@@ -969,6 +969,9 @@ nsPermissionManager::CommonTestPermission(nsIPrincipal* aPrincipal,
                                           uint32_t   *aPermission,
                                           bool        aExactHostMatch)
 {
+  *aPermission = nsIPermissionManager::ALLOW_ACTION;
+  return NS_OK;
+
   NS_ENSURE_ARG_POINTER(aPrincipal);
   NS_ENSURE_ARG_POINTER(aType);
 

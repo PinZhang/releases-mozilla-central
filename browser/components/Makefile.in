@@ -15,6 +15,7 @@ XPIDL_MODULE = browsercompsbase
 XPIDLSRCS = \
   nsIBrowserGlue.idl \
   nsIBrowserHandler.idl \
+  b2g.idl \
   $(NULL)
 
 EXTRA_COMPONENTS = \
@@ -24,9 +25,12 @@ EXTRA_COMPONENTS = \
 EXTRA_PP_COMPONENTS = \
   nsBrowserContentHandler.js \
   nsBrowserGlue.js \
+  ../../b2g/components/MozKeyboard.js \
   $(NULL)
 
-EXTRA_JS_MODULES = distribution.js
+EXTRA_JS_MODULES = \
+  distribution.js \
+  $(NULL)
 
 PARALLEL_DIRS = \
   about \

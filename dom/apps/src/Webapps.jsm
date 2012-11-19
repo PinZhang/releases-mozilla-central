@@ -22,7 +22,7 @@ Cu.import("resource://gre/modules/SystemMessagePermissionsChecker.jsm");
 Cu.import("resource://gre/modules/AppDownloadManager.jsm");
 
 function debug(aMsg) {
-  //dump("-*-*- Webapps.jsm : " + aMsg + "\n");
+  dump("-*-*- Webapps.jsm : " + aMsg + "\n");
 }
 
 // Minimum delay between two progress events while downloading, in ms.
@@ -68,7 +68,7 @@ this.DOMApplicationRegistry = {
   appsFile: null,
   webapps: { },
   children: [ ],
-  allAppsLaunchable: false,
+  allAppsLaunchable: true,
 
   init: function() {
     this.messages = ["Webapps:Install", "Webapps:Uninstall",
