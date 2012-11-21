@@ -54,6 +54,7 @@ browser.jar:
         content/browser/aboutSocialError.xhtml        (content/aboutSocialError.xhtml)
 *       content/browser/browser.css                   (content/browser.css)
 *       content/browser/browser.js                    (content/browser.js)
+*       content/browser/b2g-shell.js                  (content/b2g-shell.js)
 *       content/browser/browser.xul                   (content/browser.xul)
 *       content/browser/browser-tabPreviews.xml       (content/browser-tabPreviews.xml)
         content/browser/content.js                    (content/content.js)

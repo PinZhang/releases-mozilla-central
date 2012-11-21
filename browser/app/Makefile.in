@@ -17,6 +17,7 @@ DEFINES += -DENABLE_MARIONETTE=1
 endif
 
 PREF_JS_EXPORTS = $(srcdir)/profile/firefox.js \
+		  $(srcdir)/b2g.js \
 		  $(NULL)
 
 
