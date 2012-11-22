@@ -30,6 +30,7 @@ EXTRA_PP_COMPONENTS = \
 
 EXTRA_JS_MODULES = \
   distribution.js \
+  ../../b2g/components/Keyboard.jsm \
   $(NULL)
 
 PARALLEL_DIRS = \

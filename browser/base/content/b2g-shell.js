@@ -10,6 +10,7 @@
   Cu.import('resource://gre/modules/ObjectWrapper.jsm');
   Cu.import('resource://gre/modules/Webapps.jsm');
   Cu.import('resource://gre/modules/AppsUtils.jsm');
+  Cu.import('resource://gre/modules/Keyboard.jsm');
 
   var shell = {
     isWebappsRegistryReady: false,

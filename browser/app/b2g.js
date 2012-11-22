@@ -133,4 +133,21 @@ pref("device.storage.enabled", true);
 pref("media.plugins.enabled", false);
 pref("media.omx.enabled", true);
 
+// Show/Hide scrollbars when active/inactive
+pref("ui.showHideScrollbars", 1);
+
+// Enable the ProcessPriorityManager, and give processes with no visible
+// documents a 1s grace period before they're eligible to be marked as
+// background.
+pref("dom.ipc.processPriorityManager.enabled", true);
+pref("dom.ipc.processPriorityManager.gracePeriodMS", 1000);
+
+// Enable browser frames (including OOP, except on Windows, where it doesn't
+// work), but make in-process browser frames the default.
+pref("dom.mozBrowserFramesEnabled", true);
+
+pref("dom.ipc.tabs.disabled", false);
+
+pref("dom.ipc.browser_frames.oop_by_default", false);
+
 
