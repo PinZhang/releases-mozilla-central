@@ -1956,7 +1956,9 @@ TabChild::GetDPI(float* aDPI)
 void
 TabChild::NotifyPainted()
 {
-    if (UseDirectCompositor() && !mNotified) {
+    if (1 ||
+        (UseDirectCompositor() && !mNotified)
+        ) {
         mRemoteFrame->SendNotifyCompositorTransaction();
         mNotified = true;
     }

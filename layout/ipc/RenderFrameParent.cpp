@@ -905,6 +905,11 @@ RenderFrameParent::TriggerRepaint()
   }
 
   docFrame->SchedulePaint();
+
+
+
+  FrameLayerBuilder::InvalidateAllLayersForFrame(
+    nsLayoutUtils::GetDisplayRootFrame(docFrame));
 }
 
 ShadowLayersParent*
