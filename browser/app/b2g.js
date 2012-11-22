@@ -67,7 +67,7 @@ pref("content.ime.strict_policy", true);
 // $ adb shell stop
 // $ adb shell setprop log.redirect-stdio true
 // $ adb shell start
-pref("browser.dom.window.dump.enabled", false);
+pref("browser.dom.window.dump.enabled", true);
 
 // Temporarily relax file:// origin checks so that we can use <img>s
 // from other dirs as webgl textures and more.  Remove me when we have
