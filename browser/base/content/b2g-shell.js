@@ -1,6 +1,6 @@
 (function() {
   function debug(msg) {
-    dump('**b2g shell: **' + msg + '\n');
+    // dump('**b2g shell: **' + msg + '\n');
   }
 
   XPCOMUtils.defineLazyServiceGetter(this, 'gSystemMessenger',
