@@ -48,9 +48,9 @@
       });
 
       // Handle key events
-      window.addEventListener('keydown',  this, true);
-      window.addEventListener('keyup',    this, true);
-      window.addEventListener('keypress', this, true);
+      this.contentBrowser.addEventListener('keydown',  this, true);
+      this.contentBrowser.addEventListener('keyup',    this, true);
+      this.contentBrowser.addEventListener('keypress', this, true);
     },
 
     handleEvent: function b2gshell_handleEvent(evt) {
