@@ -4,7 +4,7 @@
 
 #include "nsIDOMEventTarget.idl"
 
-[scriptable, uuid(c142387a-5488-454b-8b5a-91f0dbee833b)]
+[scriptable, uuid(43e8033c-6560-4cd8-9681-2ceb660c461e)]
 interface nsIFMRadioSettings : nsISupports
 {
     /* Upper limit in KHz */
@@ -26,7 +26,7 @@ interface nsIFMRadioSettings : nsISupports
  *
  * If the WebFM API is re-written in c++ some day, this interface will be useless.
  */
-[scriptable, builtinclass, uuid(2ee7c122-b7aa-4948-9bc5-e4593ed4ac32)]
+[scriptable, builtinclass, uuid(571b660e-bd11-4b92-a6a6-885d4c00abaa)]
 interface nsIFMRadio : nsIDOMEventTarget {
     const long SEEK_DIRECTION_UP   = 0;
     const long SEEK_DIRECTION_DOWN = 1;
@@ -45,6 +45,11 @@ interface nsIFMRadio : nsIDOMEventTarget {
      * Indicates if the antenna is plugged in and available.
      */
     readonly attribute boolean isAntennaAvailable;
+
+    /**
+     * Indicates if the FM Radio is muted or not.
+     */
+    attribute boolean audioEnabled;
 
     /**
      * Enable the FM radio hardware with the given settings.

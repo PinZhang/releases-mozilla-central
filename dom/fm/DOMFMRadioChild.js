@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict"
-let DEBUG = 0;
+let DEBUG = 1;
 if (DEBUG)
   debug = function (s) { dump("-*- DOMFMRadioChild: " + s + "\n"); };
 else

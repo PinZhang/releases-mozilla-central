@@ -14,9 +14,9 @@
 #include "AudioChannelService.h"
 
 #define NS_FMRADIO_CONTRACTID "@mozilla.org/fmradio;1"
-// 9cb91834-78a9-4029-b644-7806173c5e2d
-#define NS_FMRADIO_CID {0x9cb91834, 0x78a9, 0x4029, \
-      {0xb6, 0x44, 0x78, 0x06, 0x17, 0x3c, 0x5e, 0x2d}}
+// {DC31F7C8-A94B-4989-B505-3AF4244732B2}
+#define NS_FMRADIO_CID { 0xdc31f7c8, 0xa94b, 0x4989, \
+      { 0xb5, 0x5, 0x3a, 0xf4, 0x24, 0x47, 0x32, 0xb2 }}
 
 namespace mozilla {
 namespace dom {

@@ -4,7 +4,7 @@
 
 "use strict"
 
-let DEBUG = 0;
+let DEBUG = 1;
 if (DEBUG)
   debug = function(s) { dump("-*- DOMFMRadioParent component: " + s + "\n");  };
 else
@@ -73,6 +73,13 @@ this.DOMFMRadioParent = {
 
   /* Indicates if the FM radio is currently being enabled */
   _enabling: false,
+
+  _enablingMsg: null,
+
+  /* Indicates if the FM radio is currently being disabled */
+  _disabling: false,
+
+  _disablingMsg: null,
 
   /* Current frequency in KHz */
   _currentFrequency: 0,
@@ -226,8 +233,8 @@ this.DOMFMRadioParent = {
     let msg = aMessage.json || { };
     let messageName = aMessage.name + ":Return";
 
-    // If the FM radio is disabled, do not execute the seek action.
-    if(!this._isEnabled) {
+    // If the FM radio is disabled or disabling, do not execute the seek action.
+    if(this._disabling || !this._isEnabled) {
        this._sendMessage(messageName, false, null, msg);
        return;
     }
@@ -323,23 +330,38 @@ this.DOMFMRadioParent = {
   },
 
   _enableFMRadio: function(msg) {
+    debug('Enable FM Radio!!!');
+    this._printState();
     let frequencyInKHz = this._roundFrequency(msg.data * 1000);
 
-    // If the FM radio is already enabled or it is currently being enabled
-    // or the given frequency is out of range, return false.
-    if (this._isEnabled || this._enabling || !frequencyInKHz) {
+    // If the FM radio is already enabled or it is currently being
+    // enabled/disabled or the given frequency is out of range, return false.
+    if (this._isEnabled || this._disabling ||
+        this._enabling || !frequencyInKHz) {
       this._sendMessage("DOMFMRadio:enable:Return", false, null, msg);
       return;
     }
 
     this._enabling = true;
+    // Cache the enable request, just in case, disable is requested
+    // when the FM Radio HW is being enabled.
+    this._enablingMsg = msg;
     let self = this;
 
     FMRadio.addEventListener("enabled", function on_enabled() {
       debug("FM Radio is enabled!");
+      self._printState();
       self._enabling = false;
+      self._enablingMsg = null;
 
       FMRadio.removeEventListener("enabled", on_enabled);
+
+      // If it's disabling, invoke the success callback of disable request.
+      if (self._disabling) {
+        debug("FM Radio is disabling!");
+        self._doDisableFMRadio(self._disablingMsg);
+        return;
+      }
 
       // To make sure the FM app will get right frequency after the FM
       // radio is enabled, we have to set the frequency first.
@@ -365,17 +387,24 @@ this.DOMFMRadioParent = {
     });
   },
 
-  _disableFMRadio: function(msg) {
-    // If the FM radio is already disabled, return false.
-    if (!this._isEnabled) {
-      this._sendMessage("DOMFMRadio:disable:Return", false, null, msg);
+  _doDisableFMRadio: function(msg) {
+    if (!msg) {
+      debug('No disabling msg need to be handled.');
       return;
     }
+
+    debug('Set _disabling to true');
+    this._disabling = true;
 
     let self = this;
     FMRadio.addEventListener("disabled", function on_disabled() {
       debug("FM Radio is disabled!");
+      self._printState();
       FMRadio.removeEventListener("disabled", on_disabled);
+
+      debug('Set _disabling to false');
+      self._disabling = false;
+      self._disablingMsg = null;
 
       self._updatePowerState();
       self._sendMessage("DOMFMRadio:disable:Return", true, null, msg);
@@ -386,6 +415,38 @@ this.DOMFMRadioParent = {
     });
 
     FMRadio.disable();
+  },
+
+  _printState: function() {
+    debug('disabing: ' + this._disabling + ", enabling: " + this._enabling +
+          ', _isEnabled: ' + this._isEnabled);
+  },
+
+  _disableFMRadio: function(msg) {
+    debug("Disable FM Radio");
+    this._printState();
+
+    // If the FM radio is disabling or is disabled without enabling, return false.
+    if (this._disabling || (!this._enabling && !this._isEnabled)) {
+      this._sendMessage("DOMFMRadio:disable:Return", false, null, msg);
+      return;
+    }
+
+    // If it's currently enabling, hold the message until FMRadio is enabled.
+    if (this._enabling) {
+      debug("FM Radio is enabling, mute the audio!");
+      debug('Set _disabling to true 222');
+      this._disabling = true;
+      this._disablingMsg = msg;
+      // Mute the FM Radio
+      FMRadio.audioEnabled = false;
+      // Fail the enable request immediately.
+      this._sendMessage("DOMFMRadio:enable:Return",
+                        false, null, this._enablingMsg);
+      return;
+    }
+
+    this._doDisableFMRadio(msg);
   },
 
   receiveMessage: function(aMessage) {
@@ -413,7 +474,7 @@ this.DOMFMRadioParent = {
 
         // If the FM radio is disabled or the given frequency is out of range,
         // skip to set frequency and send back the False message immediately.
-        if (!self._isEnabled || !frequencyInKHz) {
+        if (self._disabling || !self._isEnabled || !frequencyInKHz) {
           self._sendMessage("DOMFMRadio:setFrequency:Return", false, null, msg);
         } else {
           FMRadio.setFrequency(frequencyInKHz);
@@ -444,9 +505,9 @@ this.DOMFMRadioParent = {
         self._seekStation(Ci.nsIFMRadio.SEEK_DIRECTION_DOWN, aMessage);
         break;
       case "DOMFMRadio:cancelSeek":
-        // If the FM radio is disabled, or the FM radio is not currently
-        // seeking, do not execute the cancel seek action.
-        if (!self._isEnabled || !self._seeking) {
+        // If the FM radio is disabled, disabling, or the FM radio
+        // is not currently seeking, do not execute the cancel seek action.
+        if (self._disabling || !self._isEnabled || !self._seeking) {
           self._sendMessage("DOMFMRadio:cancelSeek:Return", false, null, msg);
         } else {
           FMRadio.cancelSeek();
