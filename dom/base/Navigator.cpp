@@ -25,6 +25,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "FMRadio.h"
 #include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
@@ -193,6 +194,11 @@ Navigator::Invalidate()
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
     mBatteryManager = nullptr;
+  }
+
+  if (mFMRadio) {
+    mFMRadio->Shutdown();
+    mFMRadio = nullptr;
   }
 
   if (mPowerManager) {
@@ -1043,6 +1049,31 @@ Navigator::GetMozNotification(ErrorResult& aRv)
   mNotification = new DesktopNotificationCenter(mWindow);
   return mNotification;
 }
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorFMRadio
+//*****************************************************************************
+fmradio::FMRadio*
+Navigator::GetMozFMRadio(ErrorResult& aRv)
+{
+  if (!mFMRadio) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
+
+    mFMRadio = new fmradio::FMRadio();
+    mFMRadio->Init(win);
+  }
+
+  return mFMRadio;
+}
+
+//*****************************************************************************
+//    Navigator::nsINavigatorBattery
+//*****************************************************************************
 
 battery::BatteryManager*
 Navigator::GetBattery(ErrorResult& aRv)

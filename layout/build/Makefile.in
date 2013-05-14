@@ -126,6 +126,10 @@ SHARED_LIBRARY_LIBS	+= \
   $(NULL)
 endif #}
 
+SHARED_LIBRARY_LIBS	+= \
+  $(DEPTH)/dom/fmradio/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
+  $(NULL)
+
 ifdef MOZ_B2G_BT #{
 SHARED_LIBRARY_LIBS += $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
 endif #}
