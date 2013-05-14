@@ -27,6 +27,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
+#include "FMRadio.h"
 #include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
@@ -121,6 +122,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsINavigatorBattery)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorFMRadio)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
@@ -226,6 +228,11 @@ Navigator::Invalidate()
   if (mBatteryManager) {
     mBatteryManager->Shutdown();
     mBatteryManager = nullptr;
+  }
+
+  if (mFMRadio) {
+    mFMRadio->Shutdown();
+    mFMRadio = nullptr;
   }
 
   if (mPowerManager) {
@@ -1151,6 +1158,27 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
   mNotification = new DesktopNotificationCenter(mWindow);
 
   NS_ADDREF(*aRetVal = mNotification);
+  return NS_OK;
+}
+
+//*****************************************************************************
+//    Navigator::nsIDOMNavigatorFMRadio
+//*****************************************************************************
+NS_IMETHODIMP
+Navigator::GetMozFMRadio(nsISupports** aFMRadio)
+{
+  if (!mFMRadio) {
+    *aFMRadio = nullptr;
+
+    nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
+    NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
+
+    mFMRadio = new fmradio::FMRadio();
+    mFMRadio->Init(win);
+  }
+
+  NS_ADDREF(*aFMRadio = mFMRadio);
+
   return NS_OK;
 }
 

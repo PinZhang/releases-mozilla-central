@@ -241,6 +241,7 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "mozilla/dom/HTMLCollectionBinding.h"
 
 #include "BatteryManager.h"
+#include "FMRadio.h"
 #include "nsIDOMPowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDOMSmsManager.h"
@@ -1300,6 +1301,7 @@ nsDOMClassInfo::Init()
                                         battery::BatteryManager::HasSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorSms)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorFMRadio)
 #ifdef MOZ_MEDIA_NAVIGATOR
     DOM_CLASSINFO_MAP_ENTRY(nsINavigatorUserMedia)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorUserMedia)
