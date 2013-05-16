@@ -5,26 +5,63 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadio.h"
-#include "mozilla/dom/FMRadioBinding.h"
 #include "nsContentUtils.h"
+#include "nsCOMPtr.h"
+#include "mozilla/Hal.h"
+#include "mozilla/HalTypes.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/dom/FMRadioBinding.h"
+
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "FMRadio" , ## args)
+#else
+#define LOG(args...)
+#endif
+
+// The pref indicates if the device has an internal antenna.
+// If the pref is true, the antanna will be always available.
+#define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
 
 #define ENABLED_EVENT_NAME                NS_LITERAL_STRING("enabled");
 #define DISABLED_EVENT_NAME               NS_LITERAL_STRING("disabled");
 #define FREQUENCYCHANGE_EVENT_NAME        NS_LITERAL_STRING("frequencychange");
 #define ANTENNAAVAILABLECHANGE_EVENT_NAME NS_LITERAL_STRING("antennaavailablechange");
 
+using namespace mozilla::hal;
+using mozilla::Preferences;
+
 namespace mozilla {
 namespace dom {
 namespace fmradio {
 
 FMRadio::FMRadio()
+  : mHeadphoneState(SWITCH_STATE_OFF)
+  , mHasInternalAntenna(false)
 {
+  LOG("FMRadio is initialized.");
+
   SetIsDOMBinding();
+
+  mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
+                                             /* default = */ false);
+  if (mHasInternalAntenna) {
+    LOG("We have an internal antenna.");
+  } else {
+    RegisterSwitchObserver(SWITCH_HEADPHONES, this);
+    mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
+  }
+
+  RegisterFMRadioObserver(this);
 }
 
 FMRadio::~FMRadio()
 {
-
+  UnregisterFMRadioObserver(this);
+  if (!mHasInternalAntenna) {
+    UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
+  }
 }
 
 void
@@ -45,44 +82,70 @@ FMRadio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
   return FMRadioBinding::Wrap(aCx, aScope, this);
 }
 
+void
+FMRadio::Notify(const SwitchEvent& aEvent)
+{
+  if (mHeadphoneState != aEvent.status()) {
+    LOG("Antenna state is changed!");
+    mHeadphoneState = aEvent.status();
+  }
+}
+
+void
+FMRadio::Notify(const FMRadioOperationInformation& info)
+{
+  switch (info.operation())
+  {
+    case FM_RADIO_OPERATION_ENABLE:
+      LOG("FM HW is enabled.");
+      break;
+    case FM_RADIO_OPERATION_DISABLE:
+      LOG("FM HW is disabled.");
+      break;
+    case FM_RADIO_OPERATION_SEEK:
+      LOG("FM HW seek complete.");
+      break;
+    default:
+      MOZ_NOT_REACHED();
+      return;
+  }
+}
+
 bool
 FMRadio::Enabled() const
 {
-  return false;
+  return IsFMRadioOn();
 }
 
 bool
 FMRadio::AntennaAvailable() const
 {
-  return false;
+  return mHasInternalAntenna ? true : mHeadphoneState != SWITCH_STATE_OFF;
 }
 
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  double frequency = 88.8;
-  return (Nullable<double>)frequency;
+  return IsFMRadioOn() ? (Nullable<double>)(GetFMRadioFrequency() / 1000)
+                       : Nullable<double>();
 }
 
 double
 FMRadio::FrequencyUpperBound() const
 {
-  double upperBound = 108.0;
-  return upperBound;
+  return 108.0;
 }
 
 double
 FMRadio::FrequencyLowerBound() const
 {
-  double lowerBound = 87.5;
-  return lowerBound;
+  return 87.5;
 }
 
 double
 FMRadio::ChannelWidth() const
 {
-  double channelWidth = 0.5;
-  return channelWidth;
+  return 0.5;
 }
 
 already_AddRefed<DOMRequest>
