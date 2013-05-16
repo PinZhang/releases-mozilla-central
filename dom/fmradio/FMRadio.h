@@ -7,6 +7,7 @@
 #define mozilla_dom_fmradio_FMRadio_h
 
 #include "nsDOMEventTargetHelper.h"
+#include "mozilla/HalTypes.h"
 
 class nsPIDOMWindow;
 class nsIScriptContext;
@@ -19,6 +20,9 @@ class DOMRequest;
 namespace fmradio {
 
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
+                        , public hal::FMRadioObserver
+                        , public hal::SwitchObserver
+
 {
 public:
   FMRadio();
@@ -26,6 +30,10 @@ public:
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
+
+  /* Observer Interface */
+  virtual void Notify(const hal::FMRadioOperationInformation& info);
+  virtual void Notify(const hal::SwitchEvent& aEvent);
 
   /* WebIDL Interface */
   nsPIDOMWindow * GetParentObject() const
@@ -64,6 +72,10 @@ public:
   IMPL_EVENT_HANDLER(disabled);
   IMPL_EVENT_HANDLER(antennaavailablechange);
   IMPL_EVENT_HANDLER(frequencychange);
+
+private:
+  hal::SwitchState mHeadphoneState;
+  bool mHasInternalAntenna;
 };
 
 } // namespace fmradio
