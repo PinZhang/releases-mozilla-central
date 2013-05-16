@@ -31,7 +31,10 @@
 #include "nsWeakReference.h"
 #include "DeviceStorage.h"
 #include "nsWrapperCache.h"
+
+#ifdef MOZ_B2G_FM
 #include "nsIDOMNavigatorFMRadio.h"
+#endif
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -77,9 +80,11 @@ namespace battery {
 class BatteryManager;
 } // namespace battery
 
+#ifdef MOZ_B2G_FM
 namespace fmradio {
 class FMRadio;
 }
+#endif
 
 class DesktopNotificationCenter;
 class SmsManager;
@@ -149,7 +154,9 @@ class Navigator : public nsIDOMNavigator
                 , public nsIMozNavigatorAudioChannelManager
 #endif
                 , public nsWrapperCache
+#ifdef MOZ_B2G_FM
                 , public nsIDOMNavigatorFMRadio
+#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -164,7 +171,9 @@ public:
   NS_DECL_NSIDOMNAVIGATORGEOLOCATION
   NS_DECL_NSIDOMNAVIGATORDESKTOPNOTIFICATION
   NS_DECL_NSINAVIGATORBATTERY
+#ifdef MOZ_B2G_FM
   NS_DECL_NSIDOMNAVIGATORFMRADIO
+#endif
   NS_DECL_NSIDOMMOZNAVIGATORSMS
   NS_DECL_NSIDOMMOZNAVIGATORMOBILEMESSAGE
 #ifdef MOZ_MEDIA_NAVIGATOR
@@ -233,7 +242,9 @@ private:
   nsRefPtr<Geolocation> mGeolocation;
   nsRefPtr<DesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
+#ifdef MOZ_B2G_FM
   nsRefPtr<fmradio::FMRadio> mFMRadio;
+#endif
   nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<SmsManager> mSmsManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;

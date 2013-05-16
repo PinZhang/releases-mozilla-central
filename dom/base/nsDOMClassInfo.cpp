@@ -241,7 +241,6 @@ using mozilla::dom::workers::ResolveWorkerClasses;
 #include "mozilla/dom/HTMLCollectionBinding.h"
 
 #include "BatteryManager.h"
-#include "FMRadio.h"
 #include "nsIDOMPowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIDOMSmsManager.h"
@@ -711,11 +710,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            EVENTTARGET_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozIccManager, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-#endif
-
-#ifdef MOZ_B2G_FM
-  NS_DEFINE_CLASSINFO_DATA(FMRadio, nsEventTargetSH,
-                           EVENTTARGET_SCRIPTABLE_FLAGS)
 #endif
 
 #ifdef MOZ_B2G_BT
@@ -1301,7 +1295,9 @@ nsDOMClassInfo::Init()
                                         battery::BatteryManager::HasSupport())
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorSms)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
+#ifdef MOZ_B2G_FM
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorFMRadio)
+#endif
 #ifdef MOZ_MEDIA_NAVIGATOR
     DOM_CLASSINFO_MAP_ENTRY(nsINavigatorUserMedia)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNavigatorUserMedia)
@@ -1722,13 +1718,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 
-#endif
-
-#ifdef MOZ_B2G_FM
-  DOM_CLASSINFO_MAP_BEGIN(FMRadio, nsIFMRadio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIFMRadio)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
 #endif
 
 #ifdef MOZ_B2G_BT

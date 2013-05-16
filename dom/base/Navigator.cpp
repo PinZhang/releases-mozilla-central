@@ -27,7 +27,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
-#include "FMRadio.h"
 #include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
@@ -70,6 +69,10 @@
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
 #include "AudioChannelManager.h"
+#endif
+
+#ifdef MOZ_B2G_FM
+#include "FMRadio.h"
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -122,7 +125,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Navigator)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDeviceStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorGeolocation)
   NS_INTERFACE_MAP_ENTRY(nsINavigatorBattery)
+#ifdef MOZ_B2G_FM
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorFMRadio)
+#endif
   NS_INTERFACE_MAP_ENTRY(nsIDOMNavigatorDesktopNotification)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorSms)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozNavigatorMobileMessage)
@@ -230,10 +235,12 @@ Navigator::Invalidate()
     mBatteryManager = nullptr;
   }
 
+#ifdef MOZ_B2G_FM
   if (mFMRadio) {
     mFMRadio->Shutdown();
     mFMRadio = nullptr;
   }
+#endif
 
   if (mPowerManager) {
     mPowerManager->Shutdown();
@@ -1161,9 +1168,12 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_FM
+
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorFMRadio
 //*****************************************************************************
+
 NS_IMETHODIMP
 Navigator::GetMozFMRadio(nsISupports** aFMRadio)
 {
@@ -1181,6 +1191,8 @@ Navigator::GetMozFMRadio(nsISupports** aFMRadio)
 
   return NS_OK;
 }
+
+#endif  // MOZ_B2G_FM
 
 //*****************************************************************************
 //    Navigator::nsINavigatorBattery

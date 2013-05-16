@@ -48,13 +48,9 @@ endif
 
 ifdef MOZ_B2G_FM
 DOM_SRCDIRS += \
-  dom/fm \
-  $(NULL)
-endif
-
-DOM_SRCDIRS += \
   dom/fmradio \
   $(NULL)
+endif
 
 ifdef MOZ_B2G_BT
 DOM_SRCDIRS += dom/bluetooth
