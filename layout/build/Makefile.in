@@ -122,13 +122,9 @@ endif #}
 
 ifdef MOZ_B2G_FM #{
 SHARED_LIBRARY_LIBS	+= \
-  $(DEPTH)/dom/fm/$(LIB_PREFIX)domfm_s.$(LIB_SUFFIX) \
-  $(NULL)
-endif #}
-
-SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/fmradio/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
   $(NULL)
+endif #}
 
 ifdef MOZ_B2G_BT #{
 SHARED_LIBRARY_LIBS += $(DEPTH)/dom/bluetooth/$(LIB_PREFIX)dombluetooth_s.$(LIB_SUFFIX)
@@ -330,7 +326,7 @@ LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/system/gonk
 endif #}
 
 ifdef MOZ_B2G_FM #{
-LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/fm
+LOCAL_INCLUDES	+= -I$(topsrcdir)/dom/fmradio
 endif #}
 
 ifdef MOZ_B2G_BT #{

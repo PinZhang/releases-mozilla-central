@@ -15,7 +15,10 @@
 #include "nsWrapperCache.h"
 #include "nsString.h"
 #include "nsTArray.h"
+
+#ifdef MOZ_B2G_FM
 #include "nsIDOMNavigatorFMRadio.h"
+#endif
 
 class nsPluginArray;
 class nsMimeTypeArray;
@@ -53,9 +56,11 @@ namespace battery {
 class BatteryManager;
 } // namespace battery
 
+#ifdef MOZ_B2G_FM
 namespace fmradio {
 class FMRadio;
 }
+#endif
 
 class DesktopNotificationCenter;
 class MobileMessageManager;
@@ -112,7 +117,9 @@ class AudioChannelManager;
 class Navigator : public nsIDOMNavigator
                 , public nsIMozNavigatorNetwork
                 , public nsWrapperCache
+#ifdef MOZ_B2G_FM
                 , public nsIDOMNavigatorFMRadio
+#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -317,7 +324,9 @@ private:
   nsRefPtr<Geolocation> mGeolocation;
   nsRefPtr<DesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
+#ifdef MOZ_B2G_FM
   nsRefPtr<fmradio::FMRadio> mFMRadio;
+#endif
   nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
 #ifdef MOZ_B2G_RIL
