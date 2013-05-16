@@ -25,7 +25,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "BatteryManager.h"
-#include "FMRadio.h"
 #include "PowerManager.h"
 #include "nsIDOMWakeLock.h"
 #include "nsIPowerManagerService.h"
@@ -64,6 +63,10 @@
 
 #ifdef MOZ_AUDIO_CHANNEL_MANAGER
 #include "AudioChannelManager.h"
+#endif
+
+#ifdef MOZ_B2G_FM
+#include "FMRadio.h"
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -196,10 +199,12 @@ Navigator::Invalidate()
     mBatteryManager = nullptr;
   }
 
+#ifdef MOZ_B2G_FM
   if (mFMRadio) {
     mFMRadio->Shutdown();
     mFMRadio = nullptr;
   }
+#endif
 
   if (mPowerManager) {
     mPowerManager->Shutdown();
@@ -1053,6 +1058,8 @@ Navigator::GetMozNotification(ErrorResult& aRv)
   return mNotification;
 }
 
+#ifdef MOZ_B2G_FM
+
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorFMRadio
 //*****************************************************************************
@@ -1073,6 +1080,8 @@ Navigator::GetMozFMRadio(ErrorResult& aRv)
 
   return mFMRadio;
 }
+
+#endif  // MOZ_B2G_FM
 
 //*****************************************************************************
 //    Navigator::nsINavigatorBattery
