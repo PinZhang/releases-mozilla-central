@@ -97,6 +97,7 @@
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
+#include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -120,6 +121,7 @@ using namespace base;
 using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
+using namespace mozilla::dom::fmradio;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobilemessage;
@@ -921,6 +923,30 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
     return true;
 #else
     MOZ_CRASH("No support for bluetooth on this platform!");
+#endif
+}
+
+PFMRadioRequestChild*
+ContentChild::AllocPFMRadioRequest()
+{
+#ifdef MOZ_B2G_FM
+    MOZ_NOT_REACHED("No one should be allocating PFMRadioRequestChild actors");
+    return nullptr;
+#else
+    MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+    return nullptr;
+#endif
+}
+
+bool
+ContentChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
+{
+#ifdef MOZ_B2G_FM
+    delete aActor;
+    return true;
+#else
+    MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+    return false;
 #endif
 }
 
