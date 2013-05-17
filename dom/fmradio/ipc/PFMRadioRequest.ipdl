@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+namespace fmradio {
+
+struct ErrorResponse
+{
+  nsString error;
+};
+
+struct SuccessResponse
+{
+};
+
+union FMRadioResponseType
+{
+  ErrorResponse;
+  SuccessResponse;
+};
+
+struct EnableRequest
+{
+  double frequency;
+};
+
+struct DisableRequest
+{
+};
+
+struct SetFrequencyRequest
+{
+  double frequency;
+};
+
+struct SeekRequest
+{
+  bool upward;
+};
+
+struct CancelSeekRequest
+{
+};
+
+union FMRadioRequestType
+{
+  EnableRequest;
+  DisableRequest;
+  SetFrequencyRequest;
+  SeekRequest;
+  CancelSeekRequest;
+};
+
+async protocol PFMRadioRequest
+{
+  manager PContent;
+
+child:
+  __delete__(FMRadioResponseType response);
+
+};
+
+} // namespace fmradio
+} // namespace dom
+} // namespace mozilla
+
