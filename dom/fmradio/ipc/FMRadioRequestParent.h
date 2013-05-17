@@ -19,7 +19,13 @@ public:
   FMRadioRequestParent();
   virtual ~FMRadioRequestParent();
 
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
   virtual void ActorDestroy(ActorDestroyReason aWhy);
+
+private:
+  nsAutoRefCnt mRefCnt;
 };
 
 } // namespace fmradio
