@@ -24,10 +24,11 @@
 // If the pref is true, the antanna will be always available.
 #define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
 
-#define ENABLED_EVENT_NAME                NS_LITERAL_STRING("enabled");
-#define DISABLED_EVENT_NAME               NS_LITERAL_STRING("disabled");
-#define FREQUENCYCHANGE_EVENT_NAME        NS_LITERAL_STRING("frequencychange");
-#define ANTENNAAVAILABLECHANGE_EVENT_NAME NS_LITERAL_STRING("antennaavailablechange");
+#define ENABLED_EVENT_NAME         NS_LITERAL_STRING("enabled");
+#define DISABLED_EVENT_NAME        NS_LITERAL_STRING("disabled");
+#define FREQUENCYCHANGE_EVENT_NAME NS_LITERAL_STRING("frequencychange");
+#define ANTENNAAVAILABLECHANGE_EVENT_NAME \
+  NS_LITERAL_STRING("antennaavailablechange");
 
 using namespace mozilla::hal;
 using mozilla::Preferences;
