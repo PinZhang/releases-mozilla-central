@@ -11,6 +11,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
 #include "DOMRequest.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
+#include "mozilla/dom/fmradio/FMRadioRequestChild.h"
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -90,6 +93,20 @@ public:
 
   NS_IMETHOD Run()
   {
+    switch (mRequestType)
+    {
+      case FMRADIO_REQUEST_ENABLE:
+      {
+        LOG("Call enable request.");
+        PFMRadioRequestChild* child = new FMRadioRequestChild();
+        FMRadioRequestEnableParams params;
+        ContentChild::GetSingleton()->SendPFMRadioRequestConstructor(
+          child, params);
+        break;
+      }
+
+    }
+
     LOG("FMRadioRequest: run request");
     return NS_OK;
   }

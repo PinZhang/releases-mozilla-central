@@ -2299,13 +2299,13 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
 }
 
 PFMRadioRequestParent*
-ContentParent::AllocPFMRadioRequest()
+ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
 {
 #ifdef MOZ_B2G_FM
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
-    return new mozilla::dom::fmradio::FMRadioRequestParent();
+    return new mozilla::dom::fmradio::FMRadioRequestParent(aParams);
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
      return nullptr;
@@ -2318,17 +2318,6 @@ ContentParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 #ifdef MOZ_B2G_FM
     delete aActor;
     return true;
-#else
-     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
-     return false;
-#endif
-}
-
-bool
-ContentParent::RecvPFMRadioConstructor(PFMRadioRequestParent* aActor)
-{
-#ifdef MOZ_B2G_FM
-     return true;
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
      return false;

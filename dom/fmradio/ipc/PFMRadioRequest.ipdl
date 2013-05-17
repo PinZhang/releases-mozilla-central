@@ -23,38 +23,6 @@ union FMRadioResponseType
   SuccessResponse;
 };
 
-struct EnableRequest
-{
-  double frequency;
-};
-
-struct DisableRequest
-{
-};
-
-struct SetFrequencyRequest
-{
-  double frequency;
-};
-
-struct SeekRequest
-{
-  bool upward;
-};
-
-struct CancelSeekRequest
-{
-};
-
-union FMRadioRequestType
-{
-  EnableRequest;
-  DisableRequest;
-  SetFrequencyRequest;
-  SeekRequest;
-  CancelSeekRequest;
-};
-
 async protocol PFMRadioRequest
 {
   manager PContent;
