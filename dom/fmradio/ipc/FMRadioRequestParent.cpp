@@ -19,9 +19,6 @@ FMRadioRequestParent::~FMRadioRequestParent()
   MOZ_COUNT_DTOR(FMRadioRequestParent);
 }
 
-NS_IMPL_THREADSAFE_ADDREF(FMRadioRequestParent)
-NS_IMPL_THREADSAFE_RELEASE(FMRadioRequestParent)
-
 } // namespace fmradio
 } // namespace dom
 } // namespace mozilla

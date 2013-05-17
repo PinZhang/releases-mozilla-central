@@ -18,7 +18,7 @@ public:
   virtual ~FMRadioRequestChild();
 
   virtual bool
-  Recv__delete__(const FMRadioResponseType aResponse) MOZ_OVERRIDE;
+  Recv__delete__(const FMRadioResponseType& aResponse) MOZ_OVERRIDE;
 };
 
 } // namespace fmradio

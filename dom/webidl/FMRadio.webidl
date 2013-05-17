@@ -61,7 +61,7 @@ interface FMRadio : EventTarget {
    * The enabled event and frequencychange event will be fired if this request
    * completes successfully.
    */
-  DOMRequest enable();
+  DOMRequest enable(double frequency);
 
   /**
    * Tune the FM radio to the given frequency.

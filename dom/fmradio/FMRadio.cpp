@@ -6,11 +6,11 @@
 
 #include "FMRadio.h"
 #include "nsContentUtils.h"
-#include "nsCOMPtr.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
+#include "DOMRequest.h"
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -64,6 +64,42 @@ FMRadio::~FMRadio()
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 }
+
+class FMRadioRequest MOZ_FINAL : public nsIRunnable
+{
+public:
+  FMRadioRequest(const FMRadioRequestType aRequestType,
+                 DOMRequest* aRequest,
+                 double aFrequency = 0)
+    : mRequestType(aRequestType)
+    , mRequest(aRequest)
+    , mSeekUpward(false)
+    , mFrequency(aFrequency) {}
+
+  FMRadioRequest(const FMRadioRequestType aRequestType,
+                 DOMRequest* aRequest,
+                 bool aSeekUpward)
+    : mRequestType(aRequestType)
+    , mRequest(aRequest)
+    , mSeekUpward(aSeekUpward)
+    , mFrequency(0) {}
+
+  ~FMRadioRequest() {}
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  NS_IMETHOD Run()
+  {
+    LOG("FMRadioRequest: run request");
+    return NS_OK;
+  }
+
+private:
+  int32_t mRequestType;
+  nsRefPtr<DOMRequest> mRequest;
+  bool mSeekUpward;
+  double mFrequency;
+};
 
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
@@ -150,27 +186,41 @@ FMRadio::ChannelWidth() const
 }
 
 already_AddRefed<DOMRequest>
-FMRadio::Enable()
+FMRadio::Enable(double aFrequency)
 {
-  return NULL;
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<nsIRunnable> r = new FMRadioRequest(
+                              FMRADIO_REQUEST_ENABLE,
+                              request,
+                              aFrequency);
+
+  NS_DispatchToMainThread(r);
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
 FMRadio::Disable()
 {
-  return NULL;
+  return nullptr;
 }
 
 already_AddRefed<DOMRequest>
-FMRadio::SetFrequency(double frequency)
+FMRadio::SetFrequency(double aFrequency)
 {
-  return NULL;
+  return nullptr;
 }
 
 already_AddRefed<DOMRequest>
 FMRadio::SeekUp()
 {
-  return NULL;
+  return nullptr;
 }
 
 already_AddRefed<DOMRequest>
