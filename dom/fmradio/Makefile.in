@@ -19,6 +19,8 @@ VPATH += $(srcdir)/ipc
 
 CPPSRCS += \
   FMRadio.cpp \
+  FMRadioRequestChild.cpp \
+  FMRadioRequestParent.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk

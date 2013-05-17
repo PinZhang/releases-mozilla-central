@@ -32,6 +32,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
+#include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "SmsParent.h"
 #include "mozilla/Hal.h"
@@ -120,6 +121,11 @@ using namespace mozilla::system;
 #endif
 
 #include "JavaScriptParent.h"
+
+#ifdef MOZ_B2G_FM
+#include "FMRadioRequestParent.h"
+#endif
+
 #include "Crypto.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -133,6 +139,7 @@ using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
+using namespace mozilla::dom::fmradio;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobilemessage;
@@ -2043,6 +2050,43 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
     return static_cast<BluetoothParent*>(aActor)->InitWithService(btService);
 #else
     MOZ_CRASH("No support for bluetooth on this platform!");
+#endif
+}
+
+PFMRadioRequestParent*
+ContentParent::AllocPFMRadioRequest()
+{
+#ifdef MOZ_B2G_FM
+    if (!AssertAppProcessPermission(this, "fmradio")) {
+        return nullptr;
+    }
+    return new mozilla::dom::fmradio::FMRadioRequestParent();
+#else
+     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+     return nullptr;
+#endif
+}
+
+bool
+ContentParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
+{
+#ifdef MOZ_B2G_FM
+    delete aActor;
+    return true;
+#else
+     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+     return false;
+#endif
+}
+
+bool
+ContentParent::RecvPFMRadioConstructor(PFMRadioRequestParent* aActor)
+{
+#ifdef MOZ_B2G_FM
+     return true;
+#else
+     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+     return false;
 #endif
 }
 
