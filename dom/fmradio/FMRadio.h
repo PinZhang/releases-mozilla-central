@@ -19,6 +19,15 @@ class DOMRequest;
 
 namespace fmradio {
 
+enum FMRadioRequestType
+{
+  FMRADIO_REQUEST_ENABLE,
+  FMRADIO_REQUEST_DISABLE,
+  FMRADIO_REQUEST_SET_FREQUENCY,
+  FMRADIO_REQUEST_SEEK,
+  FMRADIO_REQUEST_CANCEL_SEEK
+};
+
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::FMRadioObserver
                         , public hal::SwitchObserver
@@ -56,11 +65,11 @@ public:
 
   double ChannelWidth() const;
 
-  already_AddRefed<DOMRequest> Enable();
+  already_AddRefed<DOMRequest> Enable(double aFrequency);
 
   already_AddRefed<DOMRequest> Disable();
 
-  already_AddRefed<DOMRequest> SetFrequency(double frequency);
+  already_AddRefed<DOMRequest> SetFrequency(double aFrequency);
 
   already_AddRefed<DOMRequest> SeekUp();
 
