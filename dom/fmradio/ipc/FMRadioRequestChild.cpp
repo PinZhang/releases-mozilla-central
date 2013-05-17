@@ -6,17 +6,28 @@
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "FMRadioRequestChild.h"
 
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "PFMRadioRequestChild" , ## args)
+#else
+#define LOG(args...)
+#endif
+
+
 namespace mozilla {
 namespace dom {
 namespace fmradio {
 
 FMRadioRequestChild::FMRadioRequestChild()
 {
+  LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioRequestChild);
 }
 
 FMRadioRequestChild::~FMRadioRequestChild()
 {
+  LOG("DESTRUCTOR");
   MOZ_COUNT_DTOR(FMRadioRequestChild);
 }
 

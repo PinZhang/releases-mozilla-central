@@ -927,7 +927,7 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
 }
 
 PFMRadioRequestChild*
-ContentChild::AllocPFMRadioRequest()
+ContentChild::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
 {
 #ifdef MOZ_B2G_FM
     MOZ_NOT_REACHED("No one should be allocating PFMRadioRequestChild actors");

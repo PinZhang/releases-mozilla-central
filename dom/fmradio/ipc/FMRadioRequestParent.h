@@ -8,6 +8,7 @@
 #define mozilla_dom_fmradio_ipc_fmradiorequestparent_h__
 
 #include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
+#include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -17,6 +18,7 @@ class FMRadioRequestParent : public PFMRadioRequestParent
 {
 public:
   FMRadioRequestParent();
+  FMRadioRequestParent(const FMRadioRequestParams& aParams);
   virtual ~FMRadioRequestParent();
 
   NS_IMETHOD_(nsrefcnt) AddRef();
