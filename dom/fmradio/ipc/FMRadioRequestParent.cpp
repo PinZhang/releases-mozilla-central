@@ -5,17 +5,28 @@
 
 #include "FMRadioRequestParent.h"
 
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "PFMRadioRequestParent" , ## args)
+#else
+#define LOG(args...)
+#endif
+
+
 namespace mozilla {
 namespace dom {
 namespace fmradio {
 
 FMRadioRequestParent::FMRadioRequestParent()
 {
+  LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
 }
 
 FMRadioRequestParent::~FMRadioRequestParent()
 {
+  LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioRequestParent);
 }
 

@@ -318,9 +318,8 @@ private:
     virtual bool DeallocPBluetooth(PBluetoothParent* aActor);
     virtual bool RecvPBluetoothConstructor(PBluetoothParent* aActor);
 
-    virtual PFMRadioRequestParent* AllocPFMRadioRequest();
+    virtual PFMRadioRequestParent* AllocPFMRadioRequest(const FMRadioRequestParams&);
     virtual bool DeallocPFMRadioRequest(PFMRadioRequestParent* aActor);
-    virtual bool RecvPFMRadioConstructor(PFMRadioRequestParent* aActor);
 
     virtual PSpeechSynthesisParent* AllocPSpeechSynthesis();
     virtual bool DeallocPSpeechSynthesis(PSpeechSynthesisParent* aActor);

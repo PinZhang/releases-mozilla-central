@@ -17,6 +17,7 @@ XPIDL_FLAGS += [
 MODULE = 'dom'
 
 EXPORTS.mozilla.dom.fmradio += [
-
+  'FMRadioRequestChild.h',
+  'FMRadioRequestParent.h',
 ]
 

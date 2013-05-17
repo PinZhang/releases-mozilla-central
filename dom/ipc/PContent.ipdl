@@ -124,6 +124,40 @@ union DeviceStorageParams
   DeviceStorageAvailableParams;
 };
 
+struct FMRadioRequestEnableParams
+{
+  double frequency;
+};
+
+struct FMRadioRequestDisableParams
+{
+
+};
+
+struct FMRadioRequestSetFrequencyParams
+{
+  double frequency;
+};
+
+struct FMRadioRequestSeekParams
+{
+  bool upward;
+};
+
+struct FMRadioRequestCancelSeekParams
+{
+
+};
+
+union FMRadioRequestParams
+{
+  FMRadioRequestEnableParams;
+  FMRadioRequestDisableParams;
+  FMRadioRequestSetFrequencyParams;
+  FMRadioRequestSeekParams;
+  FMRadioRequestCancelSeekParams;
+};
+
 struct SlicedBlobConstructorParams
 {
   PBlob source;
@@ -404,7 +438,7 @@ parent:
 
     PBluetooth();
 
-    PFMRadioRequest();
+    PFMRadioRequest(FMRadioRequestParams params);
 
     // Services remoting
 
