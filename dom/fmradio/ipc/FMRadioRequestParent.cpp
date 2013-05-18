@@ -24,10 +24,22 @@ FMRadioRequestParent::FMRadioRequestParent()
   MOZ_COUNT_CTOR(FMRadioRequestParent);
 }
 
+FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestParams& aParams)
+{
+  LOG("constructor");
+  MOZ_COUNT_CTOR(FMRadioRequestParent);
+}
+
 FMRadioRequestParent::~FMRadioRequestParent()
 {
   LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioRequestParent);
+}
+
+void
+FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
+{
+  return;
 }
 
 NS_IMPL_THREADSAFE_ADDREF(FMRadioRequestParent)

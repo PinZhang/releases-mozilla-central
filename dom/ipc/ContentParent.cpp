@@ -126,7 +126,7 @@ using namespace mozilla::system;
 #include "JavaScriptParent.h"
 
 #ifdef MOZ_B2G_FM
-#include "FMRadioRequestParent.h"
+#include "mozilla/dom/fmradio/FMRadioRequestParent.h"
 #endif
 
 #include "Crypto.h"
@@ -2239,7 +2239,7 @@ ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
-    return new mozilla::dom::fmradio::FMRadioRequestParent(aParams);
+    return new FMRadioRequestParent(aParams);
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
      return nullptr;
