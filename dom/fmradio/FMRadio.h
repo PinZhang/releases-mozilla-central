@@ -7,6 +7,7 @@
 #define mozilla_dom_fmradio_FMRadio_h
 
 #include "nsDOMEventTargetHelper.h"
+#include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
 
 class nsPIDOMWindow;

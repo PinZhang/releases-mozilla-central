@@ -90,6 +90,7 @@ public:
   ~FMRadioRequest() {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioRequest)
 
   NS_IMETHOD Run()
   {
@@ -117,6 +118,15 @@ private:
   bool mSeekUpward;
   double mFrequency;
 };
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FMRadioRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FMRadioRequest)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FMRadioRequest)
+
+NS_IMPL_CYCLE_COLLECTION_1(FMRadioRequest, mRequest)
 
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
