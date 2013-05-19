@@ -20,15 +20,6 @@ class DOMRequest;
 
 namespace fmradio {
 
-enum FMRadioRequestType
-{
-  FMRADIO_REQUEST_ENABLE,
-  FMRADIO_REQUEST_DISABLE,
-  FMRADIO_REQUEST_SET_FREQUENCY,
-  FMRADIO_REQUEST_SEEK,
-  FMRADIO_REQUEST_CANCEL_SEEK
-};
-
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::FMRadioObserver
                         , public hal::SwitchObserver

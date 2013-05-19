@@ -71,38 +71,26 @@ FMRadio::~FMRadio()
 class FMRadioRequest MOZ_FINAL : public nsIRunnable
 {
 public:
-  FMRadioRequest(const FMRadioRequestType aRequestType,
-                 DOMRequest* aRequest,
-                 double aFrequency = 0)
-    : mRequestType(aRequestType)
-    , mRequest(aRequest)
-    , mSeekUpward(false)
-    , mFrequency(aFrequency) {}
+  FMRadioRequest(DOMRequest* aRequest,
+                 FMRadioRequestParams aParams)
+    : mRequest(aRequest)
+    , mParams(aParams) {}
 
-  FMRadioRequest(const FMRadioRequestType aRequestType,
-                 DOMRequest* aRequest,
-                 bool aSeekUpward)
-    : mRequestType(aRequestType)
-    , mRequest(aRequest)
-    , mSeekUpward(aSeekUpward)
-    , mFrequency(0) {}
-
-  ~FMRadioRequest() {}
+  virtual ~FMRadioRequest() {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioRequest)
 
   NS_IMETHOD Run()
   {
-    switch (mRequestType)
+    switch (mParams.type())
     {
-      case FMRADIO_REQUEST_ENABLE:
+      case FMRadioRequestParams::TFMRadioRequestEnableParams:
       {
         LOG("Call enable request.");
         PFMRadioRequestChild* child = new FMRadioRequestChild();
-        FMRadioRequestEnableParams params;
-        ContentChild::GetSingleton()->SendPFMRadioRequestConstructor(
-          child, params);
+        ContentChild::GetSingleton()->
+          SendPFMRadioRequestConstructor(child, mParams);
         break;
       }
 
@@ -113,10 +101,8 @@ public:
   }
 
 private:
-  int32_t mRequestType;
   nsRefPtr<DOMRequest> mRequest;
-  bool mSeekUpward;
-  double mFrequency;
+  FMRadioRequestParams mParams;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FMRadioRequest)
@@ -223,9 +209,8 @@ FMRadio::Enable(double aFrequency)
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<nsIRunnable> r = new FMRadioRequest(
-                              FMRADIO_REQUEST_ENABLE,
-                              request,
-                              aFrequency);
+                                  request,
+                                  FMRadioRequestEnableParams());
 
   NS_DispatchToMainThread(r);
 
