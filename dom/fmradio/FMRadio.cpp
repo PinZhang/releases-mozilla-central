@@ -88,7 +88,7 @@ public:
       case FMRadioRequestParams::TFMRadioRequestEnableParams:
       {
         LOG("Call enable request.");
-        PFMRadioRequestChild* child = new FMRadioRequestChild();
+        PFMRadioRequestChild* child = new FMRadioRequestChild(mRequest);
         ContentChild::GetSingleton()->
           SendPFMRadioRequestConstructor(child, mParams);
         break;

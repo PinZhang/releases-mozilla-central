@@ -9,16 +9,22 @@
 
 namespace mozilla {
 namespace dom {
+
+class DOMRequest;
+
 namespace fmradio {
 
 class FMRadioRequestChild : public PFMRadioRequestChild
 {
 public:
-  FMRadioRequestChild();
+  FMRadioRequestChild(DOMRequest* aRequest);
   virtual ~FMRadioRequestChild();
 
   virtual bool
   Recv__delete__(const FMRadioResponseType& aResponse) MOZ_OVERRIDE;
+
+private:
+  nsRefPtr<DOMRequest> mRequest;
 };
 
 } // namespace fmradio

@@ -2305,7 +2305,10 @@ ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
-    return new FMRadioRequestParent(aParams);
+
+    nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aParams);
+    result->Dispatch();
+    return result.forget().get();
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
      return nullptr;
