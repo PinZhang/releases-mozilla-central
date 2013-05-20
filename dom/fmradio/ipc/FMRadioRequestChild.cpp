@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "FMRadioRequestChild.h"
+#include "DOMRequest.h"
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -21,7 +22,8 @@ namespace mozilla {
 namespace dom {
 namespace fmradio {
 
-FMRadioRequestChild::FMRadioRequestChild()
+FMRadioRequestChild::FMRadioRequestChild(DOMRequest* aRequest)
+  : mRequest(aRequest)
 {
   LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioRequestChild);
@@ -36,6 +38,26 @@ FMRadioRequestChild::~FMRadioRequestChild()
 bool
 FMRadioRequestChild::Recv__delete__(const FMRadioResponseType& aType)
 {
+  switch (aType.type())
+  {
+    case FMRadioResponseType::TErrorResponse:
+    {
+      ErrorResponse response = aType;
+      mRequest->FireError(response.error());
+      break;
+    }
+    case FMRadioResponseType::TSuccessResponse:
+    {
+      SuccessResponse response = aType;
+      // FIXME create a meaningfull result
+      JS::Value result = JS_NumberValue(1);
+      mRequest->FireSuccess(result);
+      break;
+    }
+    default:
+      NS_RUNTIMEABORT("not reached");
+      break;
+  }
   return true;
 }
 
