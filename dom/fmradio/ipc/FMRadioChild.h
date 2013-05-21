@@ -15,7 +15,7 @@ namespace fmradio {
 
 class FMRadioRequestChild;
 
-class FMRadioChild : nsIRunnable
+class FMRadioChild : nsISupports
                    , public PFMRadioChild
 {
 public:
@@ -24,11 +24,6 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioChild)
-
-  NS_IMETHOD Run()
-  {
-    return NS_OK;
-  }
 
   virtual bool
   Recv__delete__() MOZ_OVERRIDE;
