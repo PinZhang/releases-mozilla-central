@@ -62,10 +62,10 @@ private:
 
   protected:
     nsRefPtr<FMRadioRequestParent> mParent;
+    FMRadioRequestParams mParams;
 
   private:
     bool mCanceled;
-    FMRadioRequestParams mParams;
   };
 
   class PostErrorEvent : public CancelableRunnable
@@ -92,6 +92,23 @@ private:
     EnableEvent(FMRadioRequestParent* aParent,
                 FMRadioRequestEnableParams aParams);
     virtual ~EnableEvent();
+    virtual nsresult CancelableRun();
+  };
+
+  class DisableEvent : public CancelableRunnable
+  {
+  public:
+    DisableEvent(FMRadioRequestParent* aParent);
+    virtual ~DisableEvent();
+    virtual nsresult CancelableRun();
+  };
+
+  class SetFrequencyEvent : public CancelableRunnable
+  {
+  public:
+    SetFrequencyEvent(FMRadioRequestParent* aParent,
+                      FMRadioRequestSetFrequencyParams aParams);
+    virtual ~SetFrequencyEvent();
     virtual nsresult CancelableRun();
   };
 };
