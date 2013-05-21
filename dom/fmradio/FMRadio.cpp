@@ -12,6 +12,8 @@
 #include "mozilla/dom/FMRadioBinding.h"
 #include "DOMRequest.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/fmradio/PFMRadioChild.h"
+#include "mozilla/dom/fmradio/FMRadioChild.h"
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "mozilla/dom/fmradio/FMRadioRequestChild.h"
 
@@ -72,9 +74,11 @@ class FMRadioRequest MOZ_FINAL : public nsIRunnable
 {
 public:
   FMRadioRequest(DOMRequest* aRequest,
-                 FMRadioRequestParams aParams)
+                 FMRadioChild* aRadioChild,
+                 FMRadioRequestType aRequestType)
     : mRequest(aRequest)
-    , mParams(aParams) {}
+    , mRadioChild(aRadioChild)
+    , mRequestType(aRequestType) {}
 
   virtual ~FMRadioRequest() {}
 
@@ -83,17 +87,16 @@ public:
 
   NS_IMETHOD Run()
   {
-    switch (mParams.type())
+    switch (mRequestType.type())
     {
-      case FMRadioRequestParams::TFMRadioRequestEnableParams:
-      case FMRadioRequestParams::TFMRadioRequestDisableParams:
-      case FMRadioRequestParams::TFMRadioRequestSetFrequencyParams:
-      case FMRadioRequestParams::TFMRadioRequestSeekParams:
-      case FMRadioRequestParams::TFMRadioRequestCancelSeekParams:
+      case FMRadioRequestType::TEnableRequest:
+      case FMRadioRequestType::TDisableRequest:
+      case FMRadioRequestType::TSetFrequencyRequest:
+      case FMRadioRequestType::TCancelSeekRequest:
+      case FMRadioRequestType::TSeekRequest:
       {
         PFMRadioRequestChild* child = new FMRadioRequestChild(mRequest);
-        ContentChild::GetSingleton()->
-          SendPFMRadioRequestConstructor(child, mParams);
+        mRadioChild->SendPFMRadioRequestConstructor(child, mRequestType);
         break;
       }
       default:
@@ -107,7 +110,8 @@ public:
 
 private:
   nsRefPtr<DOMRequest> mRequest;
-  FMRadioRequestParams mParams;
+  nsRefPtr<FMRadioChild> mRadioChild;
+  FMRadioRequestType mRequestType;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FMRadioRequest)
@@ -117,18 +121,21 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FMRadioRequest)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FMRadioRequest)
 
-NS_IMPL_CYCLE_COLLECTION_1(FMRadioRequest, mRequest)
+NS_IMPL_CYCLE_COLLECTION_2(FMRadioRequest, mRequest, mRadioChild)
 
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
 {
   BindToOwner(aWindow);
+
+  mRadioChild = new FMRadioChild();
+  ContentChild::GetSingleton()->SendPFMRadioConstructor(mRadioChild);
 }
 
 void
 FMRadio::Shutdown()
 {
-
+  LOG("Shutdown");
 }
 
 JSObject*
@@ -214,7 +221,8 @@ FMRadio::Enable(double aFrequency)
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                  FMRadioRequestEnableParams(aFrequency));
+                                               mRadioChild,
+                                               EnableRequest(aFrequency));
 
   NS_DispatchToMainThread(r);
 
@@ -232,7 +240,8 @@ FMRadio::Disable()
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                  FMRadioRequestDisableParams());
+                                               mRadioChild,
+                                               DisableRequest());
   NS_DispatchToMainThread(r);
 
   return request.forget();
@@ -249,7 +258,8 @@ FMRadio::SetFrequency(double aFrequency)
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                  FMRadioRequestSetFrequencyParams(aFrequency));
+                                               mRadioChild,
+                                               SetFrequencyRequest(aFrequency));
   NS_DispatchToMainThread(r);
 
   return request.forget();

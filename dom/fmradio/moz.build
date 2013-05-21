@@ -16,7 +16,10 @@ XPIDL_FLAGS += [
 
 MODULE = 'dom'
 
+# FIXME what's it used for?
 EXPORTS.mozilla.dom.fmradio += [
+  'FMRadioChild.h',
+  'FMRadioParent.h',
   'FMRadioRequestChild.h',
   'FMRadioRequestParent.h',
 ]
