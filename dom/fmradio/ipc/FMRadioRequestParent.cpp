@@ -28,8 +28,8 @@ namespace mozilla {
 namespace dom {
 namespace fmradio {
 
-FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestParams& aParams)
-  : mParams(aParams)
+FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aRequestType)
+  : mRequestType(aRequestType)
 {
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
@@ -38,33 +38,33 @@ FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestParams& aParams)
 void
 FMRadioRequestParent::Dispatch()
 {
-  switch (mParams.type())
+  switch (mRequestType.type())
   {
-    case FMRadioRequestParams::TFMRadioRequestEnableParams:
+    case FMRadioRequestType::TEnableRequest:
     {
-      FMRadioRequestEnableParams params = mParams;
-      nsRefPtr<nsRunnable> r = new EnableEvent(this, params);
+      EnableRequest request = mRequestType;
+      nsRefPtr<nsRunnable> r = new EnableEvent(this, request);
       NS_DispatchToMainThread(r);
       break;
     }
-    case FMRadioRequestParams::TFMRadioRequestDisableParams:
+    case FMRadioRequestType::TDisableRequest:
     {
       LOG("Call DisableEvent");
       nsRefPtr<nsRunnable> r = new DisableEvent(this);
       NS_DispatchToMainThread(r);
       break;
     }
-    case FMRadioRequestParams::TFMRadioRequestSetFrequencyParams:
+    case FMRadioRequestType::TSetFrequencyRequest:
     {
       LOG("Call SetFrequency");
-      FMRadioRequestSetFrequencyParams params = mParams;
-      nsRefPtr<nsRunnable> r = new SetFrequencyEvent(this, params);
+      SetFrequencyRequest request = mRequestType;
+      nsRefPtr<nsRunnable> r = new SetFrequencyEvent(this, request);
       NS_DispatchToMainThread(r);
       break;
     }
-    case FMRadioRequestParams::TFMRadioRequestSeekParams:
+    case FMRadioRequestType::TSeekRequest:
       break;
-    case FMRadioRequestParams::TFMRadioRequestCancelSeekParams:
+    case FMRadioRequestType::TCancelSeekRequest:
       break;
     default:
       NS_RUNTIMEABORT("not reached");
@@ -132,8 +132,8 @@ FMRadioRequestParent::PostSuccessEvent::CancelableRun()
  *       EnableEvent           *
  *******************************/
 FMRadioRequestParent::EnableEvent::EnableEvent(
-  FMRadioRequestParent* aParent, FMRadioRequestEnableParams aParams)
-  : CancelableRunnable(aParent, aParams) { }
+  FMRadioRequestParent* aParent, EnableRequest aRequest)
+  : CancelableRunnable(aParent, aRequest) { }
 
 FMRadioRequestParent::EnableEvent::~EnableEvent() {}
 
@@ -215,8 +215,8 @@ FMRadioRequestParent::DisableEvent::CancelableRun()
  *        SetFrequencyEvent        *
  ***********************************/
 FMRadioRequestParent::SetFrequencyEvent::SetFrequencyEvent(
-  FMRadioRequestParent* aParent, FMRadioRequestSetFrequencyParams aParams)
-  : CancelableRunnable(aParent, aParams) { }
+  FMRadioRequestParent* aParent, SetFrequencyRequest aRequest)
+  : CancelableRunnable(aParent, aRequest) { }
 
 FMRadioRequestParent::SetFrequencyEvent::~SetFrequencyEvent() { }
 
@@ -234,7 +234,7 @@ FMRadioRequestParent::SetFrequencyEvent::CancelableRun()
     return NS_OK;
   }
 
-  FMRadioRequestSetFrequencyParams params = mParams;
+  SetFrequencyRequest params = mRequestType;
   SetFMRadioFrequency(params.frequency());
 
   nsRefPtr<nsRunnable> event = new PostSuccessEvent(mParent);

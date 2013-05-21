@@ -8,6 +8,7 @@
 #define mozilla_dom_fmradio_ipc_fmradiorequestparent_h__
 
 #include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
+#include "mozilla/dom/fmradio/PFMRadio.h"
 #include "mozilla/dom/ContentChild.h"
 
 namespace mozilla {
@@ -17,7 +18,7 @@ namespace fmradio {
 class FMRadioRequestParent : public PFMRadioRequestParent
 {
 public:
-  FMRadioRequestParent(const FMRadioRequestParams& aParams);
+  FMRadioRequestParent(const FMRadioRequestType& aRequestType);
   virtual ~FMRadioRequestParent();
 
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -29,17 +30,17 @@ public:
 
 private:
   nsAutoRefCnt mRefCnt;
-  FMRadioRequestParams mParams;
+  FMRadioRequestType mRequestType;
 
   class CancelableRunnable : public nsRunnable
   {
   public:
     // FIXME set aParams with default value
     CancelableRunnable(FMRadioRequestParent* aParent,
-                       FMRadioRequestParams aParams = FMRadioRequestParams())
+                       FMRadioRequestType aRequestType = FMRadioRequestType())
       : mParent(aParent)
       , mCanceled(false)
-      , mParams(aParams) { }
+      , mRequestType(aRequestType) { }
 
     virtual ~CancelableRunnable() { }
 
@@ -62,7 +63,7 @@ private:
 
   protected:
     nsRefPtr<FMRadioRequestParent> mParent;
-    FMRadioRequestParams mParams;
+    FMRadioRequestType mRequestType;
 
   private:
     bool mCanceled;
@@ -90,7 +91,7 @@ private:
   {
   public:
     EnableEvent(FMRadioRequestParent* aParent,
-                FMRadioRequestEnableParams aParams);
+                EnableRequest aRequest);
     virtual ~EnableEvent();
     virtual nsresult CancelableRun();
   };
@@ -107,7 +108,7 @@ private:
   {
   public:
     SetFrequencyEvent(FMRadioRequestParent* aParent,
-                      FMRadioRequestSetFrequencyParams aParams);
+                      SetFrequencyRequest aRequest);
     virtual ~SetFrequencyEvent();
     virtual nsresult CancelableRun();
   };

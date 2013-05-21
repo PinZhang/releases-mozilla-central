@@ -20,6 +20,8 @@ class DOMRequest;
 
 namespace fmradio {
 
+class FMRadioChild;
+
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::FMRadioObserver
                         , public hal::SwitchObserver
@@ -77,6 +79,7 @@ public:
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
+  nsRefPtr<FMRadioChild> mRadioChild;
 };
 
 } // namespace fmradio

@@ -153,8 +153,8 @@ public:
     virtual PBluetoothChild* AllocPBluetooth();
     virtual bool DeallocPBluetooth(PBluetoothChild* aActor);
 
-    virtual PFMRadioRequestChild* AllocPFMRadioRequest(const FMRadioRequestParams&);
-    virtual bool DeallocPFMRadioRequest(PFMRadioRequestChild* aActor);
+    virtual PFMRadioChild* AllocPFMRadio();
+    virtual bool DeallocPFMRadio(PFMRadioChild* aActor);
 
     virtual PSpeechSynthesisChild* AllocPSpeechSynthesis();
     virtual bool DeallocPSpeechSynthesis(PSpeechSynthesisChild* aActor);

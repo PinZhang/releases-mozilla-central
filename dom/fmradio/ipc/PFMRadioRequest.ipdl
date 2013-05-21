@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
+include protocol PFMRadio;
 
 namespace mozilla {
 namespace dom {
@@ -25,7 +25,7 @@ union FMRadioResponseType
 
 async protocol PFMRadioRequest
 {
-  manager PContent;
+  manager PFMRadio;
 
 child:
   __delete__(FMRadioResponseType response);
