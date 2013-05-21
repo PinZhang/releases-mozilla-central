@@ -11,7 +11,7 @@ include protocol PCompositor;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
 include protocol PDeviceStorageRequest;
-include protocol PFMRadioRequest;
+include protocol PFMRadio;
 include protocol PHal;
 include protocol PImageBridge;
 include protocol PIndexedDB;
@@ -189,7 +189,7 @@ rpc protocol PContent
     manages PCrashReporter;
     manages PDeviceStorageRequest;
     manages PExternalHelperApp;
-    manages PFMRadioRequest;
+    manages PFMRadio;
     manages PHal;
     manages PIndexedDB;
     manages PMemoryReportRequest;
@@ -355,7 +355,7 @@ parent:
 
     PBluetooth();
 
-    PFMRadioRequest(FMRadioRequestParams params);
+    PFMRadio();
 
     // Services remoting
 

@@ -19,6 +19,8 @@ VPATH += $(srcdir)/ipc
 
 CPPSRCS += \
   FMRadio.cpp \
+  FMRadioChild.cpp \
+  FMRadioParent.cpp \
   FMRadioRequestChild.cpp \
   FMRadioRequestParent.cpp \
   $(NULL)

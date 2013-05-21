@@ -98,8 +98,12 @@
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
-#include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
+#include "mozilla/dom/fmradio/PFMRadioChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+
+#ifdef MOZ_B2G_FM
+#include "mozilla/dom/fmradio/FMRadioChild.h"
+#endif
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/PSpeechSynthesisChild.h"
@@ -956,11 +960,11 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
 #endif
 }
 
-PFMRadioRequestChild*
-ContentChild::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
+PFMRadioChild*
+ContentChild::AllocPFMRadio()
 {
 #ifdef MOZ_B2G_FM
-    MOZ_NOT_REACHED("No one should be allocating PFMRadioRequestChild actors");
+    MOZ_NOT_REACHED("No one should be allocating PFMRadioChild actors");
     return nullptr;
 #else
     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
@@ -969,10 +973,11 @@ ContentChild::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
 }
 
 bool
-ContentChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
+ContentChild::DeallocPFMRadio(PFMRadioChild* aActor)
 {
 #ifdef MOZ_B2G_FM
-    delete aActor;
+    FMRadioChild* child = static_cast<FMRadioChild*>(aActor);
+    NS_RELEASE(child);
     return true;
 #else
     MOZ_NOT_REACHED("No support for FMRadio on this platform!");

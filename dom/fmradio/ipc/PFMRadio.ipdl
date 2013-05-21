@@ -1,0 +1,70 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+include protocol PFMRadioRequest;
+
+namespace mozilla {
+namespace dom {
+namespace fmradio {
+
+struct EnableRequest
+{
+  double frequency;
+};
+
+struct DisableRequest
+{
+};
+
+struct SetFrequencyRequest
+{
+  double frequency;
+};
+
+struct SeekRequest
+{
+  bool upward;
+};
+
+struct CancelSeekRequest
+{
+};
+
+union FMRadioRequestType
+{
+  EnableRequest;
+  DisableRequest;
+  SetFrequencyRequest;
+  SeekRequest;
+  CancelSeekRequest;
+};
+
+async protocol PFMRadio
+{
+  manager PContent;
+  manages PFMRadioRequest;
+
+child:
+  /**
+   * Sent when the FM HW is enabled or disabled.
+   */
+  Enabled(bool enabled);
+
+  /**
+   * Sent when the frequency is changed.
+   */
+  FrequencyChanged(double frequency);
+
+  __delete__();
+
+parent:
+  PFMRadioRequest(FMRadioRequestType requestType);
+
+};
+
+} // namespace fmradio
+} // namespace dom
+} // namespace mozilla
+

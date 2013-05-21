@@ -32,7 +32,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
-#include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
+#include "mozilla/dom/fmradio/PFMRadioParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "SmsParent.h"
 #include "mozilla/Hal.h"
@@ -128,7 +128,7 @@ using namespace mozilla::system;
 #include "JavaScriptParent.h"
 
 #ifdef MOZ_B2G_FM
-#include "mozilla/dom/fmradio/FMRadioRequestParent.h"
+#include "mozilla/dom/fmradio/FMRadioParent.h"
 #endif
 
 #include "Crypto.h"
@@ -2298,16 +2298,14 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
 #endif
 }
 
-PFMRadioRequestParent*
-ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
+PFMRadioParent*
+ContentParent::AllocPFMRadio()
 {
 #ifdef MOZ_B2G_FM
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
-    nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aParams);
-    result->Dispatch();
-    return result.forget().get();
+    return new FMRadioParent();
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
      return nullptr;
@@ -2315,11 +2313,10 @@ ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
 }
 
 bool
-ContentParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
+ContentParent::DeallocPFMRadio(PFMRadioParent* aActor)
 {
 #ifdef MOZ_B2G_FM
-    FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);
-    NS_RELEASE(parent);
+    delete aActor;
     return true;
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");
