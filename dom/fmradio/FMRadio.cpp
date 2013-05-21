@@ -86,14 +86,19 @@ public:
     switch (mParams.type())
     {
       case FMRadioRequestParams::TFMRadioRequestEnableParams:
+      case FMRadioRequestParams::TFMRadioRequestDisableParams:
+      case FMRadioRequestParams::TFMRadioRequestSetFrequencyParams:
+      case FMRadioRequestParams::TFMRadioRequestSeekParams:
+      case FMRadioRequestParams::TFMRadioRequestCancelSeekParams:
       {
-        LOG("Call enable request.");
         PFMRadioRequestChild* child = new FMRadioRequestChild(mRequest);
         ContentChild::GetSingleton()->
           SendPFMRadioRequestConstructor(child, mParams);
         break;
       }
-
+      default:
+        NS_RUNTIMEABORT("not reached");
+        break;
     }
 
     LOG("FMRadioRequest: run request");
@@ -208,8 +213,7 @@ FMRadio::Enable(double aFrequency)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<nsIRunnable> r = new FMRadioRequest(
-                                  request,
+  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
                                   FMRadioRequestEnableParams(aFrequency));
 
   NS_DispatchToMainThread(r);
@@ -220,13 +224,35 @@ FMRadio::Enable(double aFrequency)
 already_AddRefed<DOMRequest>
 FMRadio::Disable()
 {
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
+                                  FMRadioRequestDisableParams());
+  NS_DispatchToMainThread(r);
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
 FMRadio::SetFrequency(double aFrequency)
 {
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
+                                  FMRadioRequestSetFrequencyParams(aFrequency));
+  NS_DispatchToMainThread(r);
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>

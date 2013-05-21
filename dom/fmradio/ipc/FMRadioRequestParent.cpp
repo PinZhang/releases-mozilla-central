@@ -7,6 +7,10 @@
 #include "mozilla/unused.h"
 // FIXME Why not "ContentParent.h"?
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/Hal.h"
+#include "nsIAudioManager.h"
+#include "AudioManager.h"
+#include "nsDOMClassInfo.h"
 
 #undef LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -17,6 +21,8 @@
 #else
 #define LOG(args...)
 #endif
+
+using namespace mozilla::hal;
 
 namespace mozilla {
 namespace dom {
@@ -37,18 +43,25 @@ FMRadioRequestParent::Dispatch()
     case FMRadioRequestParams::TFMRadioRequestEnableParams:
     {
       FMRadioRequestEnableParams params = mParams;
-      nsRefPtr<nsIRunnable> r = new EnableEvent(this, params);
-
-      // FIXME Why NS_STREAMTRANSPORTSERVICE_CONTRACTID?
-      nsCOMPtr<nsIEventTarget> target = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-      NS_ASSERTION(target, "Must have stream transport service");
-      target->Dispatch(r, NS_DISPATCH_NORMAL);
+      nsRefPtr<nsRunnable> r = new EnableEvent(this, params);
+      NS_DispatchToMainThread(r);
       break;
     }
     case FMRadioRequestParams::TFMRadioRequestDisableParams:
+    {
+      LOG("Call DisableEvent");
+      nsRefPtr<nsRunnable> r = new DisableEvent(this);
+      NS_DispatchToMainThread(r);
       break;
+    }
     case FMRadioRequestParams::TFMRadioRequestSetFrequencyParams:
+    {
+      LOG("Call SetFrequency");
+      FMRadioRequestSetFrequencyParams params = mParams;
+      nsRefPtr<nsRunnable> r = new SetFrequencyEvent(this, params);
+      NS_DispatchToMainThread(r);
       break;
+    }
     case FMRadioRequestParams::TFMRadioRequestSeekParams:
       break;
     case FMRadioRequestParams::TFMRadioRequestCancelSeekParams:
@@ -127,8 +140,106 @@ FMRadioRequestParent::EnableEvent::~EnableEvent() {}
 nsresult
 FMRadioRequestParent::EnableEvent::CancelableRun()
 {
+  // We need to call EnableFMRadio() in main thread
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  bool isEnabled = IsFMRadioOn();
+  if (isEnabled) {
+    nsRefPtr<nsRunnable> event = new PostErrorEvent(mParent, "It's enabled");
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+
+  // TODO read from SettingsAPI
+  FMRadioSettings info;
+  info.upperLimit() = 108000;
+  info.lowerLimit() = 87500;
+  info.spaceType() = 100;
+
+  EnableFMRadio(info);
+
+  nsCOMPtr<nsIAudioManager> audioManager =
+    do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(audioManager, NS_OK);
+
+  audioManager->SetFmRadioAudioEnabled(true);
+
+  // TODO apply path of bug 862899: AudioChannelAgent per process
+
   nsRefPtr<nsRunnable> event = new PostSuccessEvent(mParent);
   NS_DispatchToMainThread(event);
+
+  return NS_OK;
+}
+
+/***********************************
+ *           DisableEvent          *
+ ***********************************/
+FMRadioRequestParent::DisableEvent::DisableEvent(FMRadioRequestParent* aParent)
+  : CancelableRunnable(aParent) { }
+
+FMRadioRequestParent::DisableEvent::~DisableEvent() { }
+
+nsresult
+FMRadioRequestParent::DisableEvent::CancelableRun()
+{
+  LOG("Check Main Thread");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  LOG("It's safe to disable FMRadio in main thread!");
+
+  bool isEnabled = IsFMRadioOn();
+  if (!isEnabled) {
+    nsRefPtr<nsRunnable> event = new PostErrorEvent(mParent, "It's disabled");
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+
+  // Fix Bug 796733. 
+  // DisableFMRadio should be called before SetFmRadioAudioEnabled to prevent
+  // the annoying beep sound.
+  DisableFMRadio();
+
+  nsCOMPtr<nsIAudioManager> audioManager =
+    do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(audioManager, NS_OK);
+
+  audioManager->SetFmRadioAudioEnabled(false);
+
+  nsRefPtr<nsRunnable> event = new PostSuccessEvent(mParent);
+  NS_DispatchToMainThread(event);
+
+  return NS_OK;
+}
+
+/***********************************
+ *        SetFrequencyEvent        *
+ ***********************************/
+FMRadioRequestParent::SetFrequencyEvent::SetFrequencyEvent(
+  FMRadioRequestParent* aParent, FMRadioRequestSetFrequencyParams aParams)
+  : CancelableRunnable(aParent, aParams) { }
+
+FMRadioRequestParent::SetFrequencyEvent::~SetFrequencyEvent() { }
+
+nsresult
+FMRadioRequestParent::SetFrequencyEvent::CancelableRun()
+{
+  LOG("Check Main Thread");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  LOG("It's safe to set frequency in main thread!");
+
+  bool isEnabled = IsFMRadioOn();
+  if (!isEnabled) {
+    nsRefPtr<nsRunnable> event = new PostErrorEvent(mParent, "It's disabled");
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+
+  FMRadioRequestSetFrequencyParams params = mParams;
+  SetFMRadioFrequency(params.frequency());
+
+  nsRefPtr<nsRunnable> event = new PostSuccessEvent(mParent);
+  NS_DispatchToMainThread(event);
+
   return NS_OK;
 }
 
