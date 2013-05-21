@@ -2239,7 +2239,6 @@ ContentParent::AllocPFMRadioRequest(const FMRadioRequestParams& aParams)
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
-
     nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aParams);
     result->Dispatch();
     return result.forget().get();
@@ -2253,7 +2252,8 @@ bool
 ContentParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 {
 #ifdef MOZ_B2G_FM
-    delete aActor;
+    FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);
+    NS_RELEASE(parent);
     return true;
 #else
      MOZ_NOT_REACHED("No support for FMRadio on this platform!");

@@ -210,7 +210,7 @@ FMRadio::Enable(double aFrequency)
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
   nsRefPtr<nsIRunnable> r = new FMRadioRequest(
                                   request,
-                                  FMRadioRequestEnableParams());
+                                  FMRadioRequestEnableParams(aFrequency));
 
   NS_DispatchToMainThread(r);
 
