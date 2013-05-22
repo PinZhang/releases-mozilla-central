@@ -7,14 +7,7 @@
 #include "FMRadioRequestParent.h"
 
 #undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, \
-                                          "PFMRadioParent", \
-                                          ## args)
-#else
-#define LOG(args...)
-#endif
+#define LOG(args...) FM_LOG("PFMRadioParent", args)
 
 // The pref indicates if the device has an internal antenna.
 // If the pref is true, the antanna will be always available.

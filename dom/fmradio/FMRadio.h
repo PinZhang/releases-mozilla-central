@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_fmradio_FMRadio_h
 #define mozilla_dom_fmradio_FMRadio_h
 
+#include "FMRadioCommon.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
