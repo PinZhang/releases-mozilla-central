@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_fmradio_ipc_fmradiorequestchild_h__
 #define mozilla_dom_fmradio_ipc_fmradiorequestchild_h__
 
+#include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
+
 namespace mozilla {
 namespace dom {
 

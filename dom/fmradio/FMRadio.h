@@ -79,7 +79,6 @@ public:
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
-  nsRefPtr<FMRadioChild> mRadioChild;
 };
 
 } // namespace fmradio

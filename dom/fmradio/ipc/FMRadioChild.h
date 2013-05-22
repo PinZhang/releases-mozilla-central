@@ -7,23 +7,20 @@
 #ifndef mozilla_dom_fmradio_ipc_fmradiochild_h__
 #define mozilla_dom_fmradio_ipc_fmradiochild_h__
 
-#include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/fmradio/PFMRadioChild.h"
 
 namespace mozilla {
 namespace dom {
 namespace fmradio {
 
-class FMRadioRequestChild;
-
-class FMRadioChild : nsISupports
-                   , public PFMRadioChild
+class FMRadioChild : public PFMRadioChild
 {
 public:
   FMRadioChild();
   virtual ~FMRadioChild();
 
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioChild)
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
 
   virtual bool
   Recv__delete__() MOZ_OVERRIDE;
@@ -39,10 +36,14 @@ public:
 
   virtual bool
   DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
+
+private:
+  nsAutoRefCnt mRefCnt;
 };
 
 } // namespace fmradio
 } // namespace dom
 } // namespace mozilla
+
 #endif // mozilla_dom_fmradio_ipc_fmradiochild_h__
 

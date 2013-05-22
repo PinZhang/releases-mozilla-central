@@ -17,7 +17,6 @@
 #define LOG(args...)
 #endif
 
-
 namespace mozilla {
 namespace dom {
 namespace fmradio {

@@ -35,18 +35,23 @@ FMRadioParent::~FMRadioParent()
 void
 FMRadioParent::ActorDestroy(ActorDestroyReason aWhy)
 {
+  LOG("ActorDestroy");
   return;
 }
 
 PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
 {
-  return new FMRadioRequestParent(aRequestType);
+  LOG("AllocPFMRadioRequest");
+  nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aRequestType);
+  result->Dispatch();
+  return result.forget().get();
 }
 
 bool
 FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 {
+  LOG("DeallocPFMRadioRequest");
   FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);
   NS_RELEASE(parent);
   return true;
