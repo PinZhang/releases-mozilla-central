@@ -65,9 +65,6 @@ FMRadioChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
   return true;
 }
 
-NS_IMPL_THREADSAFE_ADDREF(FMRadioChild)
-NS_IMPL_THREADSAFE_RELEASE(FMRadioChild)
-
 } // namespace fmradio
 } // namespace dom
 } // namespace mozilla

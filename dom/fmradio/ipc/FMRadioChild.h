@@ -19,9 +19,6 @@ public:
   FMRadioChild();
   virtual ~FMRadioChild();
 
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-
   virtual bool
   Recv__delete__() MOZ_OVERRIDE;
 
