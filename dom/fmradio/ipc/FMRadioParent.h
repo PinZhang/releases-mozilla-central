@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_fmradio_ipc_fmradioparent_h__
 #define mozilla_dom_fmradio_ipc_fmradioparent_h__
 
+#include "FMRadioCommon.h"
 #include "mozilla/dom/fmradio/PFMRadioParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/HalTypes.h"
