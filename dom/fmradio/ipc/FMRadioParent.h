@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/fmradio/PFMRadioParent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/HalTypes.h"
 
 namespace mozilla {
 namespace dom {

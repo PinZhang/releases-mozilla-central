@@ -23,7 +23,6 @@ namespace fmradio {
 class FMRadioChild;
 
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
-                        , public hal::FMRadioObserver
                         , public hal::SwitchObserver
 
 {
@@ -35,7 +34,6 @@ public:
   void Shutdown();
 
   /* Observer Interface */
-  virtual void Notify(const hal::FMRadioOperationInformation& info);
   virtual void Notify(const hal::SwitchEvent& aEvent);
 
   /* WebIDL Interface */
