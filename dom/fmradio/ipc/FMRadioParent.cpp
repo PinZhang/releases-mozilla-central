@@ -16,6 +16,10 @@
 #define LOG(args...)
 #endif
 
+// The pref indicates if the device has an internal antenna.
+// If the pref is true, the antanna will be always available.
+#define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
+
 namespace mozilla {
 namespace dom {
 namespace fmradio {

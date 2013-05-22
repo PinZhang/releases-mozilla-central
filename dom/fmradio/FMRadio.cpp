@@ -53,16 +53,12 @@ FMRadio::FMRadio()
   if (mHasInternalAntenna) {
     LOG("We have an internal antenna.");
   } else {
-    RegisterSwitchObserver(SWITCH_HEADPHONES, this);
     mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
   }
-
-  RegisterFMRadioObserver(this);
 }
 
 FMRadio::~FMRadio()
 {
-  UnregisterFMRadioObserver(this);
   if (!mHasInternalAntenna) {
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
@@ -142,26 +138,6 @@ FMRadio::Notify(const SwitchEvent& aEvent)
   if (mHeadphoneState != aEvent.status()) {
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
-  }
-}
-
-void
-FMRadio::Notify(const FMRadioOperationInformation& info)
-{
-  switch (info.operation())
-  {
-    case FM_RADIO_OPERATION_ENABLE:
-      LOG("FM HW is enabled.");
-      break;
-    case FM_RADIO_OPERATION_DISABLE:
-      LOG("FM HW is disabled.");
-      break;
-    case FM_RADIO_OPERATION_SEEK:
-      LOG("FM HW seek complete.");
-      break;
-    default:
-      MOZ_NOT_REACHED();
-      return;
   }
 }
 

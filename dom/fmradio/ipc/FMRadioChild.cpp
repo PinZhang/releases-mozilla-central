@@ -35,12 +35,14 @@ FMRadioChild::~FMRadioChild()
 bool
 FMRadioChild::RecvEnabled(const bool& aEnabled)
 {
+  LOG("RecvEnabled");
   return true;
 }
 
 bool
 FMRadioChild::RecvFrequencyChanged(const double& aFrequency)
 {
+  LOG("RecvFrequencyChanged");
   return true;
 }
 

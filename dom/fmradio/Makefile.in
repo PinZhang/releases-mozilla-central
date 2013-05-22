@@ -24,6 +24,7 @@ CPPSRCS += \
   FMRadioRequestChild.cpp \
   FMRadioRequestParent.cpp \
   FMRadioChildService.cpp \
+  FMRadioParentService.cpp \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
