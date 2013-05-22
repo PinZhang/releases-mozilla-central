@@ -47,6 +47,7 @@ FMRadioChild::RecvFrequencyChanged(const double& aFrequency)
 bool
 FMRadioChild::Recv__delete__()
 {
+  LOG("Recv__delete__");
   return true;
 }
 
@@ -64,18 +65,8 @@ FMRadioChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
   return true;
 }
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FMRadioChild)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FMRadioChild)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FMRadioChild)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTING_ADDREF(FMRadioChild)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(FMRadioChild)
+NS_IMPL_THREADSAFE_ADDREF(FMRadioChild)
+NS_IMPL_THREADSAFE_RELEASE(FMRadioChild)
 
 } // namespace fmradio
 } // namespace dom

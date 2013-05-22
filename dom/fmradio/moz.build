@@ -22,5 +22,6 @@ EXPORTS.mozilla.dom.fmradio += [
   'FMRadioParent.h',
   'FMRadioRequestChild.h',
   'FMRadioRequestParent.h',
+  'FMRadioChildService.h',
 ]
 
