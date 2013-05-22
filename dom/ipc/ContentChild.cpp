@@ -956,8 +956,7 @@ ContentChild::DeallocPFMRadio(PFMRadioChild* aActor)
 {
 #ifdef MOZ_B2G_FM
     LOG("DeallocPFMRadio");
-    FMRadioChild* child = static_cast<FMRadioChild*>(aActor);
-    NS_RELEASE(child);
+    delete aActor;
     return true;
 #else
     MOZ_NOT_REACHED("No support for FMRadio on this platform!");

@@ -25,7 +25,7 @@ namespace mozilla {
 namespace dom {
 namespace fmradio {
 
-nsRefPtr<FMRadioChild> gFMRadioChild;
+FMRadioChild* gFMRadioChild;
 FMRadioChildService* gFMRadioChildService;
 
 FMRadioChildService::FMRadioChildService()
@@ -38,7 +38,8 @@ FMRadioChildService::~FMRadioChildService()
   // TODO releate static object
   LOG("Destructor");
   gFMRadioChildService = nullptr;
-  NS_RELEASE(gFMRadioChild);
+  // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
+  gFMRadioChild = nullptr;
 }
 
 void
