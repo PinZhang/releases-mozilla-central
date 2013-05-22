@@ -10,6 +10,7 @@
 #include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
 #include "mozilla/dom/fmradio/PFMRadio.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/unused.h"
 
 namespace mozilla {
 namespace dom {
@@ -32,20 +33,22 @@ private:
   nsAutoRefCnt mRefCnt;
   FMRadioRequestType mRequestType;
 
-  class CancelableRunnable : public nsRunnable
+public:
+  class ReplyRunnable : public nsRunnable
   {
   public:
     // FIXME set aParams with default value
-    CancelableRunnable(FMRadioRequestParent* aParent,
-                       FMRadioRequestType aRequestType = FMRadioRequestType())
+    ReplyRunnable(FMRadioRequestParent* aParent)
       : mParent(aParent)
       , mCanceled(false)
-      , mRequestType(aRequestType) { }
+    { }
 
-    virtual ~CancelableRunnable() { }
+    virtual ~ReplyRunnable() { }
 
     NS_IMETHOD Run()
     {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
       nsresult rv = NS_OK;
       if (!mCanceled) {
         rv = CancelableRun();
@@ -59,58 +62,36 @@ private:
       mCanceled = true;
     }
 
-    virtual nsresult CancelableRun() = 0;
+    nsresult CancelableRun()
+    {
+      if (mResponseType.type() == FMRadioResponseType::TSuccessResponse) {
+        SuccessResponse response;
+        unused << mParent->Send__delete__(mParent, response);
+      } else {
+        ErrorResponse response(mError);
+        unused << mParent->Send__delete__(mParent, response);
+      }
+
+      return NS_OK;
+    }
+
+    void SetReply(const FMRadioResponseType& aResponseType)
+    {
+      mResponseType = aResponseType;
+    }
+
+    void SetError(const char* aError)
+    {
+      CopyASCIItoUTF16(aError, mError);
+    }
 
   protected:
     nsRefPtr<FMRadioRequestParent> mParent;
-    FMRadioRequestType mRequestType;
+    FMRadioResponseType mResponseType;
+    nsString mError;
 
   private:
     bool mCanceled;
-  };
-
-  class PostErrorEvent : public CancelableRunnable
-  {
-  public:
-    PostErrorEvent(FMRadioRequestParent* aParent, const char* aError);
-    virtual ~PostErrorEvent();
-    virtual nsresult CancelableRun();
-  private:
-    nsString mError;
-  };
-
-  class PostSuccessEvent : public CancelableRunnable
-  {
-  public:
-    PostSuccessEvent(FMRadioRequestParent* aParent);
-    virtual ~PostSuccessEvent();
-    virtual nsresult CancelableRun();
-  };
-
-  class EnableEvent : public CancelableRunnable
-  {
-  public:
-    EnableEvent(FMRadioRequestParent* aParent,
-                EnableRequest aRequest);
-    virtual ~EnableEvent();
-    virtual nsresult CancelableRun();
-  };
-
-  class DisableEvent : public CancelableRunnable
-  {
-  public:
-    DisableEvent(FMRadioRequestParent* aParent);
-    virtual ~DisableEvent();
-    virtual nsresult CancelableRun();
-  };
-
-  class SetFrequencyEvent : public CancelableRunnable
-  {
-  public:
-    SetFrequencyEvent(FMRadioRequestParent* aParent,
-                      SetFrequencyRequest aRequest);
-    virtual ~SetFrequencyEvent();
-    virtual nsresult CancelableRun();
   };
 };
 
