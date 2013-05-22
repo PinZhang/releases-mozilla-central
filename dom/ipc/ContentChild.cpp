@@ -930,10 +930,19 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
 #endif
 }
 
+#undef LOG
+#if defined(MOZ_WIDGET_GONK)
+#include <android/log.h>
+#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "FMRadio ContentChild" , ## args)
+#else
+#define LOG(args...)
+#endif
+
 PFMRadioChild*
 ContentChild::AllocPFMRadio()
 {
 #ifdef MOZ_B2G_FM
+    LOG("AllocPFMRadio");
     MOZ_NOT_REACHED("No one should be allocating PFMRadioChild actors");
     return nullptr;
 #else
@@ -946,6 +955,7 @@ bool
 ContentChild::DeallocPFMRadio(PFMRadioChild* aActor)
 {
 #ifdef MOZ_B2G_FM
+    LOG("DeallocPFMRadio");
     FMRadioChild* child = static_cast<FMRadioChild*>(aActor);
     NS_RELEASE(child);
     return true;
