@@ -7,18 +7,16 @@
 #include "FMRadioChildService.h"
 #include "FMRadioChild.h"
 #include "mozilla/dom/ContentChild.h"
-#include "DOMRequest.h"
 #include "mozilla/dom/fmradio/FMRadioChild.h"
 #include "mozilla/dom/fmradio/FMRadioRequestChild.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioChildService", args)
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadioChild* gFMRadioChild;
+// TODO release static object
 FMRadioChildService* gFMRadioChildService;
 
 FMRadioChildService::FMRadioChildService()
@@ -28,7 +26,6 @@ FMRadioChildService::FMRadioChildService()
 
 FMRadioChildService::~FMRadioChildService()
 {
-  // TODO releate static object
   LOG("Destructor");
   gFMRadioChildService = nullptr;
   // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
@@ -67,7 +64,4 @@ FMRadioChildService::Get()
   return gFMRadioChildService;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE

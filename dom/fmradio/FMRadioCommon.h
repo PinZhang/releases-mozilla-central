@@ -18,7 +18,9 @@
 #define FM_LOG(args...)
 #endif
 
-#undef LOG
-#define LOG(args...) FM_LOG("FMRadio", args)
+#define BEGIN_FMRADIO_NAMESPACE \
+  namespace mozilla { namespace dom { namespace fmradio {
+#define END_FMRADIO_NAMESPACE \
+  } /* namespace fmradio */ } /* namespace dom */ } /* namespace mozilla */
 
 #endif /* FMRADIOCOMMON_H_ */

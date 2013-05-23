@@ -13,6 +13,7 @@
 #include "nsDOMClassInfo.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/fmradio/FMRadioParent.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioParentService", args)
@@ -20,10 +21,9 @@
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
+// TODO release static object
 FMRadioParentService* gFMRadioParentService;
 
 FMRadioParentService::FMRadioParentService()
@@ -47,6 +47,40 @@ FMRadioParentService::~FMRadioParentService()
 
   UnregisterFMRadioObserver(this);
   gFMRadioParentService = nullptr;
+}
+
+void
+GetAllFMRadioActors(InfallibleTArray<FMRadioParent*>& aActors)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aActors.IsEmpty());
+
+  nsAutoTArray<ContentParent*, 20> contentActors;
+  ContentParent::GetAll(contentActors);
+
+  LOG("%d ContentParent", contentActors.Length());
+
+  for (uint32_t contentIndex = 0;
+       contentIndex < contentActors.Length();
+       contentIndex++)
+  {
+    MOZ_ASSERT(contentActors[contentIndex]);
+
+    AutoInfallibleTArray<PFMRadioParent*, 5> fmRadioActors;
+    contentActors[contentIndex]->ManagedPFMRadioParent(fmRadioActors);
+
+    LOG("%d FMRadioParent for %dth ContentParent", fmRadioActors.Length(), contentIndex);
+
+    for (uint32_t fmRadioIndex = 0;
+         fmRadioIndex < fmRadioActors.Length();
+         fmRadioIndex++)
+    {
+      MOZ_ASSERT(fmRadioActors[fmRadioIndex]);
+      FMRadioParent* actor =
+        static_cast<FMRadioParent*>(fmRadioActors[fmRadioIndex]);
+      aActors.AppendElement(actor);
+    }
+  }
 }
 
 void
@@ -176,18 +210,39 @@ FMRadioParentService::UpdatePowerState()
   if (enabled != mEnabled)
   {
     mEnabled = enabled;
-    // SendEnabled(enabled);
+
+    AutoInfallibleTArray<FMRadioParent*, 10> fmRadioActors;
+    GetAllFMRadioActors(fmRadioActors);
+
+    LOG("We have %d actors to notify.", fmRadioActors.Length());
+    for (uint32_t actorIndex = 0;
+         actorIndex < fmRadioActors.Length();
+         actorIndex++)
+    {
+      unused << fmRadioActors[actorIndex]->SendEnabled(enabled);
+    }
   }
 }
 
-void FMRadioParentService::UpdateFrequency()
+void
+FMRadioParentService::UpdateFrequency()
 {
   int32_t frequency = GetFMRadioFrequency();
   if (mFrequency != frequency)
   {
     mFrequency = frequency;
-    // TODO round and keep decimal precise
-    // SendFrequencyChanged(frequency / 1000.0);
+
+    AutoInfallibleTArray<FMRadioParent*, 10> fmRadioActors;
+    GetAllFMRadioActors(fmRadioActors);
+
+    LOG("We have %d actors to notify.", fmRadioActors.Length());
+    for (uint32_t actorIndex = 0;
+         actorIndex < fmRadioActors.Length();
+         actorIndex++)
+    {
+      // TODO round and keep decimal precise
+      unused << fmRadioActors[actorIndex]->SendFrequencyChanged(frequency);
+    }
   }
 }
 
@@ -208,6 +263,4 @@ FMRadioParentService::Get()
   return gFMRadioParentService;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
+END_FMRADIO_NAMESPACE
