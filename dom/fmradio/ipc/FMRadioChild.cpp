@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
 #include "FMRadioChild.h"
+#include "FMRadioChildService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioChild", args)
@@ -24,16 +25,10 @@ FMRadioChild::~FMRadioChild()
 }
 
 bool
-FMRadioChild::RecvEnabled(const bool& aEnabled)
+FMRadioChild::RecvNotify(const FMRadioEventType& aType)
 {
-  LOG("RecvEnabled");
-  return true;
-}
-
-bool
-FMRadioChild::RecvFrequencyChanged(const double& aFrequency)
-{
-  LOG("RecvFrequencyChanged");
+  LOG("RecvNotify");
+  FMRadioChildService::Get()->DistributeEvent(aType);
   return true;
 }
 

@@ -219,7 +219,8 @@ FMRadioParentService::UpdatePowerState()
          actorIndex < fmRadioActors.Length();
          actorIndex++)
     {
-      unused << fmRadioActors[actorIndex]->SendEnabled(enabled);
+      StateChangedEvent event(enabled);
+      unused << fmRadioActors[actorIndex]->SendNotify(event);
     }
   }
 }
@@ -241,7 +242,8 @@ FMRadioParentService::UpdateFrequency()
          actorIndex++)
     {
       // TODO round and keep decimal precise
-      unused << fmRadioActors[actorIndex]->SendFrequencyChanged(frequency);
+      FrequencyChangedEvent event(frequency);
+      unused << fmRadioActors[actorIndex]->SendNotify(event);
     }
   }
 }

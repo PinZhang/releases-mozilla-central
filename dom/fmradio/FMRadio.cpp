@@ -46,11 +46,13 @@ FMRadio::FMRadio()
     LOG("We have an internal antenna.");
   } else {
     mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
+    RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 }
 
 FMRadio::~FMRadio()
 {
+  LOG("FMRadio is destructed.");
   if (!mHasInternalAntenna) {
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
@@ -105,17 +107,36 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(FMRadioRequest)
 
 NS_IMPL_CYCLE_COLLECTION_1(FMRadioRequest, mRequest)
 
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
+
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
 {
   LOG("Init");
   BindToOwner(aWindow);
+
+  if (!IsMainProcess()) {
+    LOG("Register Handler");
+    FMRadioChildService::Get()->RegisterHandler(this);
+  } else {
+    LOG("Only OOP is support now.");
+  }
 }
 
 void
 FMRadio::Shutdown()
 {
   LOG("Shutdown");
+  if (!IsMainProcess()) {
+    LOG("Unregister Handler");
+    FMRadioChildService::Get()->UnregisterHandler(this);
+  } else {
+    LOG("Only OOP is support now.");
+  }
 }
 
 JSObject*
@@ -130,6 +151,29 @@ FMRadio::Notify(const SwitchEvent& aEvent)
   if (mHeadphoneState != aEvent.status()) {
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
+  }
+}
+
+void
+FMRadio::Notify(const FMRadioEventType& aType)
+{
+  switch(aType.type())
+  {
+    case FMRadioEventType::TFrequencyChangedEvent:
+    {
+      FrequencyChangedEvent event = aType;
+      LOG("Frequency is changed to: %f", event.frequency());
+      break;
+    }
+    case FMRadioEventType::TStateChangedEvent:
+    {
+      StateChangedEvent event = aType;
+      LOG("Power state is changed to: %d", event.enabled());
+      break;
+    }
+    default:
+      MOZ_NOT_REACHED();
+      break;
   }
 }
 
