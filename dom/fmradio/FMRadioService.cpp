@@ -25,7 +25,7 @@ BEGIN_FMRADIO_NAMESPACE
 
 // TODO release static object
 FMRadioService* gFMRadioService;
-FMRadioEventObserverList* gObserverList;
+FMRadioEventObserverList* gEventObserverList;
 
 FMRadioService::FMRadioService()
   : mFrequency(0)
@@ -47,23 +47,23 @@ FMRadioService::~FMRadioService()
   LOG("destructor");
 
   gFMRadioService = nullptr;
-  gObserverList = nullptr;
+  gEventObserverList = nullptr;
 }
 
 void
 FMRadioService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Register handler");
-  gObserverList->AddObserver(aHandler);
+  gEventObserverList->AddObserver(aHandler);
 }
 
 void
 FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Unregister handler");
-  gObserverList->RemoveObserver(aHandler);
+  gEventObserverList->RemoveObserver(aHandler);
 
-  if (gObserverList->Length() == 0)
+  if (gEventObserverList->Length() == 0)
   {
     LOG("No observer in the list, destroy myself");
     delete this;
@@ -198,7 +198,7 @@ FMRadioService::UpdatePowerState()
   if (enabled != mEnabled)
   {
     mEnabled = enabled;
-    gObserverList->Broadcast(StateChangedEvent(enabled));
+    gEventObserverList->Broadcast(StateChangedEvent(enabled));
   }
 }
 
@@ -210,14 +210,20 @@ FMRadioService::UpdateFrequency()
   {
     mFrequency = frequency;
     // TODO round and keep decimal precise
-    gObserverList->Broadcast(FrequencyChangedEvent(frequency));
+    gEventObserverList->Broadcast(FrequencyChangedEvent(frequency));
   }
 }
 
 void
 FMRadioService::DistributeEvent(const FMRadioEventType& aType)
 {
-  gObserverList->Broadcast(aType);
+  gEventObserverList->Broadcast(aType);
+}
+
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
 }
 
 // static

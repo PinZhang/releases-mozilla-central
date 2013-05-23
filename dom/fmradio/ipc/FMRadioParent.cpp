@@ -69,6 +69,9 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
       unused << this->SendNotify(aType);
       break;
     }
+    default:
+      NS_RUNTIMEABORT("not reached");
+      break;
   }
 }
 
