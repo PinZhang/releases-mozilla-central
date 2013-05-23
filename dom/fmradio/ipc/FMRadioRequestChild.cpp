@@ -5,14 +5,11 @@
 
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "FMRadioRequestChild.h"
-#include "DOMRequest.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestChild", args)
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadioRequestChild::FMRadioRequestChild(DOMRequest* aRequest)
   : mRequest(aRequest)
@@ -53,7 +50,4 @@ FMRadioRequestChild::Recv__delete__(const FMRadioResponseType& aType)
   return true;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE

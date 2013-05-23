@@ -9,13 +9,9 @@
 
 #include "FMRadioCommon.h"
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
+#include "DOMRequest.h"
 
-namespace mozilla {
-namespace dom {
-
-class DOMRequest;
-
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioRequestChild : public PFMRadioRequestChild
 {
@@ -30,9 +26,6 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
+END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_ipc_fmradiorequestchild_h__
-

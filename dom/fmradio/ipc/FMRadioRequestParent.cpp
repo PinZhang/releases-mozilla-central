@@ -9,9 +9,7 @@
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestParent", args)
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aRequestType)
   : mRequestType(aRequestType)
@@ -87,7 +85,4 @@ FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 NS_IMPL_THREADSAFE_ADDREF(FMRadioRequestParent)
 NS_IMPL_THREADSAFE_RELEASE(FMRadioRequestParent)
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE

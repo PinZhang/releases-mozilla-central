@@ -12,9 +12,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/HalTypes.h"
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 class PFMRadioRequestParent;
 
@@ -33,9 +31,7 @@ public:
   DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
 };
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
+END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_ipc_fmradioparent_h__
 

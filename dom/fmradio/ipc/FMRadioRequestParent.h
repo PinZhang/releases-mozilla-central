@@ -13,9 +13,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioRequestParent : public PFMRadioRequestParent
 {
@@ -96,9 +94,6 @@ public:
   };
 };
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
+END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_ipc_fmradiorequestparent_h__
-

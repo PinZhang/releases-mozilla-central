@@ -9,9 +9,7 @@
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioChild", args)
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadioChild::FMRadioChild()
 {
@@ -60,7 +58,4 @@ FMRadioChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
   return true;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE

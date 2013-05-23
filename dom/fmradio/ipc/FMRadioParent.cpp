@@ -13,9 +13,7 @@
 // If the pref is true, the antanna will be always available.
 #define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadioParent::FMRadioParent()
 {
@@ -54,7 +52,4 @@ FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
   return true;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE

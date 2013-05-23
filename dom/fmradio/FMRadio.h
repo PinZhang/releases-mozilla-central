@@ -10,16 +10,12 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
+#include "DOMRequest.h"
 
 class nsPIDOMWindow;
 class nsIScriptContext;
 
-namespace mozilla {
-namespace dom {
-
-class DOMRequest;
-
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
 
@@ -80,9 +76,6 @@ private:
   bool mHasInternalAntenna;
 };
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
+END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_FMRadio_h
-
