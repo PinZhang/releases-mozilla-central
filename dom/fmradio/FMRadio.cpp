@@ -10,7 +10,6 @@
 #include "mozilla/HalTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
-#include "DOMRequest.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/fmradio/FMRadioChildService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
@@ -31,9 +30,7 @@
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
-namespace mozilla {
-namespace dom {
-namespace fmradio {
+BEGIN_FMRADIO_NAMESPACE
 
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
@@ -243,7 +240,4 @@ FMRadio::CancelSeek()
   return NULL;
 }
 
-} // namespace fmradio
-} // namespace dom
-} // namespace mozilla
-
+END_FMRADIO_NAMESPACE
