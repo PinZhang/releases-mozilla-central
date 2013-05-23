@@ -18,6 +18,7 @@ MODULE = 'dom'
 
 EXPORTS.mozilla.dom.fmradio += [
   'FMRadioCommon.h',
+  'FMRadioService.h',
   'FMRadioChild.h',
   'FMRadioParent.h',
   'FMRadioRequestChild.h',

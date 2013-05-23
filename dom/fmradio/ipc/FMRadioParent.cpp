@@ -4,7 +4,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadioParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "FMRadioRequestParent.h"
+#include "FMRadioService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioParent", args)
@@ -19,12 +21,16 @@ FMRadioParent::FMRadioParent()
 {
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioParent);
+
+  FMRadioService::Get()->RegisterObserver(this);
 }
 
 FMRadioParent::~FMRadioParent()
 {
   LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioParent);
+
+  FMRadioService::Get()->UnregisterObserver(this);
 }
 
 void
@@ -50,6 +56,20 @@ FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
   FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);
   NS_RELEASE(parent);
   return true;
+}
+
+void
+FMRadioParent::Notify(const FMRadioEventType& aType)
+{
+  switch(aType.type())
+  {
+    case FMRadioEventType::TStateChangedEvent:
+    case FMRadioEventType::TFrequencyChangedEvent:
+    {
+      unused << this->SendNotify(aType);
+      break;
+    }
+  }
 }
 
 END_FMRADIO_NAMESPACE
