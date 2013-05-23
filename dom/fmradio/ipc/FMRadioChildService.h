@@ -14,6 +14,7 @@ BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
 class FMRadioRequestType;
+class FMRadioEventType;
 
 class FMRadioChildService
 {
@@ -22,7 +23,17 @@ class FMRadioChildService
 public:
   static FMRadioChildService* Get();
 
+  /* Called by FMRadioRequest */
   void SendRequest(DOMRequest* aRequest, FMRadioRequestType aType);
+
+  /* Called by FMRadioChild when RecvNotify() is called*/
+  void DistributeEvent(const FMRadioEventType& aType);
+
+  /* Called when mozFMRadio is inited */
+  void RegisterHandler(FMRadioEventObserver* aHandler);
+
+  /* Called when mozFMRadio is shutdown */
+  void UnregisterHandler(FMRadioEventObserver* aHandler);
 
 protected:
   FMRadioChildService();

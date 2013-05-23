@@ -18,9 +18,11 @@ class nsIScriptContext;
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
+class FMRadioEventType;
 
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::SwitchObserver
+                        , public FMRadioEventObserver
 
 {
 public:
@@ -32,6 +34,7 @@ public:
 
   /* Observer Interface */
   virtual void Notify(const hal::SwitchEvent& aEvent);
+  virtual void Notify(const FMRadioEventType& aType);
 
   /* WebIDL Interface */
   nsPIDOMWindow * GetParentObject() const

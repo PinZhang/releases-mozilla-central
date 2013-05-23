@@ -22,19 +22,13 @@ public:
   Recv__delete__() MOZ_OVERRIDE;
 
   virtual bool
-  RecvEnabled(const bool& aEnabled) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvFrequencyChanged(const double& aFrequency) MOZ_OVERRIDE;
+  RecvNotify(const FMRadioEventType& aType);
 
   virtual PFMRadioRequestChild*
   AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
-
-private:
-  nsAutoRefCnt mRefCnt;
 };
 
 END_FMRADIO_NAMESPACE
