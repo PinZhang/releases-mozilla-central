@@ -4,11 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/Observer.h"
-#include "nsXULAppAPI.h"
-
 #ifndef FMRADIOCOMMON_H_
 #define FMRADIOCOMMON_H_
+
+#include "mozilla/Observer.h"
 
 #undef FM_LOG
 #if defined(MOZ_WIDGET_GONK)
@@ -28,12 +27,6 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-bool
-IsMainProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 class FMRadioEventType;
 
 typedef mozilla::Observer<FMRadioEventType>     FMRadioEventObserver;
@@ -42,3 +35,4 @@ typedef mozilla::ObserverList<FMRadioEventType> FMRadioEventObserverList;
 END_FMRADIO_NAMESPACE
 
 #endif /* FMRADIOCOMMON_H_ */
+

@@ -17,7 +17,7 @@ BEGIN_FMRADIO_NAMESPACE
 
 FMRadioChild* gFMRadioChild = nullptr;
 FMRadioChildService* gFMRadioChildService = nullptr;
-FMRadioEventObserverList* gObserverList = nullptr;
+FMRadioEventObserverList* gChildEventObserverList = nullptr;
 
 FMRadioChildService::FMRadioChildService()
 {
@@ -30,7 +30,7 @@ FMRadioChildService::~FMRadioChildService()
   gFMRadioChildService = nullptr;
   // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
   gFMRadioChild = nullptr;
-  gObserverList = nullptr;
+  gChildEventObserverList = nullptr;
 }
 
 void FMRadioChildService::Enable(double aFrequency, ReplyRunnable* aRunnable)
@@ -62,31 +62,31 @@ void FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
 void
 FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
 {
-  LOG("We have %d observer to broadcast the event", gObserverList->Length());
-  gObserverList->Broadcast(aType);
+  LOG("We have %d observer to broadcast the event", gChildEventObserverList->Length());
+  gChildEventObserverList->Broadcast(aType);
 }
 
 void
 FMRadioChildService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
-  gObserverList->AddObserver(aHandler);
-  LOG("Register observer, we have %d observers", gObserverList->Length());
+  gChildEventObserverList->AddObserver(aHandler);
+  LOG("Register observer, we have %d observers", gChildEventObserverList->Length());
 }
 
 void
 FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Unregister observer");
-  gObserverList->RemoveObserver(aHandler);
+  gChildEventObserverList->RemoveObserver(aHandler);
 
-  if (gObserverList->Length() == 0)
+  if (gChildEventObserverList->Length() == 0)
   {
     LOG("NO handler anymore.");
     delete this;
   }
   else
   {
-    LOG("We have %d observer left", gObserverList->Length());
+    LOG("We have %d observer left", gChildEventObserverList->Length());
   }
 }
 
@@ -116,8 +116,8 @@ FMRadioChildService::Get()
   LOG("Create gFMRadioChildService");
   gFMRadioChildService = new FMRadioChildService();
 
-  LOG("Init gObserverList");
-  gObserverList = new FMRadioEventObserverList();
+  LOG("Init gChildEventObserverList");
+  gChildEventObserverList = new FMRadioEventObserverList();
 
   LOG("Init gFMRadioChild");
   gFMRadioChild = new FMRadioChild();
