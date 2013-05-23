@@ -43,14 +43,8 @@ public:
     mResponseType = aResponseType;
   }
 
-  void SetError(const char* aError)
-  {
-    CopyASCIItoUTF16(aError, mError);
-  }
-
 protected:
   FMRadioResponseType mResponseType;
-  nsString mError;
 
 private:
   bool mCanceled;

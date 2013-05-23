@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Observer.h"
+#include "nsXULAppAPI.h"
 
 #ifndef FMRADIOCOMMON_H_
 #define FMRADIOCOMMON_H_
@@ -26,6 +27,12 @@
   } /* namespace fmradio */ } /* namespace dom */ } /* namespace mozilla */
 
 BEGIN_FMRADIO_NAMESPACE
+
+bool
+IsMainProcess()
+{
+  return XRE_GetProcessType() == GeckoProcessType_Default;
+}
 
 class FMRadioEventType;
 

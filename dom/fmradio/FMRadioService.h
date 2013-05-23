@@ -16,27 +16,46 @@ class FMRadioParent;
 class FMRadioRequestParent;
 class ReplyRunnable;
 
-class FMRadioService : public hal::FMRadioObserver
+class IFMRadioService
+{
+public:
+  virtual ~IFMRadioService() { }
+
+  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
+  virtual void Disable(ReplyRunnable* aRunnable) = 0;
+  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) = 0;
+  virtual void Seek(bool upward, ReplyRunnable* aRunnable) = 0;
+  virtual void CancelSeek(ReplyRunnable* aRunnable) = 0;
+
+  virtual void DistributeEvent(const FMRadioEventType& aType) = 0;
+
+  virtual void RegisterHandler(FMRadioEventObserver* aHandler) = 0;
+  virtual void UnregisterHandler(FMRadioEventObserver* aHandler) = 0;
+};
+
+class FMRadioService : public IFMRadioService
+                     , public hal::FMRadioObserver
 {
   friend class FMRadioParent;
   friend class FMRadioRequestParent;
 
 public:
-  static FMRadioService* Get();
-
-  void Enable(double aFrequency, ReplyRunnable* aRunnable);
-  void Disable(ReplyRunnable* aRunnable);
-  void SetFrequency(double frequency, ReplyRunnable* aRunnable);
-  void Seek(bool upward, ReplyRunnable* aRunnable);
-  void CancelSeek(ReplyRunnable* aRunnable);
-
-  void DistributeEvent(const FMRadioEventType& aType);
+  static IFMRadioService* Get();
 
   /* Observer Interface */
   virtual void Notify(const hal::FMRadioOperationInformation& info);
 
-  void RegisterObserver(FMRadioEventObserver* aHandler);
-  void UnregisterObserver(FMRadioEventObserver* aHandler);
+  /* IFMRadioService interfaces */
+  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
+  virtual void Disable(ReplyRunnable* aRunnable);
+  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable);
+  virtual void Seek(bool upward, ReplyRunnable* aRunnable);
+  virtual void CancelSeek(ReplyRunnable* aRunnable);
+
+  virtual void DistributeEvent(const FMRadioEventType& aType);
+
+  virtual void RegisterHandler(FMRadioEventObserver* aHandler);
+  virtual void UnregisterHandler(FMRadioEventObserver* aHandler);
 
 private:
   FMRadioService();
