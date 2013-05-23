@@ -15,9 +15,9 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioChild* gFMRadioChild;
-// TODO release static object
-FMRadioChildService* gFMRadioChildService;
+FMRadioChild* gFMRadioChild = nullptr;
+FMRadioChildService* gFMRadioChildService = nullptr;
+FMRadioEventObserverList* gObserverList = nullptr;
 
 FMRadioChildService::FMRadioChildService()
 {
@@ -30,13 +30,43 @@ FMRadioChildService::~FMRadioChildService()
   gFMRadioChildService = nullptr;
   // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
   gFMRadioChild = nullptr;
+  gObserverList = nullptr;
+}
+
+void
+FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
+{
+  LOG("We have %d observer to broadcast the event", gObserverList->Length());
+  gObserverList->Broadcast(aType);
+}
+
+void
+FMRadioChildService::RegisterHandler(FMRadioEventObserver* aHandler)
+{
+  gObserverList->AddObserver(aHandler);
+  LOG("Register observer, we have %d observers", gObserverList->Length());
+}
+
+void
+FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
+{
+  LOG("Unregister observer");
+  gObserverList->RemoveObserver(aHandler);
+
+  if (gObserverList->Length() == 0)
+  {
+    LOG("NO handler anymore.");
+    delete this;
+  }
+  else
+  {
+    LOG("We have %d observer left", gObserverList->Length());
+  }
 }
 
 void
 FMRadioChildService::SendRequest(DOMRequest* aRequest, FMRadioRequestType aType)
 {
-  MOZ_ASSERT(gFMRadioChild);
-
   PFMRadioRequestChild* child = new FMRadioRequestChild(aRequest);
   gFMRadioChild->SendPFMRadioRequestConstructor(child, aType);
   LOG("Request is sent.");
@@ -53,13 +83,18 @@ FMRadioChildService::Get()
     return gFMRadioChildService;
   }
 
-  LOG("Create gFMRadioChildService");
+  LOG("Create gFMRadioChild");
   MOZ_ASSERT(!gFMRadioChild);
 
+  LOG("Create gFMRadioChildService");
+  gFMRadioChildService = new FMRadioChildService();
+
+  LOG("Init gObserverList");
+  gObserverList = new FMRadioEventObserverList();
+
+  LOG("Init gFMRadioChild");
   gFMRadioChild = new FMRadioChild();
   ContentChild::GetSingleton()->SendPFMRadioConstructor(gFMRadioChild);
-
-  gFMRadioChildService = new FMRadioChildService();
 
   return gFMRadioChildService;
 }

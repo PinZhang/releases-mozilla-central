@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Observer.h"
+
 #ifndef FMRADIOCOMMON_H_
 #define FMRADIOCOMMON_H_
 
@@ -22,5 +24,14 @@
   namespace mozilla { namespace dom { namespace fmradio {
 #define END_FMRADIO_NAMESPACE \
   } /* namespace fmradio */ } /* namespace dom */ } /* namespace mozilla */
+
+BEGIN_FMRADIO_NAMESPACE
+
+class FMRadioEventType;
+
+typedef mozilla::Observer<FMRadioEventType>     FMRadioEventObserver;
+typedef mozilla::ObserverList<FMRadioEventType> FMRadioEventObserverList;
+
+END_FMRADIO_NAMESPACE
 
 #endif /* FMRADIOCOMMON_H_ */
