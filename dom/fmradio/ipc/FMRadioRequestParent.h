@@ -46,14 +46,7 @@ private:
 
     nsresult CancelableRun()
     {
-      if (mResponseType.type() == FMRadioResponseType::TSuccessResponse) {
-        SuccessResponse response;
-        unused << mParent->Send__delete__(mParent, response);
-      } else {
-        ErrorResponse response(mError);
-        unused << mParent->Send__delete__(mParent, response);
-      }
-
+      unused << mParent->Send__delete__(mParent, mResponseType);
       return NS_OK;
     }
 

@@ -11,7 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/fmradio/FMRadioChildService.h"
+#include "mozilla/dom/fmradio/FMRadioService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
 
 #undef LOG
@@ -58,44 +58,43 @@ FMRadio::~FMRadio()
   }
 }
 
-class FMRadioRequest MOZ_FINAL : public nsIRunnable
+class FMRadioRequest MOZ_FINAL : public ReplyRunnable
 {
 public:
-  FMRadioRequest(DOMRequest* aRequest,
-                 FMRadioRequestType aRequestType)
-    : mRequest(aRequest)
-    , mRequestType(aRequestType) {}
+  FMRadioRequest(DOMRequest* aRequest)
+    : mRequest(aRequest) { }
 
-  virtual ~FMRadioRequest() {}
+  virtual ~FMRadioRequest() { }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioRequest)
 
-  NS_IMETHOD Run()
+  NS_IMETHOD CancelableRun()
   {
-    switch (mRequestType.type())
+    switch (mResponseType.type())
     {
-      case FMRadioRequestType::TEnableRequest:
-      case FMRadioRequestType::TDisableRequest:
-      case FMRadioRequestType::TSetFrequencyRequest:
-      case FMRadioRequestType::TCancelSeekRequest:
-      case FMRadioRequestType::TSeekRequest:
+      case FMRadioResponseType::TErrorResponse:
       {
-        LOG("FMRadioRequest: send request");
-        FMRadioChildService::Get()->SendRequest(mRequest, mRequestType);
+        ErrorResponse response = mResponseType;
+        mRequest->FireError(response.error());
+        break;
+      }
+      case FMRadioResponseType::TSuccessResponse:
+      {
+        // FIXME create a meaningfull result
+        JS::Value result = JS_NumberValue(1);
+        mRequest->FireSuccess(result);
         break;
       }
       default:
         NS_RUNTIMEABORT("not reached");
         break;
     }
-
     return NS_OK;
   }
 
 private:
   nsRefPtr<DOMRequest> mRequest;
-  FMRadioRequestType mRequestType;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FMRadioRequest)
@@ -107,36 +106,21 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(FMRadioRequest)
 
 NS_IMPL_CYCLE_COLLECTION_1(FMRadioRequest, mRequest)
 
-bool
-IsMainProcess()
-{
-  return XRE_GetProcessType() == GeckoProcessType_Default;
-}
-
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
 {
   LOG("Init");
   BindToOwner(aWindow);
 
-  if (!IsMainProcess()) {
-    LOG("Register Handler");
-    FMRadioChildService::Get()->RegisterHandler(this);
-  } else {
-    LOG("Only OOP is support now.");
-  }
+  LOG("Register Handler");
+  FMRadioService::Get()->RegisterHandler(this);
 }
 
 void
 FMRadio::Shutdown()
 {
-  LOG("Shutdown");
-  if (!IsMainProcess()) {
-    LOG("Unregister Handler");
-    FMRadioChildService::Get()->UnregisterHandler(this);
-  } else {
-    LOG("Only OOP is support now.");
-  }
+  LOG("Shutdown, Unregister Handler");
+  FMRadioService::Get()->UnregisterHandler(this);
 }
 
 JSObject*
@@ -224,10 +208,9 @@ FMRadio::Enable(double aFrequency)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                               EnableRequest(aFrequency));
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
 
-  NS_DispatchToMainThread(r);
+  FMRadioService::Get()->Enable(aFrequency, r);
 
   return request.forget();
 }
@@ -242,9 +225,9 @@ FMRadio::Disable()
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                               DisableRequest());
-  NS_DispatchToMainThread(r);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+
+  FMRadioService::Get()->Disable(r);
 
   return request.forget();
 }
@@ -259,9 +242,9 @@ FMRadio::SetFrequency(double aFrequency)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<nsIRunnable> r = new FMRadioRequest(request,
-                                               SetFrequencyRequest(aFrequency));
-  NS_DispatchToMainThread(r);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+
+  FMRadioService::Get()->SetFrequency(aFrequency, r);
 
   return request.forget();
 }
@@ -269,19 +252,53 @@ FMRadio::SetFrequency(double aFrequency)
 already_AddRefed<DOMRequest>
 FMRadio::SeekUp()
 {
-  return nullptr;
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+
+  FMRadioService::Get()->Seek(true, r);
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
 FMRadio::SeekDown()
 {
-  return NULL;
+
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+
+  FMRadioService::Get()->Seek(false, r);
+
+  return request.forget();
 }
 
 already_AddRefed<DOMRequest>
 FMRadio::CancelSeek()
 {
-  return NULL;
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+
+  FMRadioService::Get()->CancelSeek(r);
+
+  return request.forget();
 }
 
 END_FMRADIO_NAMESPACE

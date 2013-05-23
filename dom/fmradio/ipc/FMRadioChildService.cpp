@@ -33,6 +33,32 @@ FMRadioChildService::~FMRadioChildService()
   gObserverList = nullptr;
 }
 
+void FMRadioChildService::Enable(double aFrequency, ReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, EnableRequest(aFrequency));
+}
+
+void FMRadioChildService::Disable(ReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, DisableRequest());
+}
+
+void FMRadioChildService::SetFrequency(double aFrequency,
+                                       ReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, SetFrequencyRequest(aFrequency));
+}
+
+void FMRadioChildService::Seek(bool upward, ReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, SeekRequest(upward));
+}
+
+void FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, CancelSeekRequest());
+}
+
 void
 FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
 {
@@ -65,9 +91,10 @@ FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
 }
 
 void
-FMRadioChildService::SendRequest(DOMRequest* aRequest, FMRadioRequestType aType)
+FMRadioChildService::SendRequest(ReplyRunnable* aReplyRunnable,
+                                 FMRadioRequestType aType)
 {
-  PFMRadioRequestChild* child = new FMRadioRequestChild(aRequest);
+  PFMRadioRequestChild* child = new FMRadioRequestChild(aReplyRunnable);
   gFMRadioChild->SendPFMRadioRequestConstructor(child, aType);
   LOG("Request is sent.");
 }
