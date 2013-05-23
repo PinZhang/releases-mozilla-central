@@ -17,6 +17,7 @@ BEGIN_FMRADIO_NAMESPACE
 class PFMRadioRequestParent;
 
 class FMRadioParent : public PFMRadioParent
+                    , public FMRadioEventObserver
 {
 public:
   FMRadioParent();
@@ -29,6 +30,9 @@ public:
 
   virtual bool
   DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
+
+  /* Observer Interface */
+  virtual void Notify(const FMRadioEventType& aType);
 };
 
 END_FMRADIO_NAMESPACE

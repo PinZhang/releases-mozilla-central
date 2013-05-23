@@ -12,6 +12,7 @@
 #include "mozilla/dom/fmradio/PFMRadio.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
+#include "ReplyRunnable.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
@@ -32,34 +33,16 @@ private:
   nsAutoRefCnt mRefCnt;
   FMRadioRequestType mRequestType;
 
-public:
-  class ReplyRunnable : public nsRunnable
+private:
+  class ParentReplyRunnable : public ReplyRunnable
   {
   public:
-    // FIXME set aParams with default value
-    ReplyRunnable(FMRadioRequestParent* aParent)
-      : mParent(aParent)
-      , mCanceled(false)
+    ParentReplyRunnable(FMRadioRequestParent* aParent)
+      : ReplyRunnable()
+      , mParent(aParent)
     { }
 
-    virtual ~ReplyRunnable() { }
-
-    NS_IMETHOD Run()
-    {
-      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-      nsresult rv = NS_OK;
-      if (!mCanceled) {
-        rv = CancelableRun();
-      }
-
-      return rv;
-    }
-
-    void Cancel()
-    {
-      mCanceled = true;
-    }
+    virtual ~ParentReplyRunnable() { }
 
     nsresult CancelableRun()
     {
@@ -74,23 +57,8 @@ public:
       return NS_OK;
     }
 
-    void SetReply(const FMRadioResponseType& aResponseType)
-    {
-      mResponseType = aResponseType;
-    }
-
-    void SetError(const char* aError)
-    {
-      CopyASCIItoUTF16(aError, mError);
-    }
-
-  protected:
-    nsRefPtr<FMRadioRequestParent> mParent;
-    FMRadioResponseType mResponseType;
-    nsString mError;
-
   private:
-    bool mCanceled;
+    nsRefPtr<FMRadioRequestParent> mParent;
   };
 };
 

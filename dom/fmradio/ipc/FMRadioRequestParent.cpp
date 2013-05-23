@@ -4,15 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadioRequestParent.h"
-#include "FMRadioParentService.h"
+#include "FMRadioService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestParent", args)
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aRequestType)
-  : mRequestType(aRequestType)
+FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aType)
+  : mRequestType(aType)
 {
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
@@ -27,41 +27,41 @@ FMRadioRequestParent::Dispatch()
     {
       LOG("Call Enable");
       EnableRequest request = mRequestType;
-      nsRefPtr<ReplyRunnable> replyRunnable = new ReplyRunnable(this);
-      FMRadioParentService::Get()->Enable(request.frequency(),
-                                          replyRunnable.forget().get());
+      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
+      FMRadioService::Get()->Enable(request.frequency(),
+                                    replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TDisableRequest:
     {
       LOG("Call Disable");
-      nsRefPtr<ReplyRunnable> replyRunnable = new ReplyRunnable(this);
-      FMRadioParentService::Get()->Disable(replyRunnable.forget().get());
+      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
+      FMRadioService::Get()->Disable(replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TSetFrequencyRequest:
     {
       LOG("Call SetFrequency");
       SetFrequencyRequest request = mRequestType;
-      nsRefPtr<ReplyRunnable> replyRunnable = new ReplyRunnable(this);
-      FMRadioParentService::Get()->SetFrequency(request.frequency(),
-                                                replyRunnable.forget().get());
+      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
+      FMRadioService::Get()->SetFrequency(request.frequency(),
+                                          replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TSeekRequest:
     {
       LOG("Call Seek");
       SeekRequest request = mRequestType;
-      nsRefPtr<ReplyRunnable> replyRunnable = new ReplyRunnable(this);
-      FMRadioParentService::Get()->Seek(request.upward(),
-                                        replyRunnable.forget().get());
+      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
+      FMRadioService::Get()->Seek(request.upward(),
+                                  replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TCancelSeekRequest:
     {
       LOG("Call CancelSeek");
-      nsRefPtr<ReplyRunnable> replyRunnable = new ReplyRunnable(this);
-      FMRadioParentService::Get()->CancelSeek(replyRunnable.forget().get());
+      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
+      FMRadioService::Get()->CancelSeek(replyRunnable.forget().get());
       break;
     }
     default:

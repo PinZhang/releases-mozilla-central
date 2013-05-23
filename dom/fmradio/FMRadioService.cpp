@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FMRadioParentService.h"
+#include "FMRadioService.h"
 // FIXME Why not "ContentParent.h"?
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Hal.h"
@@ -13,10 +13,9 @@
 #include "nsDOMClassInfo.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/dom/fmradio/FMRadioParent.h"
 
 #undef LOG
-#define LOG(args...) FM_LOG("PFMRadioParentService", args)
+#define LOG(args...) FM_LOG("PFMRadioService", args)
 
 using namespace mozilla::hal;
 using mozilla::Preferences;
@@ -24,9 +23,10 @@ using mozilla::Preferences;
 BEGIN_FMRADIO_NAMESPACE
 
 // TODO release static object
-FMRadioParentService* gFMRadioParentService;
+FMRadioService* gFMRadioService;
+FMRadioEventObserverList* gObserverList;
 
-FMRadioParentService::FMRadioParentService()
+FMRadioService::FMRadioService()
   : mFrequency(0)
 {
   LOG("constructor");
@@ -41,50 +41,37 @@ FMRadioParentService::FMRadioParentService()
   RegisterFMRadioObserver(this);
 }
 
-FMRadioParentService::~FMRadioParentService()
+FMRadioService::~FMRadioService()
 {
   LOG("destructor");
 
-  UnregisterFMRadioObserver(this);
-  gFMRadioParentService = nullptr;
+  gFMRadioService = nullptr;
+  gObserverList = nullptr;
 }
 
 void
-GetAllFMRadioActors(InfallibleTArray<FMRadioParent*>& aActors)
+FMRadioService::RegisterObserver(FMRadioEventObserver* aHandler)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aActors.IsEmpty());
+  LOG("Register handler");
+  gObserverList->AddObserver(aHandler);
+}
 
-  nsAutoTArray<ContentParent*, 20> contentActors;
-  ContentParent::GetAll(contentActors);
+void
+FMRadioService::UnregisterObserver(FMRadioEventObserver* aHandler)
+{
+  LOG("Unregister handler");
+  gObserverList->RemoveObserver(aHandler);
 
-  LOG("%d ContentParent", contentActors.Length());
-
-  for (uint32_t contentIndex = 0;
-       contentIndex < contentActors.Length();
-       contentIndex++)
+  if (gObserverList->Length() == 0)
   {
-    MOZ_ASSERT(contentActors[contentIndex]);
-
-    AutoInfallibleTArray<PFMRadioParent*, 5> fmRadioActors;
-    contentActors[contentIndex]->ManagedPFMRadioParent(fmRadioActors);
-
-    LOG("%d FMRadioParent for %dth ContentParent", fmRadioActors.Length(), contentIndex);
-
-    for (uint32_t fmRadioIndex = 0;
-         fmRadioIndex < fmRadioActors.Length();
-         fmRadioIndex++)
-    {
-      MOZ_ASSERT(fmRadioActors[fmRadioIndex]);
-      FMRadioParent* actor =
-        static_cast<FMRadioParent*>(fmRadioActors[fmRadioIndex]);
-      aActors.AppendElement(actor);
-    }
+    LOG("No observer in the list, destroy myself");
+    delete this;
   }
 }
 
+
 void
-FMRadioParentService::Enable(double aFrequency, ReplyRunnable* aRunnable)
+FMRadioService::Enable(double aFrequency, ReplyRunnable* aRunnable)
 {
   // We need to call EnableFMRadio() in main thread
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -118,7 +105,7 @@ FMRadioParentService::Enable(double aFrequency, ReplyRunnable* aRunnable)
 }
 
 void
-FMRadioParentService::Disable(ReplyRunnable* aRunnable)
+FMRadioService::Disable(ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -148,7 +135,7 @@ FMRadioParentService::Disable(ReplyRunnable* aRunnable)
 }
 
 void
-FMRadioParentService::SetFrequency(double aFrequency, ReplyRunnable* aRunnable)
+FMRadioService::SetFrequency(double aFrequency, ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -169,19 +156,19 @@ FMRadioParentService::SetFrequency(double aFrequency, ReplyRunnable* aRunnable)
 }
 
 void
-FMRadioParentService::Seek(bool upward, ReplyRunnable* aRunnable)
+FMRadioService::Seek(bool upward, ReplyRunnable* aRunnable)
 {
 
 }
 
 void
-FMRadioParentService::CancelSeek(ReplyRunnable* aRunnable)
+FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 {
 
 }
 
 void
-FMRadioParentService::Notify(const FMRadioOperationInformation& info)
+FMRadioService::Notify(const FMRadioOperationInformation& info)
 {
   switch (info.operation())
   {
@@ -204,65 +191,49 @@ FMRadioParentService::Notify(const FMRadioOperationInformation& info)
 }
 
 void
-FMRadioParentService::UpdatePowerState()
+FMRadioService::UpdatePowerState()
 {
   bool enabled = IsFMRadioOn();
   if (enabled != mEnabled)
   {
     mEnabled = enabled;
-
-    AutoInfallibleTArray<FMRadioParent*, 10> fmRadioActors;
-    GetAllFMRadioActors(fmRadioActors);
-
-    LOG("We have %d actors to notify.", fmRadioActors.Length());
-    for (uint32_t actorIndex = 0;
-         actorIndex < fmRadioActors.Length();
-         actorIndex++)
-    {
-      StateChangedEvent event(enabled);
-      unused << fmRadioActors[actorIndex]->SendNotify(event);
-    }
+    gObserverList->Broadcast(StateChangedEvent(enabled));
   }
 }
 
 void
-FMRadioParentService::UpdateFrequency()
+FMRadioService::UpdateFrequency()
 {
   int32_t frequency = GetFMRadioFrequency();
   if (mFrequency != frequency)
   {
     mFrequency = frequency;
-
-    AutoInfallibleTArray<FMRadioParent*, 10> fmRadioActors;
-    GetAllFMRadioActors(fmRadioActors);
-
-    LOG("We have %d actors to notify.", fmRadioActors.Length());
-    for (uint32_t actorIndex = 0;
-         actorIndex < fmRadioActors.Length();
-         actorIndex++)
-    {
-      // TODO round and keep decimal precise
-      FrequencyChangedEvent event(frequency);
-      unused << fmRadioActors[actorIndex]->SendNotify(event);
-    }
+    // TODO round and keep decimal precise
+    gObserverList->Broadcast(FrequencyChangedEvent(frequency));
   }
 }
 
+void
+FMRadioService::DistributeEvent(const FMRadioEventType& aType)
+{
+  gObserverList->Broadcast(aType);
+}
+
 // static
-FMRadioParentService*
-FMRadioParentService::Get()
+FMRadioService*
+FMRadioService::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (gFMRadioParentService) {
-    LOG("Return cached gFMRadioParentService");
-    return gFMRadioParentService;
+  if (gFMRadioService) {
+    LOG("Return cached gFMRadioService");
+    return gFMRadioService;
   }
 
   // TODO release the object at some place
-  gFMRadioParentService = new FMRadioParentService();
+  gFMRadioService = new FMRadioService();
 
-  return gFMRadioParentService;
+  return gFMRadioService;
 }
 
 END_FMRADIO_NAMESPACE
