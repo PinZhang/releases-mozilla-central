@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_fmradio_ipc_fmradioparentservice_h__
-#define mozilla_dom_fmradio_ipc_fmradioparentservice_h__
+#ifndef mozilla_dom_fmradio_ipc_fmradioservice_h__
+#define mozilla_dom_fmradio_ipc_fmradioservice_h__
 
 #include "FMRadioCommon.h"
 #include "mozilla/dom/fmradio/FMRadioRequestParent.h"
@@ -14,16 +14,15 @@ BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioParent;
 class FMRadioRequestParent;
+class ReplyRunnable;
 
-class FMRadioParentService : public hal::FMRadioObserver
+class FMRadioService : public hal::FMRadioObserver
 {
   friend class FMRadioParent;
   friend class FMRadioRequestParent;
 
 public:
-  typedef FMRadioRequestParent::ReplyRunnable ReplyRunnable;
-
-  static FMRadioParentService* Get();
+  static FMRadioService* Get();
 
   void Enable(double aFrequency, ReplyRunnable* aRunnable);
   void Disable(ReplyRunnable* aRunnable);
@@ -31,12 +30,17 @@ public:
   void Seek(bool upward, ReplyRunnable* aRunnable);
   void CancelSeek(ReplyRunnable* aRunnable);
 
+  void DistributeEvent(const FMRadioEventType& aType);
+
   /* Observer Interface */
   virtual void Notify(const hal::FMRadioOperationInformation& info);
 
+  void RegisterObserver(FMRadioEventObserver* aHandler);
+  void UnregisterObserver(FMRadioEventObserver* aHandler);
+
 private:
-  FMRadioParentService();
-  ~FMRadioParentService();
+  FMRadioService();
+  ~FMRadioService();
 
   void UpdatePowerState();
   void UpdateFrequency();
@@ -44,9 +48,8 @@ private:
 private:
   bool mEnabled;
   int32_t mFrequency; // frequency in KHz
-
 };
 
 END_FMRADIO_NAMESPACE
 
-#endif // mozilla_dom_fmradio_ipc_fmradioparentservice_h__
+#endif // mozilla_dom_fmradio_ipc_fmradioservice_h__
