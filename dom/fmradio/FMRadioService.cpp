@@ -13,6 +13,7 @@
 #include "nsDOMClassInfo.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/fmradio/FMRadioChildService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioService", args)
@@ -50,14 +51,14 @@ FMRadioService::~FMRadioService()
 }
 
 void
-FMRadioService::RegisterObserver(FMRadioEventObserver* aHandler)
+FMRadioService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Register handler");
   gObserverList->AddObserver(aHandler);
 }
 
 void
-FMRadioService::UnregisterObserver(FMRadioEventObserver* aHandler)
+FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Unregister handler");
   gObserverList->RemoveObserver(aHandler);
@@ -78,8 +79,8 @@ FMRadioService::Enable(double aFrequency, ReplyRunnable* aRunnable)
 
   bool isEnabled = IsFMRadioOn();
   if (isEnabled) {
-    aRunnable->SetReply(ErrorResponse());
-    aRunnable->SetError("It's enabled");
+    nsString error;
+    aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's enabled")));
     NS_DispatchToMainThread(aRunnable);
     return;
   }
@@ -113,8 +114,8 @@ FMRadioService::Disable(ReplyRunnable* aRunnable)
 
   bool isEnabled = IsFMRadioOn();
   if (!isEnabled) {
-    aRunnable->SetReply(ErrorResponse());
-    aRunnable->SetError("It's disabled");
+    nsString error;
+    aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabled")));
     NS_DispatchToMainThread(aRunnable);
     return;
   }
@@ -143,8 +144,8 @@ FMRadioService::SetFrequency(double aFrequency, ReplyRunnable* aRunnable)
 
   bool isEnabled = IsFMRadioOn();
   if (!isEnabled) {
-    aRunnable->SetReply(ErrorResponse());
-    aRunnable->SetError("It's disabled");
+    nsString error;
+    aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabled")));
     NS_DispatchToMainThread(aRunnable);
     return;
   }
@@ -220,10 +221,16 @@ FMRadioService::DistributeEvent(const FMRadioEventType& aType)
 }
 
 // static
-FMRadioService*
+IFMRadioService*
 FMRadioService::Get()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (!IsMainProcess())
+  {
+    LOG("Return FMRadioChildService for OOP");
+    return FMRadioChildService::Get();
+  }
 
   if (gFMRadioService) {
     LOG("Return cached gFMRadioService");

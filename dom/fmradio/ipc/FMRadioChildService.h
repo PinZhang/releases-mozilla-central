@@ -9,33 +9,35 @@
 
 #include "FMRadioCommon.h"
 #include "DOMRequest.h"
+#include "mozilla/dom/fmradio/FMRadioService.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
 class FMRadioRequestType;
-class FMRadioEventType;
 
-class FMRadioChildService
+class FMRadioChildService : public IFMRadioService
 {
   friend class FMRadioChild;
 
 public:
   static FMRadioChildService* Get();
 
-  /* Called by FMRadioRequest */
-  void SendRequest(DOMRequest* aRequest, FMRadioRequestType aType);
+  void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
 
-  /* Called by FMRadioChild when RecvNotify() is called*/
-  void DistributeEvent(const FMRadioEventType& aType);
+  /* IFMRadioService interfaces */
+  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
+  virtual void Disable(ReplyRunnable* aRunnable);
+  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable);
+  virtual void Seek(bool upward, ReplyRunnable* aRunnable);
+  virtual void CancelSeek(ReplyRunnable* aRunnable);
 
-  /* Called when mozFMRadio is inited */
-  void RegisterHandler(FMRadioEventObserver* aHandler);
+  virtual void DistributeEvent(const FMRadioEventType& aType);
 
-  /* Called when mozFMRadio is shutdown */
-  void UnregisterHandler(FMRadioEventObserver* aHandler);
+  virtual void RegisterHandler(FMRadioEventObserver* aHandler);
+  virtual void UnregisterHandler(FMRadioEventObserver* aHandler);
 
-protected:
+private:
   FMRadioChildService();
   ~FMRadioChildService();
 };
