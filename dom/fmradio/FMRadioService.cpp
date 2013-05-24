@@ -33,8 +33,10 @@ FMRadioService::FMRadioService()
   : mFrequencyInKHz(0)
   , mDisabling(false)
   , mEnabling(false)
+  , mSeeking(false)
   , mDisableRequest(nullptr)
   , mEnableRequest(nullptr)
+  , mSeekRequest(nullptr)
 {
   LOG("constructor");
 
@@ -51,10 +53,7 @@ FMRadioService::FMRadioService()
 FMRadioService::~FMRadioService()
 {
   LOG("destructor");
-
-  NS_RELEASE(sFMRadioService);
   sFMRadioService = nullptr;
-
   delete sObserverList;
   sObserverList = nullptr;
 }
@@ -157,6 +156,22 @@ private:
   int32_t mFrequency;
 };
 
+class SeekRunnable : public nsRunnable
+{
+public:
+  SeekRunnable(bool aUpward) : mUpward(aUpward) { }
+  virtual ~SeekRunnable() { }
+
+  NS_IMETHOD Run()
+  {
+    FMRadioSeek(mUpward ? FM_RADIO_SEEK_DIRECTION_UP : FM_RADIO_SEEK_DIRECTION_DOWN);
+    return NS_OK;
+  }
+
+private:
+  bool mUpward;
+};
+
 void
 FMRadioService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
@@ -173,7 +188,7 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
   if (sObserverList->Length() == 0)
   {
     LOG("No observer in the list, destroy myself");
-    delete this;
+    NS_RELEASE(sFMRadioService);
   }
 }
 
@@ -248,7 +263,8 @@ FMRadioService::Disable(ReplyRunnable* aRunnable)
     return;
   }
 
-  if (!mEnabling && !IsFMRadioOn()) {
+  if (!mEnabling && !IsFMRadioOn())
+  {
     LOG("It's disabled");
     aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabled")));
     NS_DispatchToMainThread(aRunnable);
@@ -287,7 +303,8 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 
   // Because IsFMRadioOn() should be false when it's being enabled, we don't
   // need to check `mEnabling`.
-  if (!IsFMRadioOn()) {
+  if (!IsFMRadioOn())
+  {
     aRunnable->SetReply(ErrorResponse(
       NS_ConvertASCIItoUTF16("It's disabled")));
     NS_DispatchToMainThread(aRunnable);
@@ -320,13 +337,86 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 void
 FMRadioService::Seek(bool upward, ReplyRunnable* aRunnable)
 {
+  LOG("Check Main Thread");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (!IsFMRadioOn())
+  {
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's disabled")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  if (mSeeking)
+  {
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's disabling")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  if (mDisabling)
+  {
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's disabling")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  mSeeking = true;
+  mSeekRequest = aRunnable;
+
+  NS_DispatchToMainThread(new SeekRunnable(upward));
 }
 
 void
 FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 {
+  LOG("Check Main Thread for CancelSeek");
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  if (!IsFMRadioOn())
+  {
+    LOG("It's disabled");
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's disabled")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  if (!mSeeking)
+  {
+    LOG("It's not seeking");
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's not seeking")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  if (mDisabling)
+  {
+    LOG("It's disabling");
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("It's disabling")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
+  LOG("Cancel seeking immediately");
+  // Cancel it immediately to prevent seeking complete
+  CancelFMRadioSeek();
+
+  LOG("Fail seeking request");
+  mSeeking = false;
+  mSeekRequest->SetReply(ErrorResponse(
+    NS_ConvertASCIItoUTF16("It's canceled")));
+  NS_DispatchToMainThread(mSeekRequest);
+  mSeekRequest = nullptr;
+
+  LOG("Fire success for cancel seeking");
+  aRunnable->SetReply(SuccessResponse());
+  NS_DispatchToMainThread(aRunnable);
 }
 
 void
@@ -408,12 +498,39 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
 
       // If the FM Radio is currently seeking, no fail-to-seek or similar
       // event will be fired, execute the seek callback manually.
+      if (mSeeking)
+      {
+        mSeeking = false;
+        mSeekRequest->SetReply(ErrorResponse(
+            NS_ConvertASCIItoUTF16("It's canceled")));
+        NS_DispatchToMainThread(mSeekRequest);
+        mSeekRequest = nullptr;
+      }
       break;
     }
     case FM_RADIO_OPERATION_SEEK:
+    {
       LOG("FM HW seek complete.");
+
+      // The signal we received might be triggered by other thread/process, we
+      // should check if `mSeeking` is true, if false, we should skip it and
+      // and just update the frequency
+      if (!mSeeking)
+      {
+        LOG("Not triggered by current thread, skip it.");
+        return;
+      }
+
+      LOG("Fire success event for seeking request");
+      mSeeking = false;
+      mSeekRequest->SetReply(SuccessResponse());
+      NS_DispatchToMainThread(mSeekRequest);
+      mSeekRequest = nullptr;
+
+      LOG("Update frequency");
       UpdateFrequency();
       break;
+    }
     default:
       MOZ_NOT_REACHED();
       return;

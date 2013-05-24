@@ -79,9 +79,11 @@ private:
   bool mDisabling;
   /* Indicates if the FM radio is currently being enabled */
   bool mEnabling;
+  bool mSeeking;
 
   nsRefPtr<ReplyRunnable> mDisableRequest;
   nsRefPtr<ReplyRunnable> mEnableRequest;
+  nsRefPtr<ReplyRunnable> mSeekRequest;
 
 private:
   static nsRefPtr<FMRadioService> sFMRadioService;
