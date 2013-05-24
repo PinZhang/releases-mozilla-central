@@ -29,6 +29,8 @@ public:
   FMRadio();
   ~FMRadio();
 
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
+
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
 
@@ -77,6 +79,8 @@ public:
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
+  double mFrequency;
+  bool mEnabled;
 };
 
 END_FMRADIO_NAMESPACE
