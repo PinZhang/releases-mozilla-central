@@ -70,9 +70,18 @@ private:
   FMRadioService();
   ~FMRadioService();
 
+  void DoDisable();
+
 private:
   bool mEnabled;
-  int32_t mFrequencyInKHz; // frequency in KHz
+  int32_t mFrequencyInKHz;
+  /* Indicates if the FM radio is currently being disabled */
+  bool mDisabling;
+  /* Indicates if the FM radio is currently being enabled */
+  bool mEnabling;
+
+  nsRefPtr<ReplyRunnable> mDisableRequest;
+  nsRefPtr<ReplyRunnable> mEnableRequest;
 
 private:
   static nsRefPtr<FMRadioService> sFMRadioService;
