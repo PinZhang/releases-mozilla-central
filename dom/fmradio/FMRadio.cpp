@@ -140,6 +140,8 @@ FMRadio::Notify(const SwitchEvent& aEvent)
   if (mHeadphoneState != aEvent.status()) {
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
+
+    DispatchTrustedEvent(ANTENNAAVAILABLECHANGE_EVENT_NAME);
   }
 }
 
