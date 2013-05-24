@@ -40,6 +40,11 @@ public:
 private:
   FMRadioChildService();
   ~FMRadioChildService();
+
+private:
+  static FMRadioChild* sFMRadioChild;
+  static FMRadioChildService* sFMRadioChildService;
+  static FMRadioEventObserverList* sChildEventObserverList;
 };
 
 END_FMRADIO_NAMESPACE
