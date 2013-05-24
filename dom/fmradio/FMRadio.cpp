@@ -21,11 +21,11 @@
 // If the pref is true, the antanna will be always available.
 #define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
 
-#define ENABLED_EVENT_NAME         NS_LITERAL_STRING("enabled");
-#define DISABLED_EVENT_NAME        NS_LITERAL_STRING("disabled");
-#define FREQUENCYCHANGE_EVENT_NAME NS_LITERAL_STRING("frequencychange");
+#define ENABLED_EVENT_NAME         NS_LITERAL_STRING("enabled")
+#define DISABLED_EVENT_NAME        NS_LITERAL_STRING("disabled")
+#define FREQUENCYCHANGE_EVENT_NAME NS_LITERAL_STRING("frequencychange")
 #define ANTENNAAVAILABLECHANGE_EVENT_NAME \
-  NS_LITERAL_STRING("antennaavailablechange");
+  NS_LITERAL_STRING("antennaavailablechange")
 
 using namespace mozilla::hal;
 using mozilla::Preferences;
@@ -35,27 +35,17 @@ BEGIN_FMRADIO_NAMESPACE
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
   , mHasInternalAntenna(false)
+  , mFrequency(0)
+  , mEnabled(false)
 {
   LOG("FMRadio is initialized.");
 
   SetIsDOMBinding();
-
-  mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
-                                             /* default = */ false);
-  if (mHasInternalAntenna) {
-    LOG("We have an internal antenna.");
-  } else {
-    mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
-    RegisterSwitchObserver(SWITCH_HEADPHONES, this);
-  }
 }
 
 FMRadio::~FMRadio()
 {
   LOG("FMRadio is destructed.");
-  if (!mHasInternalAntenna) {
-    UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
-  }
 }
 
 class FMRadioRequest MOZ_FINAL : public ReplyRunnable
@@ -114,6 +104,17 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
 
   LOG("Register Handler");
   FMRadioService::Get()->RegisterHandler(this);
+
+  mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
+                                             /* default = */ false);
+  if (mHasInternalAntenna) {
+    LOG("We have an internal antenna.");
+  } else {
+    mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
+    RegisterSwitchObserver(SWITCH_HEADPHONES, this);
+  }
+
+  // TODO update mEnabled/mFrequency
 }
 
 void
@@ -121,6 +122,10 @@ FMRadio::Shutdown()
 {
   LOG("Shutdown, Unregister Handler");
   FMRadioService::Get()->UnregisterHandler(this);
+
+  if (!mHasInternalAntenna) {
+    UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
+  }
 }
 
 JSObject*
@@ -147,12 +152,29 @@ FMRadio::Notify(const FMRadioEventType& aType)
     {
       FrequencyChangedEvent event = aType;
       LOG("Frequency is changed to: %f", event.frequency());
+
+      mFrequency = event.frequency();
+      DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
       break;
     }
     case FMRadioEventType::TStateChangedEvent:
     {
       StateChangedEvent event = aType;
-      LOG("Power state is changed to: %d", event.enabled());
+      LOG("Power state is changed from %d to %d", mEnabled, event.enabled());
+
+      mEnabled = event.enabled();
+      mFrequency = event.frequency();
+
+      if (mEnabled)
+      {
+        LOG("Fire onenabled");
+        DispatchTrustedEvent(ENABLED_EVENT_NAME);
+      }
+      else
+      {
+        LOG("Fire ondisabled");
+        DispatchTrustedEvent(DISABLED_EVENT_NAME);
+      }
       break;
     }
     default:
@@ -164,7 +186,7 @@ FMRadio::Notify(const FMRadioEventType& aType)
 bool
 FMRadio::Enabled() const
 {
-  return IsFMRadioOn();
+  return mEnabled;
 }
 
 bool
@@ -176,8 +198,7 @@ FMRadio::AntennaAvailable() const
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  return IsFMRadioOn() ? (Nullable<double>)(GetFMRadioFrequency() / 1000)
-                       : Nullable<double>();
+  return mEnabled ? (Nullable<double>)(mFrequency) : Nullable<double>();
 }
 
 double
