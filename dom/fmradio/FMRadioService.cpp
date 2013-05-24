@@ -246,6 +246,8 @@ FMRadioService::Get()
   // TODO release the object at some place
   gFMRadioService = new FMRadioService();
 
+  gEventObserverList = new FMRadioEventObserverList();
+
   return gFMRadioService;
 }
 
