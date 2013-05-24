@@ -21,6 +21,9 @@ class IFMRadioService
 public:
   virtual ~IFMRadioService() { }
 
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
   virtual void Disable(ReplyRunnable* aRunnable) = 0;
   virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) = 0;
@@ -31,6 +34,9 @@ public:
 
   virtual void RegisterHandler(FMRadioEventObserver* aHandler) = 0;
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) = 0;
+
+protected:
+  nsAutoRefCnt mRefCnt;
 };
 
 class FMRadioService : public IFMRadioService
@@ -57,16 +63,20 @@ public:
   virtual void RegisterHandler(FMRadioEventObserver* aHandler);
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler);
 
-private:
-  FMRadioService();
-  ~FMRadioService();
-
   void UpdatePowerState();
   void UpdateFrequency();
 
 private:
+  FMRadioService();
+  ~FMRadioService();
+
+private:
   bool mEnabled;
   int32_t mFrequencyInKHz; // frequency in KHz
+
+private:
+  static nsRefPtr<FMRadioService> sFMRadioService;
+  static FMRadioEventObserverList* sObserverList;
 };
 
 END_FMRADIO_NAMESPACE

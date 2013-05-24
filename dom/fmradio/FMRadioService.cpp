@@ -23,9 +23,11 @@ using mozilla::Preferences;
 
 BEGIN_FMRADIO_NAMESPACE
 
-// TODO release static object
-FMRadioService* gFMRadioService;
-FMRadioEventObserverList* gEventObserverList;
+nsRefPtr<FMRadioService>
+FMRadioService::sFMRadioService;
+
+FMRadioEventObserverList*
+FMRadioService::sObserverList;
 
 FMRadioService::FMRadioService()
   : mFrequencyInKHz(0)
@@ -46,8 +48,11 @@ FMRadioService::~FMRadioService()
 {
   LOG("destructor");
 
-  gFMRadioService = nullptr;
-  gEventObserverList = nullptr;
+  NS_RELEASE(sFMRadioService);
+  sFMRadioService = nullptr;
+
+  delete sObserverList;
+  sObserverList = nullptr;
 }
 
 /**
@@ -78,20 +83,90 @@ RoundFrequncy(int32_t aFrequencyInKHz)
   return lower + roundedPart;
 }
 
+class EnableRunnable : public nsRunnable
+{
+public:
+  EnableRunnable() { }
+  virtual ~EnableRunnable() { }
+
+  NS_IMETHOD Run()
+  {
+    // TODO read from SettingsAPI
+    FMRadioSettings info;
+    info.upperLimit() = 108000;
+    info.lowerLimit() = 87500;
+    info.spaceType() = 100;
+
+    EnableFMRadio(info);
+
+    nsCOMPtr<nsIAudioManager> audioManager =
+      do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+    NS_ASSERTION(audioManager, "No AudioManager");
+
+    audioManager->SetFmRadioAudioEnabled(true);
+
+    // TODO apply path of bug 862899: AudioChannelAgent per process
+    return NS_OK;
+  }
+};
+
+class DisableRunnable : public nsRunnable
+{
+public:
+  DisableRunnable() { }
+  virtual ~DisableRunnable() { }
+
+  NS_IMETHOD Run()
+  {
+    // Fix Bug 796733.
+    // DisableFMRadio should be called before SetFmRadioAudioEnabled to prevent
+    // the annoying beep sound.
+    DisableFMRadio();
+
+    nsCOMPtr<nsIAudioManager> audioManager =
+      do_GetService(NS_AUDIOMANAGER_CONTRACTID);
+    NS_ASSERTION(audioManager, "No AudioManager");
+
+    audioManager->SetFmRadioAudioEnabled(false);
+
+    return NS_OK;
+  }
+};
+
+class SetFrequencyRunnable : public nsRunnable
+{
+public:
+  SetFrequencyRunnable(FMRadioService* aService, int32_t aFrequency)
+    : mService(aService)
+    , mFrequency(aFrequency) { }
+  virtual ~SetFrequencyRunnable() { }
+
+  NS_IMETHOD Run()
+  {
+    SetFMRadioFrequency(mFrequency);
+    mService->UpdateFrequency();
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<FMRadioService> mService;
+  int32_t mFrequency;
+};
+
 void
 FMRadioService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Register handler");
-  gEventObserverList->AddObserver(aHandler);
+  sObserverList->AddObserver(aHandler);
 }
 
 void
 FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Unregister handler");
-  gEventObserverList->RemoveObserver(aHandler);
+  sObserverList->RemoveObserver(aHandler);
 
-  if (gEventObserverList->Length() == 0)
+  if (sObserverList->Length() == 0)
   {
     LOG("No observer in the list, destroy myself");
     delete this;
@@ -123,24 +198,10 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
   // Cache the frequency value, and set it after the FM HW is enabled
   mFrequencyInKHz = roundedFrequency;
 
-  // TODO read from SettingsAPI
-  FMRadioSettings info;
-  info.upperLimit() = 108000;
-  info.lowerLimit() = 87500;
-  info.spaceType() = 100;
-
-  EnableFMRadio(info);
-
-  nsCOMPtr<nsIAudioManager> audioManager =
-    do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-  NS_ASSERTION(audioManager, "No AudioManager");
-
-  audioManager->SetFmRadioAudioEnabled(true);
-
-  // TODO apply path of bug 862899: AudioChannelAgent per process
-
   aRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aRunnable);
+
+  NS_DispatchToMainThread(new EnableRunnable());
 }
 
 void
@@ -158,19 +219,10 @@ FMRadioService::Disable(ReplyRunnable* aRunnable)
     return;
   }
 
-  // Fix Bug 796733.
-  // DisableFMRadio should be called before SetFmRadioAudioEnabled to prevent
-  // the annoying beep sound.
-  DisableFMRadio();
-
-  nsCOMPtr<nsIAudioManager> audioManager =
-    do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-  NS_ASSERTION(audioManager, "No AudioManager");
-
-  audioManager->SetFmRadioAudioEnabled(false);
-
   aRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aRunnable);
+
+  NS_DispatchToMainThread(new DisableRunnable());
 }
 
 void
@@ -197,12 +249,10 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  SetFMRadioFrequency(roundedFrequency);
-
-  UpdateFrequency();
-
   aRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aRunnable);
+
+  NS_DispatchToMainThread(new SetFrequencyRunnable(this, roundedFrequency));
 }
 
 void
@@ -215,6 +265,12 @@ void
 FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 {
 
+}
+
+void
+FMRadioService::DistributeEvent(const FMRadioEventType& aType)
+{
+  sObserverList->Broadcast(aType);
 }
 
 void
@@ -239,7 +295,7 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       // The frequency is changed from '0' to some number, so we should
       // send the 'frequencyChange' message manually.
       double frequencyInMHz = mFrequencyInKHz / 1000.0;
-      gEventObserverList->Broadcast(FrequencyChangedEvent(frequencyInMHz));
+      sObserverList->Broadcast(FrequencyChangedEvent(frequencyInMHz));
 
       break;
     }
@@ -267,7 +323,7 @@ FMRadioService::UpdatePowerState()
     double frequencyInMHz = mFrequencyInKHz / 1000.0;
     // To make sure the FM app will get the right frequency when the
     // 'enabled' event is fired.
-    gEventObserverList->Broadcast(StateChangedEvent(enabled, frequencyInMHz));
+    sObserverList->Broadcast(StateChangedEvent(enabled, frequencyInMHz));
   }
 }
 
@@ -279,14 +335,8 @@ FMRadioService::UpdateFrequency()
   {
     mFrequencyInKHz = frequency;
     double frequencyInMHz = mFrequencyInKHz / 1000.0;
-    gEventObserverList->Broadcast(FrequencyChangedEvent(frequencyInMHz));
+    sObserverList->Broadcast(FrequencyChangedEvent(frequencyInMHz));
   }
-}
-
-void
-FMRadioService::DistributeEvent(const FMRadioEventType& aType)
-{
-  gEventObserverList->Broadcast(aType);
 }
 
 bool
@@ -294,6 +344,9 @@ IsMainProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;
 }
+
+NS_IMPL_THREADSAFE_ADDREF(IFMRadioService)
+NS_IMPL_THREADSAFE_RELEASE(IFMRadioService)
 
 // static
 IFMRadioService*
@@ -307,17 +360,17 @@ FMRadioService::Get()
     return FMRadioChildService::Get();
   }
 
-  if (gFMRadioService) {
+  if (sFMRadioService) {
     LOG("Return cached gFMRadioService");
-    return gFMRadioService;
+    return sFMRadioService;
   }
 
   // TODO release the object at some place
-  gFMRadioService = new FMRadioService();
+  sFMRadioService = new FMRadioService();
 
-  gEventObserverList = new FMRadioEventObserverList();
+  sObserverList = new FMRadioEventObserverList();
 
-  return gFMRadioService;
+  return sFMRadioService;
 }
 
 END_FMRADIO_NAMESPACE
