@@ -49,6 +49,7 @@ struct FrequencyChangedEvent
 struct StateChangedEvent
 {
   bool enabled;
+  double frequency;
 };
 
 union FMRadioEventType

@@ -66,7 +66,7 @@ private:
 
 private:
   bool mEnabled;
-  int32_t mFrequency; // frequency in KHz
+  int32_t mFrequencyInKHz; // frequency in KHz
 };
 
 END_FMRADIO_NAMESPACE
