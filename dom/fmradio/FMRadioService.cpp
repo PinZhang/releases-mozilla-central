@@ -68,37 +68,38 @@ FMRadioService::~FMRadioService()
  *    109000 is not rounded, null will be returned
  */
 int32_t
-RoundFrequncy(int32_t aFrequencyInKHz)
+RoundFrequncy(int32_t aUpperBound,
+              int32_t aLowerBound,
+              int32_t aChannelWidth,
+              int32_t aFrequencyInKHz)
 {
-  // TODO read from settings
-  int32_t upper = 108000;
-  int32_t lower = 87500;
-  int32_t channelWidth = 100;
-
-  if (aFrequencyInKHz < lower ||
-      aFrequencyInKHz > upper) {
+  if (aFrequencyInKHz < aLowerBound ||
+      aFrequencyInKHz > aUpperBound) {
     return 0;
   }
 
-  int32_t partToBeRounded = aFrequencyInKHz - lower;
-  int32_t roundedPart = round(partToBeRounded / channelWidth) * channelWidth;
+  int32_t partToBeRounded = aFrequencyInKHz - aLowerBound;
+  int32_t roundedPart = round(partToBeRounded / aChannelWidth) * aChannelWidth;
 
-  return lower + roundedPart;
+  return aLowerBound + roundedPart;
 }
 
 class EnableRunnable : public nsRunnable
 {
 public:
-  EnableRunnable() { }
+  EnableRunnable(int32_t aUpperLimit, int32_t aLowerLimit, int32_t aSpaceType)
+    : mUpperLimit(aUpperLimit)
+    , mLowerLimit(aLowerLimit)
+    , mSpaceType(aSpaceType) { }
+
   virtual ~EnableRunnable() { }
 
   NS_IMETHOD Run()
   {
-    // TODO read from SettingsAPI
     FMRadioSettings info;
-    info.upperLimit() = 108000;
-    info.lowerLimit() = 87500;
-    info.spaceType() = 100;
+    info.upperLimit() = mUpperLimit;
+    info.lowerLimit() = mLowerLimit;
+    info.spaceType() = mSpaceType;
 
     EnableFMRadio(info);
 
@@ -111,6 +112,10 @@ public:
     // TODO apply path of bug 862899: AudioChannelAgent per process
     return NS_OK;
   }
+private:
+  int32_t mUpperLimit;
+  int32_t mLowerLimit;
+  int32_t mSpaceType;
 };
 
 class DisableRunnable : public nsRunnable
@@ -210,6 +215,24 @@ FMRadioService::GetFrequency()
   return 0;
 }
 
+double
+FMRadioService::GetFrequencyUpperBound()
+{
+  return 108.0;
+}
+
+double
+FMRadioService::GetFrequencyLowerBound()
+{
+  return 87.5;
+}
+
+double
+FMRadioService::GetChannelWidth()
+{
+  return 0.1;
+}
+
 void
 FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 {
@@ -246,7 +269,10 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  int32_t roundedFrequency = RoundFrequncy(aFrequencyInMHz * 1000);
+  int32_t roundedFrequency = RoundFrequncy(GetFrequencyUpperBound() * 1000,
+                                           GetFrequencyLowerBound() * 1000,
+                                           GetChannelWidth() * 1000,
+                                           aFrequencyInMHz * 1000);
   if (!roundedFrequency)
   {
     LOG("Frequency is out of range");
@@ -264,7 +290,9 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
   // Cache the frequency value, and set it after the FM HW is enabled
   mFrequencyInKHz = roundedFrequency;
 
-  NS_DispatchToMainThread(new EnableRunnable());
+  NS_DispatchToMainThread(new EnableRunnable(GetFrequencyUpperBound() * 1000,
+                                             GetFrequencyLowerBound() * 1000,
+                                             GetChannelWidth() * 1000));
 }
 
 void
@@ -337,7 +365,10 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  int32_t roundedFrequency = RoundFrequncy(aFrequencyInMHz * 1000);
+  int32_t roundedFrequency = RoundFrequncy(GetFrequencyUpperBound() * 1000,
+                                           GetFrequencyLowerBound() * 1000,
+                                           GetChannelWidth() * 1000,
+                                           aFrequencyInMHz * 1000);
   if (!roundedFrequency)
   {
     aRunnable->SetReply(ErrorResponse(

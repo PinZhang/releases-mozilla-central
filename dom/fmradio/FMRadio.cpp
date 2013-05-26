@@ -197,19 +197,19 @@ FMRadio::GetFrequency() const
 double
 FMRadio::FrequencyUpperBound() const
 {
-  return 108.0;
+  return FMRadioService::Get()->GetFrequencyUpperBound();
 }
 
 double
 FMRadio::FrequencyLowerBound() const
 {
-  return 87.5;
+  return FMRadioService::Get()->GetFrequencyLowerBound();
 }
 
 double
 FMRadio::ChannelWidth() const
 {
-  return 0.5;
+  return FMRadioService::Get()->GetChannelWidth();
 }
 
 already_AddRefed<DOMRequest>

@@ -15,6 +15,7 @@ BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
 class FMRadioRequestType;
+class Settings;
 
 class FMRadioChildService : public IFMRadioService
 {
@@ -28,6 +29,9 @@ public:
   /* IFMRadioService interfaces */
   virtual bool IsEnabled();
   virtual double GetFrequency();
+  virtual double GetFrequencyUpperBound();
+  virtual double GetFrequencyLowerBound();
+  virtual double GetChannelWidth();
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
   virtual void Disable(ReplyRunnable* aRunnable);
@@ -48,6 +52,7 @@ private:
 
   bool mEnabled;
   double mFrequency;
+  Settings mSettings;
 
 private:
   static FMRadioChild* sFMRadioChild;
