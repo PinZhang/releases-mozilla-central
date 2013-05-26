@@ -79,8 +79,6 @@ public:
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
-  double mFrequency;
-  bool mEnabled;
 };
 
 END_FMRADIO_NAMESPACE

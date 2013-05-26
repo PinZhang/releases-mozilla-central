@@ -35,8 +35,6 @@ BEGIN_FMRADIO_NAMESPACE
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
   , mHasInternalAntenna(false)
-  , mFrequency(0)
-  , mEnabled(false)
 {
   LOG("FMRadio is initialized.");
 
@@ -113,8 +111,6 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
     mHeadphoneState = GetCurrentSwitchState(SWITCH_HEADPHONES);
     RegisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
-
-  // TODO update mEnabled/mFrequency
 }
 
 void
@@ -154,20 +150,14 @@ FMRadio::Notify(const FMRadioEventType& aType)
     {
       FrequencyChangedEvent event = aType;
       LOG("Frequency is changed to: %f", event.frequency());
-
-      mFrequency = event.frequency();
       DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
       break;
     }
     case FMRadioEventType::TStateChangedEvent:
     {
       StateChangedEvent event = aType;
-      LOG("Power state is changed from %d to %d", mEnabled, event.enabled());
 
-      mEnabled = event.enabled();
-      mFrequency = event.frequency();
-
-      if (mEnabled)
+      if (event.enabled())
       {
         LOG("Fire onenabled");
         DispatchTrustedEvent(ENABLED_EVENT_NAME);
@@ -188,7 +178,7 @@ FMRadio::Notify(const FMRadioEventType& aType)
 bool
 FMRadio::Enabled() const
 {
-  return mEnabled;
+  return FMRadioService::Get()->IsEnabled();
 }
 
 bool
@@ -200,7 +190,8 @@ FMRadio::AntennaAvailable() const
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  return mEnabled ? (Nullable<double>)(mFrequency) : Nullable<double>();
+  return Enabled() ? (Nullable<double>)(FMRadioService::Get()->GetFrequency())
+                   : Nullable<double>();
 }
 
 double

@@ -26,6 +26,9 @@ public:
   void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
 
   /* IFMRadioService interfaces */
+  virtual bool IsEnabled();
+  virtual double GetFrequency();
+
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
   virtual void Disable(ReplyRunnable* aRunnable);
   virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable);
@@ -40,6 +43,11 @@ public:
 private:
   FMRadioChildService();
   ~FMRadioChildService();
+
+  void Init();
+
+  bool mEnabled;
+  double mFrequency;
 
 private:
   static FMRadioChild* sFMRadioChild;
