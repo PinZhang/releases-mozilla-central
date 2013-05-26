@@ -58,7 +58,7 @@ union FMRadioEventType
   FrequencyChangedEvent;
 };
 
-async protocol PFMRadio
+sync protocol PFMRadio
 {
   manager PContent;
   manages PFMRadioRequest;
@@ -72,8 +72,10 @@ child:
   __delete__();
 
 parent:
-  PFMRadioRequest(FMRadioRequestType requestType);
+  sync IsEnabled() returns (bool enabled);
+  sync GetFrequency() returns (double frequency);
 
+  PFMRadioRequest(FMRadioRequestType requestType);
 };
 
 } // namespace fmradio

@@ -24,6 +24,9 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
+  virtual bool IsEnabled() = 0;
+  virtual double GetFrequency() = 0;
+
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
   virtual void Disable(ReplyRunnable* aRunnable) = 0;
   virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) = 0;
@@ -52,6 +55,9 @@ public:
   virtual void Notify(const hal::FMRadioOperationInformation& info);
 
   /* IFMRadioService interfaces */
+  virtual bool IsEnabled();
+  virtual double GetFrequency();
+
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
   virtual void Disable(ReplyRunnable* aRunnable);
   virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable);

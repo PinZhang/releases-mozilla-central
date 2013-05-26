@@ -40,6 +40,20 @@ FMRadioParent::ActorDestroy(ActorDestroyReason aWhy)
   return;
 }
 
+bool
+FMRadioParent::RecvIsEnabled(bool* aEnabled)
+{
+  *aEnabled = FMRadioService::Get()->IsEnabled();
+  return true;
+}
+
+bool
+FMRadioParent::RecvGetFrequency(double* aFrequency)
+{
+  *aFrequency = FMRadioService::Get()->GetFrequency();
+  return true;
+}
+
 PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
 {
