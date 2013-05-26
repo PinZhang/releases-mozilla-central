@@ -25,6 +25,8 @@ FMRadioEventObserverList*
 FMRadioChildService::sChildEventObserverList;
 
 FMRadioChildService::FMRadioChildService()
+  : mEnabled(false)
+  , mFrequency(0)
 {
   LOG("Constructor");
 }
@@ -37,6 +39,23 @@ FMRadioChildService::~FMRadioChildService()
   sFMRadioChild = nullptr;
   delete sChildEventObserverList;
   sChildEventObserverList = nullptr;
+}
+
+void
+FMRadioChildService::Init()
+{
+  sFMRadioChild->SendIsEnabled(&mEnabled);
+  sFMRadioChild->SendGetFrequency(&mFrequency);
+}
+
+bool FMRadioChildService::IsEnabled()
+{
+  return mEnabled;
+}
+
+double FMRadioChildService::GetFrequency()
+{
+  return mFrequency;
 }
 
 void FMRadioChildService::Enable(double aFrequency, ReplyRunnable* aRunnable)
@@ -69,6 +88,27 @@ void
 FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
 {
   LOG("We have %d observer to broadcast the event", sChildEventObserverList->Length());
+
+  switch(aType.type())
+  {
+    case FMRadioEventType::TFrequencyChangedEvent:
+    {
+      FrequencyChangedEvent event = aType;
+      mFrequency = event.frequency();
+      break;
+    }
+    case FMRadioEventType::TStateChangedEvent:
+    {
+      StateChangedEvent event = aType;
+      mEnabled = event.enabled();
+      mFrequency = event.frequency();
+      break;
+    }
+    default:
+      NS_RUNTIMEABORT("not reached");
+      break;
+  }
+
   sChildEventObserverList->Broadcast(aType);
 }
 
@@ -128,6 +168,8 @@ FMRadioChildService::Get()
   LOG("Init sFMRadioChild");
   sFMRadioChild = new FMRadioChild();
   ContentChild::GetSingleton()->SendPFMRadioConstructor(sFMRadioChild);
+
+  sFMRadioChildService->Init();
 
   return sFMRadioChildService;
 }

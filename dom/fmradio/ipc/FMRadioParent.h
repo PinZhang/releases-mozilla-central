@@ -25,6 +25,12 @@ public:
   virtual ~FMRadioParent();
   virtual void ActorDestroy(ActorDestroyReason aWhy);
 
+  virtual bool
+  RecvIsEnabled(bool* aEnabled);
+
+  virtual bool
+  RecvGetFrequency(double* aFrequency);
+
   virtual PFMRadioRequestParent*
   AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
 

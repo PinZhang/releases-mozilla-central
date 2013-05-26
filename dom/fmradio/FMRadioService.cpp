@@ -192,6 +192,24 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
   }
 }
 
+bool
+FMRadioService::IsEnabled()
+{
+  return IsFMRadioOn();
+}
+
+double
+FMRadioService::GetFrequency()
+{
+  if (IsEnabled())
+  {
+    int32_t frequencyInKHz = GetFMRadioFrequency();
+    return frequencyInKHz / 1000.0;
+  }
+
+  return 0;
+}
+
 void
 FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 {
