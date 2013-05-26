@@ -26,6 +26,9 @@ public:
 
   virtual bool IsEnabled() = 0;
   virtual double GetFrequency() = 0;
+  virtual double GetFrequencyUpperBound() = 0;
+  virtual double GetFrequencyLowerBound() = 0;
+  virtual double GetChannelWidth() = 0;
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
   virtual void Disable(ReplyRunnable* aRunnable) = 0;
@@ -57,6 +60,9 @@ public:
   /* IFMRadioService interfaces */
   virtual bool IsEnabled();
   virtual double GetFrequency();
+  virtual double GetFrequencyUpperBound();
+  virtual double GetFrequencyLowerBound();
+  virtual double GetChannelWidth();
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
   virtual void Disable(ReplyRunnable* aRunnable);

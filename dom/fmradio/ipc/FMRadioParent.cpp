@@ -54,6 +54,15 @@ FMRadioParent::RecvGetFrequency(double* aFrequency)
   return true;
 }
 
+bool
+FMRadioParent::RecvGetSettings(Settings* aSettings)
+{
+  aSettings->upperBound() = FMRadioService::Get()->GetFrequencyUpperBound();
+  aSettings->lowerBound() = FMRadioService::Get()->GetFrequencyLowerBound();
+  aSettings->channelWidth() = FMRadioService::Get()->GetChannelWidth();
+  return true;
+}
+
 PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
 {

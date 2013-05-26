@@ -31,6 +31,9 @@ public:
   virtual bool
   RecvGetFrequency(double* aFrequency);
 
+  bool
+  RecvGetSettings(Settings* aSettings);
+
   virtual PFMRadioRequestParent*
   AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
 
