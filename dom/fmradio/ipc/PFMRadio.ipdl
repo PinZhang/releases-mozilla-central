@@ -58,6 +58,13 @@ union FMRadioEventType
   FrequencyChangedEvent;
 };
 
+struct Settings
+{
+  double upperBound;
+  double lowerBound;
+  double channelWidth;
+};
+
 sync protocol PFMRadio
 {
   manager PContent;
@@ -74,6 +81,7 @@ child:
 parent:
   sync IsEnabled() returns (bool enabled);
   sync GetFrequency() returns (double frequency);
+  sync GetSettings() returns (Settings settings);
 
   PFMRadioRequest(FMRadioRequestType requestType);
 };
