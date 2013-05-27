@@ -1074,8 +1074,12 @@ Navigator::GetMozFMRadio(ErrorResult& aRv)
 
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mFMRadio = new fmradio::FMRadio();
-    mFMRadio->Init(win);
+    mFMRadio = fmradio::FMRadio::CheckPermissionAndCreateInstance(mWindow);
+
+    if (!mFMRadio) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
   }
 
   return mFMRadio;
