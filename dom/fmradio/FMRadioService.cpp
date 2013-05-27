@@ -98,6 +98,7 @@ FMRadioService::~FMRadioService()
   LOG("destructor");
   delete sObserverList;
   sObserverList = nullptr;
+  UnregisterFMRadioObserver(this);
 }
 
 
@@ -230,6 +231,14 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
   {
     LOG("No observer in the list, destroy myself");
     sFMRadioService = nullptr;
+
+    // No observer in the list means no app is using WebFM API, so we should
+    // turn off the FM HW.
+    if (IsEnabled())
+    {
+      LOG("Turn off FM HW");
+      NS_DispatchToMainThread(new DisableRunnable());
+    }
   }
 }
 
