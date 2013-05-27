@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadioService.h"
-// FIXME Why not "ContentParent.h"?
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/Hal.h"
 #include "nsIAudioManager.h"
@@ -96,28 +95,9 @@ FMRadioService::FMRadioService()
 FMRadioService::~FMRadioService()
 {
   LOG("destructor");
+  UnregisterFMRadioObserver(this);
   delete sObserverList;
   sObserverList = nullptr;
-  UnregisterFMRadioObserver(this);
-}
-
-
-int32_t
-FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
-{
-  int32_t lower = mLowerBoundInMHz * 1000;
-  int32_t upper = mUpperBoundInMHz * 1000;
-  int32_t channelWidth = mChannelWidthInMHz * 1000;
-
-  if (aFrequencyInKHz < lower ||
-      aFrequencyInKHz > upper) {
-    return 0;
-  }
-
-  int32_t partToBeRounded = aFrequencyInKHz - lower;
-  int32_t roundedPart = round(partToBeRounded / channelWidth) * channelWidth;
-
-  return lower + roundedPart;
 }
 
 class EnableRunnable : public nsRunnable
@@ -229,17 +209,35 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
 
   if (sObserverList->Length() == 0)
   {
-    LOG("No observer in the list, destroy myself");
-    sFMRadioService = nullptr;
-
     // No observer in the list means no app is using WebFM API, so we should
     // turn off the FM HW.
-    if (IsEnabled())
+    if (IsFMRadioOn())
     {
       LOG("Turn off FM HW");
       NS_DispatchToMainThread(new DisableRunnable());
     }
+
+    LOG("No observer in the list, destroy myself");
+    sFMRadioService = nullptr;
   }
+}
+
+int32_t
+FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
+{
+  int32_t lower = mLowerBoundInMHz * 1000;
+  int32_t upper = mUpperBoundInMHz * 1000;
+  int32_t channelWidth = mChannelWidthInMHz * 1000;
+
+  if (aFrequencyInKHz < lower ||
+      aFrequencyInKHz > upper) {
+    return 0;
+  }
+
+  int32_t partToBeRounded = aFrequencyInKHz - lower;
+  int32_t roundedPart = round(partToBeRounded / channelWidth) * channelWidth;
+
+  return lower + roundedPart;
 }
 
 bool
@@ -683,7 +681,6 @@ FMRadioService::Get()
     return sFMRadioService;
   }
 
-  // TODO release the object at some place
   sFMRadioService = new FMRadioService();
 
   sObserverList = new FMRadioEventObserverList();
