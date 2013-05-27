@@ -14,29 +14,8 @@ BEGIN_FMRADIO_NAMESPACE
 class ReplyRunnable : public nsRunnable
 {
 public:
-  ReplyRunnable() : mCanceled(false) {}
+  ReplyRunnable() {}
   virtual ~ReplyRunnable() {}
-
-  NS_IMETHOD Run()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-    nsresult rv = NS_OK;
-
-    if (!mCanceled)
-    {
-      rv = CancelableRun();
-    }
-
-    return rv;
-  }
-
-  void Cancel()
-  {
-    mCanceled = true;
-  }
-
-  virtual nsresult CancelableRun() = 0;
 
   void SetReply(const FMRadioResponseType& aResponseType)
   {
@@ -45,9 +24,6 @@ public:
 
 protected:
   FMRadioResponseType mResponseType;
-
-private:
-  bool mCanceled;
 };
 
 END_FMRADIO_NAMESPACE
