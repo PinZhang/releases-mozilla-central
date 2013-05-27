@@ -516,33 +516,35 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       LOG("FM HW is enabled.");
 
       // The signal we received might be triggered by other thread/process, we
-      // should check if `mEnabling` is true, if false, we should skip it.
-      if (!mEnabling)
+      // should check if `mEnabling` is true, if false, we should skip it and
+      // just update the power state and frequency.
+      if (mEnabling)
+      {
+        mEnabling = false;
+
+        // If we're disabling, go disable the radio now.
+        // We don't release `mEnableRequest` here, because we have release it
+        // when Disable() is called.
+        if (mDisabling)
+        {
+          LOG("We need to disable FM Radio for the waiting request.");
+          DoDisable();
+          return;
+        }
+
+        LOG("Fire Success for enable request.");
+        mEnableRequest->SetReply(SuccessResponse());
+        NS_DispatchToMainThread(mEnableRequest);
+        mEnableRequest = nullptr;
+
+        // To make sure the FM app will get right frequency after the FM
+        // radio is enabled, we have to set the frequency first.
+        SetFMRadioFrequency(mFrequencyInKHz);
+      }
+      else
       {
         LOG("Not triggered by current thread, skip it.");
-        return;
       }
-
-      mEnabling = false;
-
-      // If we're disabling, go disable the radio now.
-      // We don't release `mEnableRequest` here, because we have release it
-      // when Disable() is called.
-      if (mDisabling)
-      {
-        LOG("We need to disable FM Radio for the waiting request.");
-        DoDisable();
-        return;
-      }
-
-      LOG("Fire Success for enable request.");
-      mEnableRequest->SetReply(SuccessResponse());
-      NS_DispatchToMainThread(mEnableRequest);
-      mEnableRequest = nullptr;
-
-      // To make sure the FM app will get right frequency after the FM
-      // radio is enabled, we have to set the frequency first.
-      SetFMRadioFrequency(mFrequencyInKHz);
 
       // Update the current frequency without sending 'frequencyChange'
       // msg, to make sure the FM app will get the right frequency when the
@@ -562,18 +564,19 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       LOG("FM HW is disabled.");
 
       // The signal we received might be triggered by other thread/process, we
-      // should check if `mDisabling` is true, if false, we should skip it.
-      if (!mDisabling)
+      // should check if `mDisabling` is true, if false, we should skip it and
+      // just update the power state.
+      if (mDisabling)
+      {
+        mDisabling = false;
+        mDisableRequest->SetReply(SuccessResponse());
+        NS_DispatchToMainThread(mDisableRequest);
+        mDisableRequest = nullptr;
+      }
+      else
       {
         LOG("Not triggered by current thread, skip it.");
-        return;
       }
-
-      mDisabling = false;
-
-      mDisableRequest->SetReply(SuccessResponse());
-      NS_DispatchToMainThread(mDisableRequest);
-      mDisableRequest = nullptr;
 
       UpdatePowerState();
 
@@ -596,17 +599,18 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       // The signal we received might be triggered by other thread/process, we
       // should check if `mSeeking` is true, if false, we should skip it and
       // and just update the frequency
-      if (!mSeeking)
+      if (mSeeking)
+      {
+        LOG("Fire success event for seeking request");
+        mSeeking = false;
+        mSeekRequest->SetReply(SuccessResponse());
+        NS_DispatchToMainThread(mSeekRequest);
+        mSeekRequest = nullptr;
+      }
+      else
       {
         LOG("Not triggered by current thread, skip it.");
-        return;
       }
-
-      LOG("Fire success event for seeking request");
-      mSeeking = false;
-      mSeekRequest->SetReply(SuccessResponse());
-      NS_DispatchToMainThread(mSeekRequest);
-      mSeekRequest = nullptr;
 
       LOG("Update frequency");
       UpdateFrequency();
