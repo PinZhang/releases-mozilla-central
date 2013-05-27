@@ -53,7 +53,6 @@ FMRadioService::FMRadioService()
 FMRadioService::~FMRadioService()
 {
   LOG("destructor");
-  sFMRadioService = nullptr;
   delete sObserverList;
   sObserverList = nullptr;
 }
@@ -193,7 +192,7 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
   if (sObserverList->Length() == 0)
   {
     LOG("No observer in the list, destroy myself");
-    NS_RELEASE(sFMRadioService);
+    sFMRadioService = nullptr;
   }
 }
 
