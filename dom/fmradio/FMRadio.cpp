@@ -69,9 +69,7 @@ public:
       }
       case FMRadioResponseType::TSuccessResponse:
       {
-        // FIXME create a meaningfull result
-        JS::Value result = JS_NumberValue(1);
-        mRequest->FireSuccess(result);
+        mRequest->FireSuccess(JSVAL_VOID);
         break;
       }
       default:
@@ -120,8 +118,11 @@ FMRadio::Shutdown()
   FMRadioService::Get()->UnregisterHandler(this);
 
   if (!mHasInternalAntenna) {
+    LOG("Unregister SWITCH_HEADPHONES observer.");
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
+
+  LOG("FMRadio is shutdown");
 }
 
 JSObject*
