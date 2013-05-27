@@ -1177,17 +1177,18 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 NS_IMETHODIMP
 Navigator::GetMozFMRadio(nsISupports** aFMRadio)
 {
-  if (!mFMRadio) {
-    *aFMRadio = nullptr;
+  *aFMRadio = nullptr;
 
+  if (!mFMRadio) {
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
     NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
 
-    mFMRadio = new fmradio::FMRadio();
-    mFMRadio->Init(win);
+    mFMRadio = fmradio::FMRadio::CheckPermissionAndCreateInstance(win);
+    NS_ENSURE_TRUE(mFMRadio, NS_OK);
   }
 
-  NS_ADDREF(*aFMRadio = mFMRadio);
+  nsCOMPtr<nsISupports> fmRadio(mFMRadio);
+  fmRadio.forget(aFMRadio);
 
   return NS_OK;
 }

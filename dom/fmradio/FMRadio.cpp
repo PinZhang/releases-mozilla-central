@@ -13,6 +13,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/fmradio/FMRadioService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
+#include "nsIPermissionManager.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadio", args)
@@ -304,4 +305,27 @@ FMRadio::CancelSeek()
   return request.forget();
 }
 
+// static
+already_AddRefed<FMRadio>
+FMRadio::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
+{
+  nsCOMPtr<nsIPermissionManager> permMgr =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  NS_ENSURE_TRUE(permMgr, nullptr);
+
+  uint32_t permission = nsIPermissionManager::DENY_ACTION;
+  permMgr->TestPermissionFromWindow(aWindow, "fmradio", &permission);
+
+  if (permission != nsIPermissionManager::ALLOW_ACTION)
+  {
+    return nullptr;
+  }
+
+  nsRefPtr<FMRadio> fmRadio = new FMRadio();
+  fmRadio->Init(aWindow);
+
+  return fmRadio.forget();
+}
+
 END_FMRADIO_NAMESPACE
+
