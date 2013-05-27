@@ -84,6 +84,17 @@ private:
 
   void DoDisable();
 
+  /**
+   * Round the frequency to match the range of frequency and the channel width.
+   * If the given frequency is out of range, return 0.
+   * For example:
+   *  - lower: 87.5MHz, upper: 108MHz, channel width: 0.2MHz
+   *    87600 is rounded to 87700
+   *    87580 is rounded to 87500
+   *    109000 is not rounded, null will be returned
+   */
+  int32_t RoundFrequency(int32_t aFrequencyInKHz);
+
 private:
   bool mEnabled;
   int32_t mFrequencyInKHz;
@@ -92,6 +103,10 @@ private:
   /* Indicates if the FM radio is currently being enabled */
   bool mEnabling;
   bool mSeeking;
+
+  double mUpperBoundInMHz;
+  double mLowerBoundInMHz;
+  double mChannelWidthInMHz;
 
   nsRefPtr<ReplyRunnable> mDisableRequest;
   nsRefPtr<ReplyRunnable> mEnableRequest;
