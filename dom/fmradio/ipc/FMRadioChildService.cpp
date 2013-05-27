@@ -50,54 +50,64 @@ FMRadioChildService::Init()
   sFMRadioChild->SendGetSettings(&mSettings);
 }
 
-bool FMRadioChildService::IsEnabled()
+bool
+FMRadioChildService::IsEnabled()
 {
   return mEnabled;
 }
 
-double FMRadioChildService::GetFrequency()
+double
+FMRadioChildService::GetFrequency()
 {
   return mFrequency;
 }
 
 
-double FMRadioChildService::GetFrequencyUpperBound()
+double
+FMRadioChildService::GetFrequencyUpperBound()
 {
   return mSettings.upperBound();
 }
 
-double FMRadioChildService::GetFrequencyLowerBound()
+double
+FMRadioChildService::GetFrequencyLowerBound()
 {
   return mSettings.lowerBound();
 }
 
-double FMRadioChildService::GetChannelWidth()
+double
+FMRadioChildService::GetChannelWidth()
 {
   return mSettings.channelWidth();
 }
 
-void FMRadioChildService::Enable(double aFrequency, ReplyRunnable* aRunnable)
+void
+FMRadioChildService::Enable(double aFrequency, ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, EnableRequest(aFrequency));
 }
 
-void FMRadioChildService::Disable(ReplyRunnable* aRunnable)
+void
+FMRadioChildService::Disable(ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, DisableRequest());
 }
 
-void FMRadioChildService::SetFrequency(double aFrequency,
+void
+FMRadioChildService::SetFrequency(double aFrequency,
                                        ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, SetFrequencyRequest(aFrequency));
 }
 
-void FMRadioChildService::Seek(bool upward, ReplyRunnable* aRunnable)
+void
+FMRadioChildService::Seek(bool upward, ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, SeekRequest(upward));
 }
 
-void FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
+void
+FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, CancelSeekRequest());
 }
