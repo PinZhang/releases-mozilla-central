@@ -5,7 +5,7 @@
 
 #include "mozilla/dom/fmradio/PFMRadioRequestChild.h"
 #include "FMRadioRequestChild.h"
-#include "ReplyRunnable.h"
+#include "FMRadioService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestChild", args)

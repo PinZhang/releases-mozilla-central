@@ -9,13 +9,13 @@
 
 #include "FMRadioCommon.h"
 #include "DOMRequest.h"
-#include "mozilla/dom/fmradio/FMRadioService.h"
+#include "FMRadioService.h"
+#include "mozilla/dom/fmradio/PFMRadio.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
 class FMRadioRequestType;
-class Settings;
 
 class FMRadioChildService : public IFMRadioService
 {

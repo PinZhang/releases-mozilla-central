@@ -7,14 +7,27 @@
 #ifndef mozilla_dom_fmradio_ipc_fmradioservice_h__
 #define mozilla_dom_fmradio_ipc_fmradioservice_h__
 
+#include "mozilla/dom/fmradio/PFMRadioRequest.h"
 #include "FMRadioCommon.h"
-#include "mozilla/dom/fmradio/FMRadioRequestParent.h"
+#include "mozilla/Hal.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioParent;
-class FMRadioRequestParent;
-class ReplyRunnable;
+class ReplyRunnable : public nsRunnable
+{
+public:
+  ReplyRunnable() : mResponseType(SuccessResponse()) {}
+  virtual ~ReplyRunnable() {}
+
+  void
+  SetReply(const FMRadioResponseType& aResponseType)
+  {
+    mResponseType = aResponseType;
+  }
+
+protected:
+  FMRadioResponseType mResponseType;
+};
 
 class IFMRadioService
 {
@@ -48,9 +61,6 @@ protected:
 class FMRadioService : public IFMRadioService
                      , public hal::FMRadioObserver
 {
-  friend class FMRadioParent;
-  friend class FMRadioRequestParent;
-
 public:
   static IFMRadioService* Get();
 
