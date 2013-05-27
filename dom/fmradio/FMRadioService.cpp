@@ -10,7 +10,6 @@
 #include "nsIAudioManager.h"
 #include "AudioManager.h"
 #include "nsDOMClassInfo.h"
-#include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/fmradio/FMRadioChildService.h"
 

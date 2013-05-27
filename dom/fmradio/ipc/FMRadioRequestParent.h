@@ -12,7 +12,7 @@
 #include "mozilla/dom/fmradio/PFMRadio.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
-#include "ReplyRunnable.h"
+#include "FMRadioService.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
