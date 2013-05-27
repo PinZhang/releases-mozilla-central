@@ -30,19 +30,31 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy);
 
 private:
-  nsAutoRefCnt mRefCnt;
-  FMRadioRequestType mRequestType;
-
-private:
   class ParentReplyRunnable : public ReplyRunnable
   {
   public:
     ParentReplyRunnable(FMRadioRequestParent* aParent)
       : ReplyRunnable()
       , mParent(aParent)
-    { }
+    {
+      mCanceled = !(mParent->AddRunnable(this));
+    }
 
     virtual ~ParentReplyRunnable() { }
+
+    NS_IMETHOD Run()
+    {
+      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+      nsresult rv = NS_OK;
+
+      if (!mCanceled)
+      {
+        rv = CancelableRun();
+      }
+
+      return rv;
+    }
 
     nsresult CancelableRun()
     {
@@ -50,9 +62,39 @@ private:
       return NS_OK;
     }
 
+    void Cancel()
+    {
+      mCanceled = true;
+    }
+
   private:
     nsRefPtr<FMRadioRequestParent> mParent;
+    bool mCanceled;
   };
+
+private:
+  bool AddRunnable(ParentReplyRunnable* aRunnable)
+  {
+    MutexAutoLock lock(mMutex);
+    if (mActorDestroyed)
+      return false;
+
+    mRunnables.AppendElement(aRunnable);
+    return true;
+  }
+
+  void RemoveRunnable(ParentReplyRunnable* aRunnable)
+  {
+    MutexAutoLock lock(mMutex);
+    mRunnables.RemoveElement(aRunnable);
+  }
+
+private:
+  nsAutoRefCnt mRefCnt;
+  FMRadioRequestType mRequestType;
+  Mutex mMutex;
+  bool mActorDestroyed;
+  nsTArray<nsRefPtr<ParentReplyRunnable> > mRunnables;
 };
 
 END_FMRADIO_NAMESPACE

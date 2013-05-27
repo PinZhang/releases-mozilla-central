@@ -13,6 +13,8 @@ BEGIN_FMRADIO_NAMESPACE
 
 FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aType)
   : mRequestType(aType)
+  , mMutex("FMRadioRequestParent::mMutex")
+  , mActorDestroyed(false)
 {
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
@@ -79,7 +81,14 @@ FMRadioRequestParent::~FMRadioRequestParent()
 void
 FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  return;
+  LOG("ActorDestroy: %d", aWhy);
+  MutexAutoLock lock(mMutex);
+  mActorDestroyed = true;
+  int32_t count = mRunnables.Length();
+  for (int32_t index = 0; index < count; index++)
+  {
+    mRunnables[index]->Cancel();
+  }
 }
 
 NS_IMPL_THREADSAFE_ADDREF(FMRadioRequestParent)
