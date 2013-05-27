@@ -18,6 +18,17 @@
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadioService", args)
 
+#define BAND_87500_108000_kHz 1
+#define BAND_76000_108000_kHz 2
+#define BAND_76000_90000_kHz  3
+
+#define CHANNEL_WIDTH_200KHZ 200
+#define CHANNEL_WIDTH_100KHZ 100
+#define CHANNEL_WIDTH_50KHZ  50
+
+#define DOM_FMRADIO_BAND_PREF "dom.fmradio.band"
+#define DOM_FMRADIO_CHANNEL_WIDTH_PREF "dom.fmradio.channelWidth"
+
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
@@ -47,6 +58,38 @@ FMRadioService::FMRadioService()
     mFrequencyInKHz = GetFMRadioFrequency();
   }
 
+  switch (Preferences::GetInt(DOM_FMRADIO_BAND_PREF, BAND_87500_108000_kHz))
+  {
+    case BAND_76000_90000_kHz:
+      mUpperBoundInMHz = 90.0;
+      mLowerBoundInMHz = 76.0;
+      break;
+    case BAND_76000_108000_kHz:
+      mUpperBoundInMHz = 108.0;
+      mLowerBoundInMHz = 76.0;
+      break;
+    case BAND_87500_108000_kHz:
+    default:
+      mUpperBoundInMHz = 108.0;
+      mLowerBoundInMHz = 87.5;
+      break;
+  }
+
+  switch (Preferences::GetInt(DOM_FMRADIO_CHANNEL_WIDTH_PREF,
+    CHANNEL_WIDTH_100KHZ))
+  {
+    case CHANNEL_WIDTH_200KHZ:
+      mChannelWidthInMHz = 0.2;
+      break;
+    case CHANNEL_WIDTH_50KHZ:
+      mChannelWidthInMHz = 0.05;
+      break;
+    case CHANNEL_WIDTH_100KHZ:
+    default:
+      mChannelWidthInMHz = 0.1;
+      break;
+  }
+
   RegisterFMRadioObserver(this);
 }
 
@@ -57,30 +100,23 @@ FMRadioService::~FMRadioService()
   sObserverList = nullptr;
 }
 
-/**
- * Round the frequency to match the range of frequency and the channel width.
- * If the given frequency is out of range, return 0.
- * For example:
- *  - lower: 87.5MHz, upper: 108MHz, channel width: 0.2MHz
- *    87600 is rounded to 87700
- *    87580 is rounded to 87500
- *    109000 is not rounded, null will be returned
- */
+
 int32_t
-RoundFrequncy(int32_t aUpperBound,
-              int32_t aLowerBound,
-              int32_t aChannelWidth,
-              int32_t aFrequencyInKHz)
+FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
 {
-  if (aFrequencyInKHz < aLowerBound ||
-      aFrequencyInKHz > aUpperBound) {
+  int32_t lower = mLowerBoundInMHz * 1000;
+  int32_t upper = mUpperBoundInMHz * 1000;
+  int32_t channelWidth = mChannelWidthInMHz * 1000;
+
+  if (aFrequencyInKHz < lower ||
+      aFrequencyInKHz > upper) {
     return 0;
   }
 
-  int32_t partToBeRounded = aFrequencyInKHz - aLowerBound;
-  int32_t roundedPart = round(partToBeRounded / aChannelWidth) * aChannelWidth;
+  int32_t partToBeRounded = aFrequencyInKHz - lower;
+  int32_t roundedPart = round(partToBeRounded / channelWidth) * channelWidth;
 
-  return aLowerBound + roundedPart;
+  return lower + roundedPart;
 }
 
 class EnableRunnable : public nsRunnable
@@ -168,7 +204,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    FMRadioSeek(mUpward ? FM_RADIO_SEEK_DIRECTION_UP : FM_RADIO_SEEK_DIRECTION_DOWN);
+    FMRadioSeek(mUpward ? FM_RADIO_SEEK_DIRECTION_UP
+                        : FM_RADIO_SEEK_DIRECTION_DOWN);
     return NS_OK;
   }
 
@@ -217,19 +254,19 @@ FMRadioService::GetFrequency()
 double
 FMRadioService::GetFrequencyUpperBound()
 {
-  return 108.0;
+  return mUpperBoundInMHz;
 }
 
 double
 FMRadioService::GetFrequencyLowerBound()
 {
-  return 87.5;
+  return mLowerBoundInMHz;
 }
 
 double
 FMRadioService::GetChannelWidth()
 {
-  return 0.1;
+  return mChannelWidthInMHz;
 }
 
 void
@@ -268,10 +305,8 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  int32_t roundedFrequency = RoundFrequncy(GetFrequencyUpperBound() * 1000,
-                                           GetFrequencyLowerBound() * 1000,
-                                           GetChannelWidth() * 1000,
-                                           aFrequencyInMHz * 1000);
+  int32_t roundedFrequency = RoundFrequency(aFrequencyInMHz * 1000);
+
   if (!roundedFrequency)
   {
     LOG("Frequency is out of range");
@@ -289,9 +324,9 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
   // Cache the frequency value, and set it after the FM HW is enabled
   mFrequencyInKHz = roundedFrequency;
 
-  NS_DispatchToMainThread(new EnableRunnable(GetFrequencyUpperBound() * 1000,
-                                             GetFrequencyLowerBound() * 1000,
-                                             GetChannelWidth() * 1000));
+  NS_DispatchToMainThread(new EnableRunnable(mUpperBoundInMHz * 1000,
+                                             mLowerBoundInMHz * 1000,
+                                             mChannelWidthInMHz * 1000));
 }
 
 void
@@ -364,10 +399,8 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  int32_t roundedFrequency = RoundFrequncy(GetFrequencyUpperBound() * 1000,
-                                           GetFrequencyLowerBound() * 1000,
-                                           GetChannelWidth() * 1000,
-                                           aFrequencyInMHz * 1000);
+  int32_t roundedFrequency = RoundFrequency(aFrequencyInMHz * 1000);
+
   if (!roundedFrequency)
   {
     aRunnable->SetReply(ErrorResponse(
