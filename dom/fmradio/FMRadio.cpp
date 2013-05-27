@@ -57,7 +57,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(FMRadioRequest)
 
-  NS_IMETHOD CancelableRun()
+  NS_IMETHOD Run()
   {
     switch (mResponseType.type())
     {
