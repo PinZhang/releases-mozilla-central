@@ -29,6 +29,57 @@ protected:
   FMRadioResponseType mResponseType;
 };
 
+/**
+ * The FMRadio Service Interface for FMRadio.
+ *
+ * All the requests coming from the content page will be redirected to the
+ * concrete class object respectively.
+ *
+ * There are two concrete classes which implement the interface:
+ *  - FMRadioService
+ *    It's used in the main process, implements all the logics about FM Radio.
+ *
+ *  - FMRadioChildService
+ *    It's used in OOP subprocess, it's a kind of proxy which just send all
+ *    the requests to main process through IPC channel.
+ *
+ * Consider navigator.mozFMRadio.enable(), here is the call sequences:
+ *  - OOP
+ *    (1) Call navigator.mozFMRadio.enable().
+ *    (2) Return a DOMRequest object, and call FMRadioChildService.Enable() with
+ *        a ReplyRunnable object.
+ *    (3) Send IPC message to main process.
+ *    (4) Call FMRadioService::Enable() with a ReplyRunnable object.
+ *    (5) Call hal::EnableFMRadio().
+ *    (6) Notify FMRadioService object when FM radio HW is enabled.
+ *    (7) Dispatch the ReplyRunnable object created in (4).
+ *    (8) Send IPC message back to child process.
+ *    (9) Dispatch the ReplyRunnable object created in (2).
+ *   (10) Fire success callback of the DOMRequest Object created in (2).
+ *                     _ _ _ _ _ _ _ _ _ _ _ _ _ _
+ *                    |            OOP            |
+ *                    |                           |
+ *   Page  FMRadio    |  FMRadioChildService  IPC |    FMRadioService   Hal
+ *    | (1)  |        |          |             |  |           |          |
+ *    |----->|    (2) |          |             |  |           |          |
+ *    |      |--------|--------->|      (3)    |  |           |          |
+ *    |      |        |          |-----------> |  |   (4)     |          |
+ *    |      |        |          |             |--|---------->|  (5)     |
+ *    |      |        |          |             |  |           |--------->|
+ *    |      |        |          |             |  |           |  (6)     |
+ *    |      |        |          |             |  |   (7)     |<---------|
+ *    |      |        |          |      (8)    |<-|-----------|          |
+ *    |      |    (9) |          |<----------- |  |           |          |
+ *    | (10) |<-------|----------|             |  |           |          |
+ *    |<-----|        |          |             |  |           |          |
+ *                    |                           |
+ *                    |_ _ _ _ _ _ _ _ _ _ _ _ _ _|
+ *  - non-OOP
+ *    In non-OOP model, we don't need to send messages between processes, so
+ *    the call sequences are much more simpler, it almost just follows the
+ *    sequences presented in OOP model: (1) (2) (5) (6) (9) and (10).
+ *
+ */
 class IFMRadioService
 {
 public:
@@ -51,6 +102,13 @@ public:
 
   virtual void DistributeEvent(const FMRadioEventType& aType) = 0;
 
+  /**
+   * Register handler to receive the FM Radio events, including:
+   *   - StateChangedEvent
+   *   - FrequencyChangedEvent
+   *
+   * Called by FMRadio and FMRadioParent in OOP model.
+   */
   virtual void RegisterHandler(FMRadioEventObserver* aHandler) = 0;
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) = 0;
 
@@ -62,7 +120,15 @@ class FMRadioService : public IFMRadioService
                      , public hal::FMRadioObserver
 {
 public:
+  /**
+   * Static method to return the singleton instance.
+   *
+   * If it's in the child process, we will get an object of FMRadioChildService.
+   */
   static IFMRadioService* Get();
+
+  void UpdatePowerState();
+  void UpdateFrequency();
 
   /* FMRadioObserver */
   virtual void Notify(const hal::FMRadioOperationInformation& info);
@@ -85,24 +151,11 @@ public:
   virtual void RegisterHandler(FMRadioEventObserver* aHandler);
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler);
 
-  void UpdatePowerState();
-  void UpdateFrequency();
-
 private:
   FMRadioService();
   ~FMRadioService();
 
   void DoDisable();
-
-  /**
-   * Round the frequency to match the range of frequency and the channel width.
-   * If the given frequency is out of range, return 0.
-   * For example:
-   *  - lower: 87.5MHz, upper: 108MHz, channel width: 0.2MHz
-   *    87600 is rounded to 87700
-   *    87580 is rounded to 87500
-   *    109000 is not rounded, null will be returned
-   */
   int32_t RoundFrequency(int32_t aFrequencyInKHz);
 
 private:
@@ -112,6 +165,7 @@ private:
   bool mDisabling;
   /* Indicates if the FM radio is currently being enabled */
   bool mEnabling;
+  /* Indicates if the FM radio is currently seeking */
   bool mSeeking;
 
   double mUpperBoundInMHz;
