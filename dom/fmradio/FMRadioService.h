@@ -13,7 +13,7 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class ReplyRunnable : public nsRunnable
+class ReplyRunnable : public nsCancelableRunnable
 {
 public:
   ReplyRunnable() : mResponseType(SuccessResponse()) {}
@@ -64,10 +64,10 @@ class FMRadioService : public IFMRadioService
 public:
   static IFMRadioService* Get();
 
-  /* Observer Interface */
+  /* FMRadioObserver */
   virtual void Notify(const hal::FMRadioOperationInformation& info);
 
-  /* IFMRadioService interfaces */
+  /* IFMRadioService */
   virtual bool IsEnabled();
   virtual double GetFrequency();
   virtual double GetFrequencyUpperBound();

@@ -24,6 +24,9 @@ public:
   virtual bool
   Recv__delete__(const FMRadioResponseType& aResponse) MOZ_OVERRIDE;
 
+  virtual void
+  ActorDestroy(ActorDestroyReason aWhy);
+
 private:
   nsRefPtr<ReplyRunnable> mReplyRunnable;
 };
