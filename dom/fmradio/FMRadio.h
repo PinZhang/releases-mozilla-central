@@ -11,19 +11,18 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
 #include "DOMRequest.h"
+#include "FMRadioService.h"
 
 class nsPIDOMWindow;
 class nsIScriptContext;
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioChild;
 class FMRadioEventType;
 
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::SwitchObserver
                         , public FMRadioEventObserver
-
 {
 public:
   FMRadio();
@@ -79,9 +78,82 @@ public:
   static already_AddRefed<FMRadio>
   CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow);
 
+  void AddRunnable(ReplyRunnable* aRunnable)
+  {
+    mRunnables.AppendElement(aRunnable);
+  }
+
+  void RemoveRunnable(ReplyRunnable* aRunnable)
+  {
+    mRunnables.RemoveElement(aRunnable);
+  }
+
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
+  nsTArray<nsRefPtr<ReplyRunnable> > mRunnables;
+};
+
+class FMRadioRequest MOZ_FINAL : public ReplyRunnable
+{
+public:
+  FMRadioRequest(DOMRequest* aRequest, FMRadio* aFMRadio)
+    : mRequest(aRequest)
+    , mFMRadio(aFMRadio)
+    , mCanceled(false)
+  {
+    mFMRadio->AddRunnable(this);
+  }
+
+  virtual ~FMRadioRequest() { }
+
+  NS_IMETHOD Run()
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+    nsresult rv = NS_OK;
+
+    if (!mCanceled)
+    {
+      rv = CancelableRun();
+      mFMRadio->RemoveRunnable(this);
+    }
+
+    return NS_OK;
+  }
+
+  nsresult CancelableRun()
+  {
+    switch (mResponseType.type())
+    {
+      case FMRadioResponseType::TErrorResponse:
+      {
+        ErrorResponse response = mResponseType;
+        mRequest->FireError(response.error());
+        break;
+      }
+      case FMRadioResponseType::TSuccessResponse:
+      {
+        mRequest->FireSuccess(JSVAL_VOID);
+        break;
+      }
+      default:
+        NS_RUNTIMEABORT("not reached");
+        break;
+    }
+    return NS_OK;
+  }
+
+  NS_IMETHOD Cancel()
+  {
+    mCanceled = true;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<DOMRequest> mRequest;
+  nsRefPtr<FMRadio> mFMRadio;
+  bool mCanceled;
 };
 
 END_FMRADIO_NAMESPACE
