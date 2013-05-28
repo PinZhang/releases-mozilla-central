@@ -8,7 +8,7 @@
 #include "FMRadioService.h"
 
 #undef LOG
-#define LOG(args...) FM_LOG("PFMRadioRequestChild", args)
+#define LOG(args...) FM_LOG("FMRadioRequestChild", args)
 
 BEGIN_FMRADIO_NAMESPACE
 
@@ -28,9 +28,33 @@ FMRadioRequestChild::~FMRadioRequestChild()
 bool
 FMRadioRequestChild::Recv__delete__(const FMRadioResponseType& aType)
 {
+  LOG("Recv__delete__");
+
   mReplyRunnable->SetReply(aType);
   NS_DispatchToMainThread(mReplyRunnable);
+  // We set mReplyRunnable to nullptr to make sure we can handle it correctly
+  // in ActorDestroy().
+  mReplyRunnable = nullptr;
   return true;
+}
+
+void
+FMRadioRequestChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  LOG("ActorDestroy");
+
+  if (!mReplyRunnable)
+  {
+    return;
+  }
+
+  LOG("Window is closed: %d", aWhy);
+
+  // If mReplyRunnable is not nullptr, it means we didn't receive __delete__
+  // message normally, and we need cancel and dispatch it to make sure
+  // it will be removed from FMRadio::mRunnables
+  mReplyRunnable->Cancel();
+  NS_DispatchToMainThread(mReplyRunnable);
 }
 
 END_FMRADIO_NAMESPACE

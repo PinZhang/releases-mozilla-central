@@ -51,6 +51,7 @@ private:
       if (!mCanceled)
       {
         rv = CancelableRun();
+        mParent->RemoveRunnable(this);
       }
 
       return rv;
@@ -62,9 +63,10 @@ private:
       return NS_OK;
     }
 
-    void Cancel()
+    NS_IMETHOD Cancel()
     {
       mCanceled = true;
+      return NS_OK;
     }
 
   private:

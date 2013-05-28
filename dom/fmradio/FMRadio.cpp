@@ -11,7 +11,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/fmradio/FMRadioService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
 #include "nsIPermissionManager.h"
 
@@ -47,40 +46,6 @@ FMRadio::~FMRadio()
   LOG("FMRadio is destructed.");
 }
 
-class FMRadioRequest MOZ_FINAL : public ReplyRunnable
-{
-public:
-  FMRadioRequest(DOMRequest* aRequest)
-    : mRequest(aRequest) { }
-
-  virtual ~FMRadioRequest() { }
-
-  NS_IMETHOD Run()
-  {
-    switch (mResponseType.type())
-    {
-      case FMRadioResponseType::TErrorResponse:
-      {
-        ErrorResponse response = mResponseType;
-        mRequest->FireError(response.error());
-        break;
-      }
-      case FMRadioResponseType::TSuccessResponse:
-      {
-        mRequest->FireSuccess(JSVAL_VOID);
-        break;
-      }
-      default:
-        NS_RUNTIMEABORT("not reached");
-        break;
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<DOMRequest> mRequest;
-};
-
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
 {
@@ -109,6 +74,12 @@ FMRadio::Shutdown()
   if (!mHasInternalAntenna) {
     LOG("Unregister SWITCH_HEADPHONES observer.");
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
+  }
+
+  int32_t count = mRunnables.Length();
+  for (int32_t index = 0; index < count; index++)
+  {
+    mRunnables[index]->Cancel();
   }
 
   LOG("FMRadio is shutdown");
@@ -212,7 +183,7 @@ FMRadio::Enable(double aFrequency)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->Enable(aFrequency, r);
 
@@ -229,7 +200,7 @@ FMRadio::Disable()
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->Disable(r);
 
@@ -246,7 +217,7 @@ FMRadio::SetFrequency(double aFrequency)
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->SetFrequency(aFrequency, r);
 
@@ -263,7 +234,7 @@ FMRadio::SeekUp()
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->Seek(true, r);
 
@@ -281,7 +252,7 @@ FMRadio::SeekDown()
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->Seek(false, r);
 
@@ -298,7 +269,7 @@ FMRadio::CancelSeek()
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request);
+  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
 
   FMRadioService::Get()->CancelSeek(r);
 

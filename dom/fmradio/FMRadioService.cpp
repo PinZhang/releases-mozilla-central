@@ -224,19 +224,19 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
 int32_t
 FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
 {
-  int32_t lower = mLowerBoundInMHz * 1000;
-  int32_t upper = mUpperBoundInMHz * 1000;
+  int32_t lowerBoundInKHz = mLowerBoundInMHz * 1000;
+  int32_t upperBoundInKHz = mUpperBoundInMHz * 1000;
   int32_t channelWidth = mChannelWidthInMHz * 1000;
 
-  if (aFrequencyInKHz < lower ||
-      aFrequencyInKHz > upper) {
+  if (aFrequencyInKHz < lowerBoundInKHz ||
+      aFrequencyInKHz > upperBoundInKHz) {
     return 0;
   }
 
-  int32_t partToBeRounded = aFrequencyInKHz - lower;
+  int32_t partToBeRounded = aFrequencyInKHz - lowerBoundInKHz;
   int32_t roundedPart = round(partToBeRounded / channelWidth) * channelWidth;
 
-  return lower + roundedPart;
+  return lowerBoundInKHz + roundedPart;
 }
 
 bool
