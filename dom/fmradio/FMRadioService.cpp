@@ -221,6 +221,15 @@ FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
   }
 }
 
+/**
+ * Round the frequency to match the range of frequency and the channel width.
+ * If the given frequency is out of range, return 0.
+ * For example:
+ *  - lower: 87.5MHz, upper: 108MHz, channel width: 0.2MHz
+ *    87600 is rounded to 87700
+ *    87580 is rounded to 87500
+ *    109000 is not rounded, null will be returned
+ */
 int32_t
 FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
 {
@@ -290,9 +299,6 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
-  // If we call Disable() immediately after Enable() is called, we will wait for
-  // the enabled-event from HAL, and apply disable action after that, so we need
-  // to check `mDisabling` before checking `mEnabling`.
   if (mDisabling)
   {
     LOG("It's disabling");
@@ -358,13 +364,13 @@ FMRadioService::Disable(ReplyRunnable* aRunnable)
   }
 
   mDisabling = true;
-  // If the radio is currently enabling, we send an enable-failed message
-  // immediately. When the radio finishes enabling, we'll send the
-  // disable-succeeded message.
   mDisableRequest = aRunnable;
 
   if (mEnabling)
   {
+    // If the radio is currently enabling, we fire the error callback
+    // immediately. When the radio finishes enabling, we'll fire the success
+    // callback for the disable request.
     LOG("It's enabling, fail it immediately.");
     mEnableRequest->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's canceled")));
     NS_DispatchToMainThread(mEnableRequest);
@@ -388,7 +394,7 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   // Because IsFMRadioOn() should be false when it's being enabled, we don't
-  // need to check `mEnabling`.
+  // need to check if `mEnabling` is true.
   if (!IsFMRadioOn())
   {
     aRunnable->SetReply(ErrorResponse(
@@ -521,15 +527,15 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
     {
       LOG("FM HW is enabled.");
 
-      // The signal we received might be triggered by other thread/process, we
-      // should check if `mEnabling` is true, if false, we should skip it and
-      // just update the power state and frequency.
+      // The signal we received might be triggered by enable request in other
+      // process, we should check if `mEnabling` is true, if false, we should
+      // skip it and just update the power state and frequency.
       if (mEnabling)
       {
         mEnabling = false;
 
-        // If we're disabling, go disable the radio now.
-        // We don't release `mEnableRequest` here, because we have release it
+        // If we're disabling, go disable the radio right now.
+        // We don't release `mEnableRequest` here, because we have released it
         // when Disable() is called.
         if (mDisabling)
         {
@@ -538,12 +544,13 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
           return;
         }
 
+        // Fire success callback for the enable request.
         LOG("Fire Success for enable request.");
         mEnableRequest->SetReply(SuccessResponse());
         NS_DispatchToMainThread(mEnableRequest);
         mEnableRequest = nullptr;
 
-        // To make sure the FM app will get right frequency after the FM
+        // To make sure the FM app will get the right frequency after the FM
         // radio is enabled, we have to set the frequency first.
         SetFMRadioFrequency(mFrequencyInKHz);
       }
@@ -552,14 +559,14 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
         LOG("Not triggered by current thread, skip it.");
       }
 
-      // Update the current frequency without sending 'frequencyChange'
-      // msg, to make sure the FM app will get the right frequency when the
-      // 'enabled' event is fired.
+      // Update the current frequency without distributing the
+      // `FrequencyChangedEvent`, to make sure the FM app will get the right
+      // frequency when the `StateChangedEvent` is fired.
       mFrequencyInKHz = GetFMRadioFrequency();
       UpdatePowerState();
 
-      // The frequency is changed from '0' to some number, so we should
-      // send the 'frequencyChange' message manually.
+      // The frequency is changed from '0' to some meaningful number, so we
+      // should distribute the `FrequencyChangedEvent` manually.
       double frequencyInMHz = mFrequencyInKHz / 1000.0;
       DistributeEvent(FrequencyChangedEvent(frequencyInMHz));
 
@@ -569,9 +576,9 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
     {
       LOG("FM HW is disabled.");
 
-      // The signal we received might be triggered by other thread/process, we
-      // should check if `mDisabling` is true, if false, we should skip it and
-      // just update the power state.
+      // The signal we received might be triggered by disable request in other
+      // process, we should check if `mDisabling` is true, if false, we should
+      // skip it and just update the power state.
       if (mDisabling)
       {
         mDisabling = false;
@@ -602,9 +609,9 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
     {
       LOG("FM HW seek complete.");
 
-      // The signal we received might be triggered by other thread/process, we
-      // should check if `mSeeking` is true, if false, we should skip it and
-      // and just update the frequency
+      // The signal we received might be triggered by disable request in other
+      // process, we should check if `mSeeking` is true, if false, we should
+      // skip it and just update the frequency.
       if (mSeeking)
       {
         LOG("Fire success event for seeking request");
@@ -635,9 +642,9 @@ FMRadioService::UpdatePowerState()
   if (enabled != mEnabled)
   {
     mEnabled = enabled;
+    // We pass the frequency with `StateChangedEvent` to make sure the FM app
+    // will get the right frequency value when the `onenabled` event is fired.
     double frequencyInMHz = mFrequencyInKHz / 1000.0;
-    // To make sure the FM app will get the right frequency when the
-    // 'enabled' event is fired.
     DistributeEvent(StateChangedEvent(enabled, frequencyInMHz));
   }
 }
