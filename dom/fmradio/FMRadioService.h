@@ -116,10 +116,18 @@ protected:
   nsAutoRefCnt mRefCnt;
 };
 
+class ReadRilSettingTask;
+
 class FMRadioService : public IFMRadioService
                      , public hal::FMRadioObserver
+                     , public nsIObserver
 {
+  friend class ReadRilSettingTask;
+
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   /**
    * Static method to return the singleton instance.
    *
@@ -167,6 +175,9 @@ private:
   bool mEnabling;
   /* Indicates if the FM radio is currently seeking */
   bool mSeeking;
+
+  bool mHasReadRilSetting;
+  bool mRilDisabled;
 
   double mUpperBoundInMHz;
   double mLowerBoundInMHz;

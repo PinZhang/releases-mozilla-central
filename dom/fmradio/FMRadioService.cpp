@@ -12,6 +12,9 @@
 #include "nsDOMClassInfo.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/fmradio/FMRadioChildService.h"
+#include "nsIObserverService.h"
+#include "nsISettingsService.h"
+#include "nsJSUtils.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadioService", args)
@@ -26,6 +29,9 @@
 
 #define DOM_FMRADIO_BAND_PREF "dom.fmradio.band"
 #define DOM_FMRADIO_CHANNEL_WIDTH_PREF "dom.fmradio.channelWidth"
+
+#define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
+#define SETTING_KEY_RIL_RADIO_DISABLED "ril.radio.disabled"
 
 using namespace mozilla::hal;
 using mozilla::Preferences;
@@ -43,6 +49,8 @@ FMRadioService::FMRadioService()
   , mDisabling(false)
   , mEnabling(false)
   , mSeeking(false)
+  , mHasReadRilSetting(false)
+  , mRilDisabled(false)
   , mDisableRequest(nullptr)
   , mEnableRequest(nullptr)
   , mSeekRequest(nullptr)
@@ -89,12 +97,26 @@ FMRadioService::FMRadioService()
   }
 
   RegisterFMRadioObserver(this);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  MOZ_ASSERT(obs);
+
+  if (NS_FAILED(obs->AddObserver(this, MOZSETTINGS_CHANGED_ID, false)))
+  {
+    NS_WARNING("Failed to add settings change observer!");
+  }
 }
 
 FMRadioService::~FMRadioService()
 {
   LOG("destructor");
   UnregisterFMRadioObserver(this);
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (!obs || NS_FAILED(obs->RemoveObserver(this, MOZSETTINGS_CHANGED_ID)))
+  {
+    NS_WARNING("Can't unregister observers, or already unregistered");
+  }
+
   delete sObserverList;
   sObserverList = nullptr;
 }
@@ -127,11 +149,78 @@ public:
     // TODO apply path of bug 862899: AudioChannelAgent per process
     return NS_OK;
   }
+
 private:
   int32_t mUpperLimit;
   int32_t mLowerLimit;
   int32_t mSpaceType;
 };
+
+class ReadRilSettingTask : public nsISettingsServiceCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  ReadRilSettingTask(FMRadioService* aFMRadioService)
+    : mFMRadioService(aFMRadioService) { }
+  virtual ~ReadRilSettingTask() { }
+
+  NS_IMETHOD
+  Handle(const nsAString & aName, const JS::Value & aResult)
+  {
+    LOG("Read settings value");
+    mFMRadioService->mHasReadRilSetting = true;
+
+    if (!aResult.isBoolean())
+    {
+      LOG("Settings is not boolean");
+      mFMRadioService->mEnableRequest->SetReply(
+          ErrorResponse(NS_ConvertASCIItoUTF16("Unexpected error")));
+      NS_DispatchToMainThread(mFMRadioService->mEnableRequest);
+      mFMRadioService->mEnableRequest = nullptr;
+      mFMRadioService->mEnabling = false;
+      return NS_OK;
+    }
+
+    mFMRadioService->mRilDisabled = aResult.toBoolean();
+    LOG("Settings is: %d", mFMRadioService->mRilDisabled);
+    if (!mFMRadioService->mRilDisabled)
+    {
+      EnableRunnable* runnable =
+        new EnableRunnable(mFMRadioService->mUpperBoundInMHz * 1000,
+                           mFMRadioService->mLowerBoundInMHz * 1000,
+                           mFMRadioService->mChannelWidthInMHz * 1000);
+      NS_DispatchToMainThread(runnable);
+    }
+    else
+    {
+      mFMRadioService->mEnableRequest->SetReply(ErrorResponse(
+        NS_ConvertASCIItoUTF16("Airplane mode is enabled")));
+      NS_DispatchToMainThread(mFMRadioService->mEnableRequest);
+      mFMRadioService->mEnableRequest = nullptr;
+      mFMRadioService->mEnabling = false;
+    }
+
+    return NS_OK;
+  }
+
+  NS_IMETHOD
+  HandleError(const nsAString& aName)
+  {
+    LOG("Can not read settings value.");
+    mFMRadioService->mEnableRequest->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("Unexpected error")));
+    NS_DispatchToMainThread(mFMRadioService->mEnableRequest);
+    mFMRadioService->mEnableRequest = nullptr;
+    mFMRadioService->mEnabling = false;
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<FMRadioService> mFMRadioService;
+};
+
+NS_IMPL_ISUPPORTS1(ReadRilSettingTask, nsISettingsServiceCallback)
 
 class DisableRunnable : public nsRunnable
 {
@@ -328,6 +417,15 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     return;
   }
 
+  if (mHasReadRilSetting && mRilDisabled)
+  {
+    LOG("Airplane mode is enabled");
+    aRunnable->SetReply(ErrorResponse(
+      NS_ConvertASCIItoUTF16("Airplane mode is enabled")));
+    NS_DispatchToMainThread(aRunnable);
+    return;
+  }
+
   mEnabling = true;
   // Cache the enable request just in case disable() is called
   // while the FM radio HW is being enabled.
@@ -335,6 +433,24 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 
   // Cache the frequency value, and set it after the FM HW is enabled
   mFrequencyInKHz = roundedFrequency;
+
+  if (!mHasReadRilSetting)
+  {
+    LOG("Settings value has not been read.");
+    nsCOMPtr<nsISettingsService> settings =
+      do_GetService("@mozilla.org/settingsService;1");
+    NS_ASSERTION(settings, "Can't create settings service");
+
+    nsCOMPtr<nsISettingsServiceLock> settingsLock;
+    nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
+    NS_ASSERTION(rv, "Can't create settings lock");
+
+    nsRefPtr<ReadRilSettingTask> callback = new ReadRilSettingTask(this);
+    rv = settingsLock->Get(SETTING_KEY_RIL_RADIO_DISABLED, callback);
+    NS_ASSERTION(rv, "Can't get settings value");
+
+    return;
+  }
 
   NS_DispatchToMainThread(new EnableRunnable(mUpperBoundInMHz * 1000,
                                              mLowerBoundInMHz * 1000,
@@ -350,16 +466,22 @@ FMRadioService::Disable(ReplyRunnable* aRunnable)
   if (mDisabling)
   {
     LOG("It's disabling");
-    aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabling")));
-    NS_DispatchToMainThread(aRunnable);
+    if (aRunnable)
+    {
+      aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabling")));
+      NS_DispatchToMainThread(aRunnable);
+    }
     return;
   }
 
   if (!mEnabling && !IsFMRadioOn())
   {
     LOG("It's disabled");
-    aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabled")));
-    NS_DispatchToMainThread(aRunnable);
+    if (aRunnable)
+    {
+      aRunnable->SetReply(ErrorResponse(NS_ConvertASCIItoUTF16("It's disabled")));
+      NS_DispatchToMainThread(aRunnable);
+    }
     return;
   }
 
@@ -582,9 +704,13 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       if (mDisabling)
       {
         mDisabling = false;
-        mDisableRequest->SetReply(SuccessResponse());
-        NS_DispatchToMainThread(mDisableRequest);
-        mDisableRequest = nullptr;
+
+        if (mDisableRequest)
+        {
+          mDisableRequest->SetReply(SuccessResponse());
+          NS_DispatchToMainThread(mDisableRequest);
+          mDisableRequest = nullptr;
+        }
       }
       else
       {
@@ -660,6 +786,69 @@ FMRadioService::UpdateFrequency()
     DistributeEvent(FrequencyChangedEvent(frequencyInMHz));
   }
 }
+
+NS_IMETHODIMP
+FMRadioService::Observe(nsISupports * aSubject,
+                        const char * aTopic,
+                        const PRUnichar * aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sFMRadioService);
+
+  if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID))
+  {
+    // The string that we're interested in will be a JSON string looks like:
+    //  {"key":"ril.radio.disabled","value":true}
+    mozilla::AutoSafeJSContext cx;
+    nsDependentString dataStr(aData);
+    JS::Value val;
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
+        !val.isObject()) {
+      return NS_OK;
+    }
+
+    JSObject& obj(val.toObject());
+    JS::Value key;
+    if (!JS_GetProperty(cx, &obj, "key", &key) ||
+        !key.isString()) {
+      return NS_OK;
+    }
+
+    JSString *jsKey = JS_ValueToString(cx, key);
+    nsDependentJSString keyStr;
+    if (!keyStr.init(cx, jsKey)) {
+      return NS_OK;
+    }
+
+    JS::Value value;
+    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+      return NS_OK;
+    }
+
+    if (keyStr.EqualsLiteral(SETTING_KEY_RIL_RADIO_DISABLED)) {
+      if (!value.isBoolean()) {
+        return NS_OK;
+      }
+
+      mRilDisabled = value.toBoolean();
+
+      // Disable the FM radio HW if Airplane mode is enabled.
+      if (mRilDisabled)
+      {
+        LOG("mRilDisabled is false, disable the FM right now");
+        Disable(nullptr);
+      }
+
+      return NS_OK;
+    }
+
+    LOG("Observer: Settings is changed to %d", mRilDisabled);
+  }
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS1(FMRadioService, nsIObserver)
 
 bool
 IsMainProcess()
