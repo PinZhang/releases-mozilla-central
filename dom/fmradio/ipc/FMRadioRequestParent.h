@@ -16,21 +16,21 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioRequestParent : public PFMRadioRequestParent
+class FMRadioRequestParent MOZ_FINAL : public PFMRadioRequestParent
 {
 public:
   FMRadioRequestParent(const FMRadioRequestType& aRequestType);
-  virtual ~FMRadioRequestParent();
+  ~FMRadioRequestParent();
 
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
   void Dispatch();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy);
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
 private:
-  class ParentReplyRunnable : public ReplyRunnable
+  class ParentReplyRunnable MOZ_FINAL : public ReplyRunnable
   {
   public:
     ParentReplyRunnable(FMRadioRequestParent* aParent)
@@ -40,16 +40,13 @@ private:
       mCanceled = !(mParent->AddRunnable(this));
     }
 
-    virtual ~ParentReplyRunnable() { }
-
     NS_IMETHOD Run()
     {
       NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
       nsresult rv = NS_OK;
 
-      if (!mCanceled)
-      {
+      if (!mCanceled) {
         rv = CancelableRun();
         mParent->RemoveRunnable(this);
       }

@@ -16,23 +16,23 @@ BEGIN_FMRADIO_NAMESPACE
 
 class PFMRadioRequestParent;
 
-class FMRadioParent : public PFMRadioParent
-                    , public FMRadioEventObserver
+class FMRadioParent MOZ_FINAL : public PFMRadioParent
+                              , public FMRadioEventObserver
 {
 public:
   FMRadioParent();
+  ~FMRadioParent();
 
-  virtual ~FMRadioParent();
-  virtual void ActorDestroy(ActorDestroyReason aWhy);
-
-  virtual bool
-  RecvIsEnabled(bool* aEnabled);
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
-  RecvGetFrequency(double* aFrequency);
+  RecvIsEnabled(bool* aEnabled) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvGetFrequency(double* aFrequency) MOZ_OVERRIDE;
 
   bool
-  RecvGetSettings(Settings* aSettings);
+  RecvGetSettings(Settings* aSettings) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestParent*
   AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
@@ -41,7 +41,7 @@ public:
   DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
 
   /* Observer Interface */
-  virtual void Notify(const FMRadioEventType& aType);
+  virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 };
 
 END_FMRADIO_NAMESPACE

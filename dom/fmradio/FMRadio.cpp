@@ -77,8 +77,7 @@ FMRadio::Shutdown()
   }
 
   int32_t count = mRunnables.Length();
-  for (int32_t index = 0; index < count; index++)
-  {
+  for (int32_t index = 0; index < count; index++) {
     mRunnables[index]->Cancel();
   }
 
@@ -94,6 +93,8 @@ FMRadio::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 void
 FMRadio::Notify(const SwitchEvent& aEvent)
 {
+  MOZ_ASSERT(!mHasInternalAntenna);
+
   if (mHeadphoneState != aEvent.status()) {
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
@@ -105,12 +106,9 @@ FMRadio::Notify(const SwitchEvent& aEvent)
 void
 FMRadio::Notify(const FMRadioEventType& aType)
 {
-  switch(aType.type())
-  {
+  switch (aType.type()) {
     case FMRadioEventType::TFrequencyChangedEvent:
     {
-      FrequencyChangedEvent event = aType;
-      LOG("Frequency is changed to: %f", event.frequency());
       DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
       break;
     }
@@ -118,13 +116,10 @@ FMRadio::Notify(const FMRadioEventType& aType)
     {
       StateChangedEvent event = aType;
 
-      if (event.enabled())
-      {
+      if (event.enabled()) {
         LOG("Fire onenabled");
         DispatchTrustedEvent(ENABLED_EVENT_NAME);
-      }
-      else
-      {
+      } else {
         LOG("Fire ondisabled");
         DispatchTrustedEvent(DISABLED_EVENT_NAME);
       }
@@ -177,8 +172,7 @@ already_AddRefed<DOMRequest>
 FMRadio::Enable(double aFrequency)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -194,8 +188,7 @@ already_AddRefed<DOMRequest>
 FMRadio::Disable()
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -211,8 +204,7 @@ already_AddRefed<DOMRequest>
 FMRadio::SetFrequency(double aFrequency)
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -228,8 +220,7 @@ already_AddRefed<DOMRequest>
 FMRadio::SeekUp()
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -246,8 +237,7 @@ FMRadio::SeekDown()
 {
 
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -263,8 +253,7 @@ already_AddRefed<DOMRequest>
 FMRadio::CancelSeek()
 {
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
-  if (!win)
-  {
+  if (!win) {
     return nullptr;
   }
 
@@ -287,8 +276,7 @@ FMRadio::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
   uint32_t permission = nsIPermissionManager::DENY_ACTION;
   permMgr->TestPermissionFromWindow(aWindow, "fmradio", &permission);
 
-  if (permission != nsIPermissionManager::ALLOW_ACTION)
-  {
+  if (permission != nsIPermissionManager::ALLOW_ACTION) {
     return nullptr;
   }
 

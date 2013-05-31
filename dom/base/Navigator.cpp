@@ -1187,8 +1187,7 @@ Navigator::GetMozFMRadio(nsISupports** aFMRadio)
     NS_ENSURE_TRUE(mFMRadio, NS_OK);
   }
 
-  nsCOMPtr<nsISupports> fmRadio(mFMRadio);
-  fmRadio.forget(aFMRadio);
+  NS_ADDREF(*aFMRadio = mFMRadio);
 
   return NS_OK;
 }

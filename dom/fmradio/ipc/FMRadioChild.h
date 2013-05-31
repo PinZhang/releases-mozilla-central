@@ -12,17 +12,17 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioChild : public PFMRadioChild
+class FMRadioChild MOZ_FINAL : public PFMRadioChild
 {
 public:
   FMRadioChild();
-  virtual ~FMRadioChild();
+  ~FMRadioChild();
 
   virtual bool
   Recv__delete__() MOZ_OVERRIDE;
 
   virtual bool
-  RecvNotify(const FMRadioEventType& aType);
+  RecvNotify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestChild*
   AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;

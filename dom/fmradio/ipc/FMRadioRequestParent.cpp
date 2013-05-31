@@ -23,8 +23,7 @@ FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aType)
 void
 FMRadioRequestParent::Dispatch()
 {
-  switch (mRequestType.type())
-  {
+  switch (mRequestType.type()) {
     case FMRadioRequestType::TEnableRequest:
     {
       LOG("Call Enable");
@@ -85,8 +84,7 @@ FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
   MutexAutoLock lock(mMutex);
   mActorDestroyed = true;
   int32_t count = mRunnables.Length();
-  for (int32_t index = 0; index < count; index++)
-  {
+  for (int32_t index = 0; index < count; index++) {
     mRunnables[index]->Cancel();
   }
 }
