@@ -120,14 +120,10 @@ class ReadRilSettingTask;
 
 class FMRadioService : public IFMRadioService
                      , public hal::FMRadioObserver
-                     , public nsIObserver
 {
   friend class ReadRilSettingTask;
 
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
   /**
    * Static method to return the singleton instance.
    *
@@ -160,6 +156,23 @@ public:
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
 
 private:
+  class RilSettingsObserver MOZ_FINAL : public nsIObserver
+  {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+
+    RilSettingsObserver(FMRadioService* aService)
+      : mService(aService) { }
+    ~RilSettingsObserver() { }
+
+  private:
+    // We don't add reference for FMRadioService object, or there is no chance
+    // to release it.
+    FMRadioService* mService;
+  };
+
+private:
   FMRadioService();
   ~FMRadioService();
 
@@ -183,13 +196,16 @@ private:
   double mLowerBoundInMHz;
   double mChannelWidthInMHz;
 
+  nsCOMPtr<nsIObserver> mSettingsObserver;
+
   nsRefPtr<ReplyRunnable> mDisableRequest;
   nsRefPtr<ReplyRunnable> mEnableRequest;
   nsRefPtr<ReplyRunnable> mSeekRequest;
 
+  FMRadioEventObserverList* mObserverList;
+
 private:
   static nsRefPtr<FMRadioService> sFMRadioService;
-  static FMRadioEventObserverList* sObserverList;
 };
 
 END_FMRADIO_NAMESPACE
