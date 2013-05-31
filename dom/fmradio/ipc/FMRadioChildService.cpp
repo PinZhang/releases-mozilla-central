@@ -117,8 +117,7 @@ FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
 {
   LOG("We have %d observer to broadcast the event", sChildEventObserverList->Length());
 
-  switch(aType.type())
-  {
+  switch (aType.type()) {
     case FMRadioEventType::TFrequencyChangedEvent:
     {
       FrequencyChangedEvent event = aType;
@@ -153,13 +152,10 @@ FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
   LOG("Unregister observer");
   sChildEventObserverList->RemoveObserver(aHandler);
 
-  if (sChildEventObserverList->Length() == 0)
-  {
+  if (sChildEventObserverList->Length() == 0) {
     LOG("NO handler anymore.");
     delete this;
-  }
-  else
-  {
+  } else {
     LOG("We have %d observer left", sChildEventObserverList->Length());
   }
 }
