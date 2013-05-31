@@ -34,8 +34,8 @@ public:
   void Shutdown();
 
   /* Observer Interface */
-  virtual void Notify(const hal::SwitchEvent& aEvent);
-  virtual void Notify(const FMRadioEventType& aType);
+  virtual void Notify(const hal::SwitchEvent& aEvent) MOZ_OVERRIDE;
+  virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
   /* WebIDL Interface */
   nsPIDOMWindow * GetParentObject() const
@@ -95,17 +95,21 @@ private:
 };
 
 class FMRadioRequest MOZ_FINAL : public ReplyRunnable
+                               , public DOMRequest
 {
 public:
-  FMRadioRequest(DOMRequest* aRequest, FMRadio* aFMRadio)
-    : mRequest(aRequest)
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FMRadioRequest, DOMRequest)
+
+  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
+    : DOMRequest(aWindow)
     , mFMRadio(aFMRadio)
     , mCanceled(false)
   {
     mFMRadio->AddRunnable(this);
   }
 
-  virtual ~FMRadioRequest() { }
+  ~FMRadioRequest() { }
 
   NS_IMETHOD Run()
   {
@@ -113,8 +117,7 @@ public:
 
     nsresult rv = NS_OK;
 
-    if (!mCanceled)
-    {
+    if (!mCanceled) {
       rv = CancelableRun();
       mFMRadio->RemoveRunnable(this);
     }
@@ -124,17 +127,16 @@ public:
 
   nsresult CancelableRun()
   {
-    switch (mResponseType.type())
-    {
+    switch (mResponseType.type()) {
       case FMRadioResponseType::TErrorResponse:
       {
         ErrorResponse response = mResponseType;
-        mRequest->FireError(response.error());
+        FireError(response.error());
         break;
       }
       case FMRadioResponseType::TSuccessResponse:
       {
-        mRequest->FireSuccess(JSVAL_VOID);
+        FireSuccess(JSVAL_VOID);
         break;
       }
       default:
@@ -151,7 +153,6 @@ public:
   }
 
 private:
-  nsRefPtr<DOMRequest> mRequest;
   nsRefPtr<FMRadio> mFMRadio;
   bool mCanceled;
 };

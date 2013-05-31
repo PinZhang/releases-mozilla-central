@@ -15,14 +15,8 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioChild*
-FMRadioChildService::sFMRadioChild;
-
 FMRadioChildService*
 FMRadioChildService::sFMRadioChildService;
-
-FMRadioEventObserverList*
-FMRadioChildService::sChildEventObserverList;
 
 FMRadioChildService::FMRadioChildService()
   : mEnabled(false)
@@ -30,24 +24,30 @@ FMRadioChildService::FMRadioChildService()
   , mSettings(Settings())
 {
   LOG("Constructor");
+  mChildEventObserverList = new FMRadioEventObserverList();
+
+  LOG("Init sFMRadioChild");
+  mFMRadioChild = new FMRadioChild();
+  ContentChild::GetSingleton()->SendPFMRadioConstructor(mFMRadioChild);
 }
 
 FMRadioChildService::~FMRadioChildService()
 {
   LOG("Destructor");
-  sFMRadioChildService = nullptr;
+
   // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
-  sFMRadioChild = nullptr;
-  delete sChildEventObserverList;
-  sChildEventObserverList = nullptr;
+  mFMRadioChild = nullptr;
+
+  delete mChildEventObserverList;
+  mChildEventObserverList = nullptr;
 }
 
 void
 FMRadioChildService::Init()
 {
-  sFMRadioChild->SendIsEnabled(&mEnabled);
-  sFMRadioChild->SendGetFrequency(&mFrequency);
-  sFMRadioChild->SendGetSettings(&mSettings);
+  mFMRadioChild->SendIsEnabled(&mEnabled);
+  mFMRadioChild->SendGetFrequency(&mFrequency);
+  mFMRadioChild->SendGetSettings(&mSettings);
 }
 
 bool
@@ -115,7 +115,7 @@ FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
 void
 FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
 {
-  LOG("We have %d observer to broadcast the event", sChildEventObserverList->Length());
+  LOG("We have %d observer to broadcast the event", mChildEventObserverList->Length());
 
   switch (aType.type()) {
     case FMRadioEventType::TFrequencyChangedEvent:
@@ -136,27 +136,28 @@ FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
       break;
   }
 
-  sChildEventObserverList->Broadcast(aType);
+  mChildEventObserverList->Broadcast(aType);
 }
 
 void
 FMRadioChildService::RegisterHandler(FMRadioEventObserver* aHandler)
 {
-  sChildEventObserverList->AddObserver(aHandler);
-  LOG("Register observer, we have %d observers", sChildEventObserverList->Length());
+  mChildEventObserverList->AddObserver(aHandler);
+  LOG("Register observer, we have %d observers", mChildEventObserverList->Length());
 }
 
 void
 FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
 {
   LOG("Unregister observer");
-  sChildEventObserverList->RemoveObserver(aHandler);
+  mChildEventObserverList->RemoveObserver(aHandler);
 
-  if (sChildEventObserverList->Length() == 0) {
+  if (mChildEventObserverList->Length() == 0) {
     LOG("NO handler anymore.");
+    sFMRadioChildService = nullptr;
     delete this;
   } else {
-    LOG("We have %d observer left", sChildEventObserverList->Length());
+    LOG("We have %d observer left", mChildEventObserverList->Length());
   }
 }
 
@@ -165,7 +166,7 @@ FMRadioChildService::SendRequest(ReplyRunnable* aReplyRunnable,
                                  FMRadioRequestType aType)
 {
   PFMRadioRequestChild* child = new FMRadioRequestChild(aReplyRunnable);
-  sFMRadioChild->SendPFMRadioRequestConstructor(child, aType);
+  mFMRadioChild->SendPFMRadioRequestConstructor(child, aType);
   LOG("Request is sent.");
 }
 
@@ -185,13 +186,6 @@ FMRadioChildService::Get()
 
   LOG("Create sFMRadioChildService");
   sFMRadioChildService = new FMRadioChildService();
-
-  LOG("Init sChildEventObserverList");
-  sChildEventObserverList = new FMRadioEventObserverList();
-
-  LOG("Init sFMRadioChild");
-  sFMRadioChild = new FMRadioChild();
-  ContentChild::GetSingleton()->SendPFMRadioConstructor(sFMRadioChild);
 
   sFMRadioChildService->Init();
 

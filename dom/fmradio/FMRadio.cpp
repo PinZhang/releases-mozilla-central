@@ -176,12 +176,10 @@ FMRadio::Enable(double aFrequency)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->Enable(aFrequency, r);
 
-  return request.forget();
+  return r.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -192,12 +190,10 @@ FMRadio::Disable()
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->Disable(r);
 
-  return request.forget();
+  return r.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -208,12 +204,10 @@ FMRadio::SetFrequency(double aFrequency)
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->SetFrequency(aFrequency, r);
 
-  return request.forget();
+  return r.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -224,12 +218,10 @@ FMRadio::SeekUp()
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->Seek(true, r);
 
-  return request.forget();
+  return r.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -241,12 +233,10 @@ FMRadio::SeekDown()
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->Seek(false, r);
 
-  return request.forget();
+  return r.forget();
 }
 
 already_AddRefed<DOMRequest>
@@ -257,12 +247,10 @@ FMRadio::CancelSeek()
     return nullptr;
   }
 
-  nsRefPtr<DOMRequest> request = new DOMRequest(win);
-  nsRefPtr<ReplyRunnable> r = new FMRadioRequest(request, this);
-
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
   FMRadioService::Get()->CancelSeek(r);
 
-  return request.forget();
+  return r.forget();
 }
 
 // static
@@ -285,6 +273,14 @@ FMRadio::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
 
   return fmRadio.forget();
 }
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FMRadioRequest, DOMRequest)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FMRadioRequest, DOMRequest)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_ISUPPORTS_INHERITED0(FMRadioRequest, DOMRequest)
 
 END_FMRADIO_NAMESPACE
 

@@ -39,7 +39,7 @@ function enableFMRadio() {
   let req = FMRadio.enable(90);
 
   req.onsuccess = function() {
-    enableAirplanMode();
+    enableAirplaneMode();
   };
 
   req.onerror = function() {
@@ -47,9 +47,10 @@ function enableFMRadio() {
   };
 }
 
-function enableAirplanMode() {
+function enableAirplaneMode() {
   log("Enable airplane mode");
   FMRadio.ondisabled = function() {
+    FMRadio.ondisabled = null;
     enableFMRadioWithAirplanModeEnabled();
   };
 

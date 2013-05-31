@@ -54,10 +54,11 @@ private:
   double mFrequency;
   Settings mSettings;
 
+  FMRadioChild* mFMRadioChild;
+  FMRadioEventObserverList* mChildEventObserverList;
+
 private:
-  static FMRadioChild* sFMRadioChild;
   static FMRadioChildService* sFMRadioChildService;
-  static FMRadioEventObserverList* sChildEventObserverList;
 };
 
 END_FMRADIO_NAMESPACE
