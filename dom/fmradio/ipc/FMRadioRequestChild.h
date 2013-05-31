@@ -15,17 +15,17 @@ BEGIN_FMRADIO_NAMESPACE
 
 class ReplyRunnable;
 
-class FMRadioRequestChild : public PFMRadioRequestChild
+class FMRadioRequestChild MOZ_FINAL : public PFMRadioRequestChild
 {
 public:
   FMRadioRequestChild(ReplyRunnable* aReplyRunnable);
-  virtual ~FMRadioRequestChild();
+  ~FMRadioRequestChild();
 
   virtual bool
   Recv__delete__(const FMRadioResponseType& aResponse) MOZ_OVERRIDE;
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy);
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
 private:
   nsRefPtr<ReplyRunnable> mReplyRunnable;

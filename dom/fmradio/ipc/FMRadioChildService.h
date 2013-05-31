@@ -17,7 +17,7 @@ BEGIN_FMRADIO_NAMESPACE
 class FMRadioChild;
 class FMRadioRequestType;
 
-class FMRadioChildService : public IFMRadioService
+class FMRadioChildService MOZ_FINAL : public IFMRadioService
 {
   friend class FMRadioChild;
 
@@ -27,22 +27,22 @@ public:
   void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
 
   /* IFMRadioService interfaces */
-  virtual bool IsEnabled();
-  virtual double GetFrequency();
-  virtual double GetFrequencyUpperBound();
-  virtual double GetFrequencyLowerBound();
-  virtual double GetChannelWidth();
+  virtual bool IsEnabled() MOZ_OVERRIDE;
+  virtual double GetFrequency() MOZ_OVERRIDE;
+  virtual double GetFrequencyUpperBound() MOZ_OVERRIDE;
+  virtual double GetFrequencyLowerBound() MOZ_OVERRIDE;
+  virtual double GetChannelWidth() MOZ_OVERRIDE;
 
-  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable);
-  virtual void Disable(ReplyRunnable* aRunnable);
-  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable);
-  virtual void Seek(bool upward, ReplyRunnable* aRunnable);
-  virtual void CancelSeek(ReplyRunnable* aRunnable);
+  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual void DistributeEvent(const FMRadioEventType& aType);
+  virtual void DistributeEvent(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
-  virtual void RegisterHandler(FMRadioEventObserver* aHandler);
-  virtual void UnregisterHandler(FMRadioEventObserver* aHandler);
+  virtual void RegisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
+  virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
 
 private:
   FMRadioChildService();

@@ -84,8 +84,7 @@ FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 void
 FMRadioParent::Notify(const FMRadioEventType& aType)
 {
-  switch(aType.type())
-  {
+  switch (aType.type()) {
     case FMRadioEventType::TStateChangedEvent:
     case FMRadioEventType::TFrequencyChangedEvent:
     {

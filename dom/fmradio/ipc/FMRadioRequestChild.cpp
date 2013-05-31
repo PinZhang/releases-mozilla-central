@@ -43,8 +43,7 @@ FMRadioRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   LOG("ActorDestroy");
 
-  if (!mReplyRunnable)
-  {
+  if (!mReplyRunnable) {
     return;
   }
 
