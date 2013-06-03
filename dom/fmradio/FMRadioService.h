@@ -85,14 +85,13 @@ class IFMRadioService
 public:
   virtual ~IFMRadioService() { }
 
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IFMRadioService)
 
-  virtual bool IsEnabled() = 0;
-  virtual double GetFrequency() = 0;
-  virtual double GetFrequencyUpperBound() = 0;
-  virtual double GetFrequencyLowerBound() = 0;
-  virtual double GetChannelWidth() = 0;
+  virtual bool IsEnabled() const = 0;
+  virtual double GetFrequency() const = 0;
+  virtual double GetFrequencyUpperBound() const = 0;
+  virtual double GetFrequencyLowerBound() const = 0;
+  virtual double GetChannelWidth() const = 0;
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
   virtual void Disable(ReplyRunnable* aRunnable) = 0;
@@ -111,9 +110,6 @@ public:
    */
   virtual void RegisterHandler(FMRadioEventObserver* aHandler) = 0;
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) = 0;
-
-protected:
-  nsAutoRefCnt mRefCnt;
 };
 
 class ReadRilSettingTask;
@@ -138,11 +134,11 @@ public:
   virtual void Notify(const hal::FMRadioOperationInformation& info) MOZ_OVERRIDE;
 
   /* IFMRadioService */
-  virtual bool IsEnabled() MOZ_OVERRIDE;
-  virtual double GetFrequency() MOZ_OVERRIDE;
-  virtual double GetFrequencyUpperBound() MOZ_OVERRIDE;
-  virtual double GetFrequencyLowerBound() MOZ_OVERRIDE;
-  virtual double GetChannelWidth() MOZ_OVERRIDE;
+  virtual bool IsEnabled() const MOZ_OVERRIDE;
+  virtual double GetFrequency() const MOZ_OVERRIDE;
+  virtual double GetFrequencyUpperBound() const MOZ_OVERRIDE;
+  virtual double GetFrequencyLowerBound() const MOZ_OVERRIDE;
+  virtual double GetChannelWidth() const MOZ_OVERRIDE;
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;

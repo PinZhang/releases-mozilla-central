@@ -17,12 +17,22 @@ XPIDL_FLAGS += [
 MODULE = 'dom'
 
 EXPORTS.mozilla.dom.fmradio += [
-  'FMRadioCommon.h',
-  'FMRadioService.h',
-  'FMRadioChild.h',
-  'FMRadioParent.h',
-  'FMRadioRequestChild.h',
-  'FMRadioRequestParent.h',
-  'FMRadioChildService.h',
+    'FMRadioChild.h',
+    'FMRadioChildService.h',
+    'FMRadioCommon.h',
+    'FMRadioParent.h',
+    'FMRadioRequestChild.h',
+    'FMRadioRequestParent.h',
+    'FMRadioService.h',
+]
+
+CPP_SOURCES += [
+    'FMRadio.cpp',
+    'FMRadioChild.cpp',
+    'FMRadioChildService.cpp',
+    'FMRadioParent.cpp',
+    'FMRadioRequestChild.cpp',
+    'FMRadioRequestParent.cpp',
+    'FMRadioService.cpp',
 ]
 

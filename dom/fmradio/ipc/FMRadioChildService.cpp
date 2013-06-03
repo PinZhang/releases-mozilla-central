@@ -51,32 +51,32 @@ FMRadioChildService::Init()
 }
 
 bool
-FMRadioChildService::IsEnabled()
+FMRadioChildService::IsEnabled() const
 {
   return mEnabled;
 }
 
 double
-FMRadioChildService::GetFrequency()
+FMRadioChildService::GetFrequency() const
 {
   return mFrequency;
 }
 
 
 double
-FMRadioChildService::GetFrequencyUpperBound()
+FMRadioChildService::GetFrequencyUpperBound() const
 {
   return mSettings.upperBound();
 }
 
 double
-FMRadioChildService::GetFrequencyLowerBound()
+FMRadioChildService::GetFrequencyLowerBound() const
 {
   return mSettings.lowerBound();
 }
 
 double
-FMRadioChildService::GetChannelWidth()
+FMRadioChildService::GetChannelWidth() const
 {
   return mSettings.channelWidth();
 }
