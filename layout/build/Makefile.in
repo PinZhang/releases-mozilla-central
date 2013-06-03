@@ -123,6 +123,7 @@ endif #}
 ifdef MOZ_B2G_FM #{
 SHARED_LIBRARY_LIBS	+= \
   $(DEPTH)/dom/fmradio/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
+  $(DEPTH)/dom/fmradio/ipc/$(LIB_PREFIX)domfmradio_s.$(LIB_SUFFIX) \
   $(NULL)
 endif #}
 
