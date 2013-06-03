@@ -115,10 +115,8 @@ public:
   {
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-    nsresult rv = NS_OK;
-
     if (!mCanceled) {
-      rv = CancelableRun();
+      CancelableRun();
       mFMRadio->RemoveRunnable(this);
     }
 
@@ -136,7 +134,7 @@ public:
       }
       case FMRadioResponseType::TSuccessResponse:
       {
-        FireSuccess(JSVAL_VOID);
+        FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
         break;
       }
       default:
