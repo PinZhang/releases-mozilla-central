@@ -27,11 +27,11 @@ public:
   void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
 
   /* IFMRadioService interfaces */
-  virtual bool IsEnabled() MOZ_OVERRIDE;
-  virtual double GetFrequency() MOZ_OVERRIDE;
-  virtual double GetFrequencyUpperBound() MOZ_OVERRIDE;
-  virtual double GetFrequencyLowerBound() MOZ_OVERRIDE;
-  virtual double GetChannelWidth() MOZ_OVERRIDE;
+  virtual bool IsEnabled() const MOZ_OVERRIDE;
+  virtual double GetFrequency() const MOZ_OVERRIDE;
+  virtual double GetFrequencyUpperBound() const MOZ_OVERRIDE;
+  virtual double GetFrequencyLowerBound() const MOZ_OVERRIDE;
+  virtual double GetChannelWidth() const MOZ_OVERRIDE;
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;

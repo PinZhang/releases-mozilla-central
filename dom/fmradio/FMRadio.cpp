@@ -227,7 +227,6 @@ FMRadio::SeekUp()
 already_AddRefed<DOMRequest>
 FMRadio::SeekDown()
 {
-
   nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     return nullptr;

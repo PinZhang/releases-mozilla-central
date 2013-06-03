@@ -110,7 +110,7 @@ FMRadioService::~FMRadioService()
   LOG("destructor");
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (!obs || NS_FAILED(obs->RemoveObserver(mSettingsObserver,
-    MOZSETTINGS_CHANGED_ID))) {
+                                            MOZSETTINGS_CHANGED_ID))) {
     NS_WARNING("Can't unregister observers, or already unregistered");
   }
   UnregisterFMRadioObserver(this);
@@ -137,7 +137,7 @@ public:
 
     nsCOMPtr<nsIAudioManager> audioManager =
       do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-    NS_ASSERTION(audioManager, "No AudioManager");
+    MOZ_ASSERT(audioManager, "No AudioManager");
 
     audioManager->SetFmRadioAudioEnabled(true);
 
@@ -226,7 +226,7 @@ public:
 
     nsCOMPtr<nsIAudioManager> audioManager =
       do_GetService(NS_AUDIOMANAGER_CONTRACTID);
-    NS_ASSERTION(audioManager, "No AudioManager");
+    MOZ_ASSERT(audioManager, "No AudioManager");
 
     audioManager->SetFmRadioAudioEnabled(false);
 
@@ -324,13 +324,13 @@ FMRadioService::RoundFrequency(int32_t aFrequencyInKHz)
 }
 
 bool
-FMRadioService::IsEnabled()
+FMRadioService::IsEnabled() const
 {
   return IsFMRadioOn();
 }
 
 double
-FMRadioService::GetFrequency()
+FMRadioService::GetFrequency() const
 {
   if (IsEnabled()) {
     int32_t frequencyInKHz = GetFMRadioFrequency();
@@ -341,19 +341,19 @@ FMRadioService::GetFrequency()
 }
 
 double
-FMRadioService::GetFrequencyUpperBound()
+FMRadioService::GetFrequencyUpperBound() const
 {
   return mUpperBoundInMHz;
 }
 
 double
-FMRadioService::GetFrequencyLowerBound()
+FMRadioService::GetFrequencyLowerBound() const
 {
   return mLowerBoundInMHz;
 }
 
 double
-FMRadioService::GetChannelWidth()
+FMRadioService::GetChannelWidth() const
 {
   return mChannelWidthInMHz;
 }
@@ -362,7 +362,7 @@ void
 FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 {
   // We need to call EnableFMRadio() in main thread
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   bool isEnabled = IsFMRadioOn();
   if (isEnabled) {
@@ -416,15 +416,15 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aRunnable)
     LOG("Settings value has not been read.");
     nsCOMPtr<nsISettingsService> settings =
       do_GetService("@mozilla.org/settingsService;1");
-    NS_ASSERTION(settings, "Can't create settings service");
+    MOZ_ASSERT(settings, "Can't create settings service");
 
     nsCOMPtr<nsISettingsServiceLock> settingsLock;
     nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
-    NS_ASSERTION(rv, "Can't create settings lock");
+    MOZ_ASSERT(rv, "Can't create settings lock");
 
     nsRefPtr<ReadRilSettingTask> callback = new ReadRilSettingTask(this);
     rv = settingsLock->Get(SETTING_KEY_RIL_RADIO_DISABLED, callback);
-    NS_ASSERTION(rv, "Can't get settings value");
+    MOZ_ASSERT(rv, "Can't get settings value");
 
     return;
   }
@@ -438,7 +438,7 @@ void
 FMRadioService::Disable(ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   if (mDisabling) {
     LOG("It's disabling");
@@ -485,7 +485,7 @@ void
 FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // Because IsFMRadioOn() should be false when it's being enabled, we don't
   // need to check if `mEnabling` is true.
@@ -520,7 +520,7 @@ void
 FMRadioService::Seek(bool upward, ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   if (!IsFMRadioOn()) {
     aRunnable->SetReply(ErrorResponse(NS_LITERAL_STRING("It's disabled")));
@@ -550,7 +550,7 @@ void
 FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 {
   LOG("Check Main Thread for CancelSeek");
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   if (!IsFMRadioOn()) {
     LOG("It's disabled");
@@ -739,27 +739,27 @@ FMRadioService::RilSettingsObserver::Observe(nsISupports * aSubject,
     //  {"key":"ril.radio.disabled","value":true}
     mozilla::AutoSafeJSContext cx;
     nsDependentString dataStr(aData);
-    JS::Value val;
+    JS::Rooted<JS::Value> val(cx);
     if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
         !val.isObject()) {
       return NS_OK;
     }
 
-    JSObject& obj(val.toObject());
-    JS::Value key;
-    if (!JS_GetProperty(cx, &obj, "key", &key) ||
+    JS::Rooted<JSObject*> obj(cx, &val.toObject());
+    JS::Rooted<JS::Value> key(cx);
+    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
         !key.isString()) {
       return NS_OK;
     }
 
-    JSString *jsKey = JS_ValueToString(cx, key);
+    JS::Rooted<JSString*> jsKey(cx, key.toString());
     nsDependentJSString keyStr;
     if (!keyStr.init(cx, jsKey)) {
       return NS_OK;
     }
 
-    JS::Value value;
-    if (!JS_GetProperty(cx, &obj, "value", &value)) {
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", value.address())) {
       return NS_OK;
     }
 
@@ -792,9 +792,6 @@ IsMainProcess()
 {
   return XRE_GetProcessType() == GeckoProcessType_Default;
 }
-
-NS_IMPL_THREADSAFE_ADDREF(IFMRadioService)
-NS_IMPL_THREADSAFE_RELEASE(IFMRadioService)
 
 // static
 IFMRadioService*

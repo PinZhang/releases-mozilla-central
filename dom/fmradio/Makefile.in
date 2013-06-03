@@ -17,16 +17,6 @@ include $(topsrcdir)/dom/dom-config.mk
 
 VPATH += $(srcdir)/ipc
 
-CPPSRCS += \
-  FMRadio.cpp \
-  FMRadioChild.cpp \
-  FMRadioParent.cpp \
-  FMRadioRequestChild.cpp \
-  FMRadioRequestParent.cpp \
-  FMRadioChildService.cpp \
-  FMRadioService.cpp \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
