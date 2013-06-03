@@ -4,29 +4,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'ipc',
-]
-
-XPIDL_SOURCES += [
-    'nsIDOMNavigatorFMRadio.idl',
-]
-
-XPIDL_MODULE = 'dom_fmradio'
-
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
-
-MODULE = 'dom'
-
 EXPORTS.mozilla.dom.fmradio += [
-    'FMRadioCommon.h',
-    'FMRadioService.h',
+    'FMRadioChild.h',
+    'FMRadioChildService.h',
+    'FMRadioParent.h',
+    'FMRadioRequestChild.h',
+    'FMRadioRequestParent.h',
 ]
 
 CPP_SOURCES += [
-    'FMRadio.cpp',
-    'FMRadioService.cpp',
+    'FMRadioChild.cpp',
+    'FMRadioChildService.cpp',
+    'FMRadioParent.cpp',
+    'FMRadioRequestChild.cpp',
+    'FMRadioRequestParent.cpp',
 ]
 
