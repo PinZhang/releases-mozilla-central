@@ -146,7 +146,7 @@ FMRadio::AntennaAvailable() const
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  return Enabled() ? (Nullable<double>)(FMRadioService::Get()->GetFrequency())
+  return Enabled() ? Nullable<double>(FMRadioService::Get()->GetFrequency())
                    : Nullable<double>();
 }
 
