@@ -602,6 +602,15 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
     {
       LOG("FM HW is enabled.");
 
+      // We will receive FM_RADIO_OPERATION_ENABLE if we call DisableFMRadio(),
+      // there must be some problem with HAL layer, we need to double check
+      // the FM radio HW status here.
+      if (!IsFMRadioOn())
+      {
+        LOG("FMRadio should not be off!!");
+        return;
+      }
+
       // The signal we received might be triggered by enable request in other
       // process, we should check if `mEnabling` is true, if false, we should
       // skip it and just update the power state and frequency.
