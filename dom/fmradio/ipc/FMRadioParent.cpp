@@ -22,7 +22,7 @@ FMRadioParent::FMRadioParent()
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioParent);
 
-  FMRadioService::Get()->RegisterHandler(this);
+  FMRadioService::Singleton()->RegisterHandler(this);
 }
 
 FMRadioParent::~FMRadioParent()
@@ -30,7 +30,7 @@ FMRadioParent::~FMRadioParent()
   LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioParent);
 
-  FMRadioService::Get()->UnregisterHandler(this);
+  FMRadioService::Singleton()->UnregisterHandler(this);
 }
 
 void
@@ -43,23 +43,23 @@ FMRadioParent::ActorDestroy(ActorDestroyReason aWhy)
 bool
 FMRadioParent::RecvIsEnabled(bool* aEnabled)
 {
-  *aEnabled = FMRadioService::Get()->IsEnabled();
+  *aEnabled = FMRadioService::Singleton()->IsEnabled();
   return true;
 }
 
 bool
 FMRadioParent::RecvGetFrequency(double* aFrequency)
 {
-  *aFrequency = FMRadioService::Get()->GetFrequency();
+  *aFrequency = FMRadioService::Singleton()->GetFrequency();
   return true;
 }
 
 bool
 FMRadioParent::RecvGetSettings(Settings* aSettings)
 {
-  aSettings->upperBound() = FMRadioService::Get()->GetFrequencyUpperBound();
-  aSettings->lowerBound() = FMRadioService::Get()->GetFrequencyLowerBound();
-  aSettings->channelWidth() = FMRadioService::Get()->GetChannelWidth();
+  aSettings->upperBound() = FMRadioService::Singleton()->GetFrequencyUpperBound();
+  aSettings->lowerBound() = FMRadioService::Singleton()->GetFrequencyLowerBound();
+  aSettings->channelWidth() = FMRadioService::Singleton()->GetChannelWidth();
   return true;
 }
 

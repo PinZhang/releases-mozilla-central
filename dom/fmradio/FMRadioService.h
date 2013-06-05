@@ -126,7 +126,7 @@ public:
    *
    * If it's in the child process, we will get an object of FMRadioChildService.
    */
-  static IFMRadioService* Get();
+  static IFMRadioService* Singleton();
 
   void UpdatePowerState();
   void UpdateFrequency();

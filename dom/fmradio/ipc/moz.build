@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom.fmradio += [
-    'FMRadioChild.h',
     'FMRadioChildService.h',
     'FMRadioParent.h',
     'FMRadioRequestChild.h',
@@ -13,7 +12,6 @@ EXPORTS.mozilla.dom.fmradio += [
 ]
 
 CPP_SOURCES += [
-    'FMRadioChild.cpp',
     'FMRadioChildService.cpp',
     'FMRadioParent.cpp',
     'FMRadioRequestChild.cpp',
