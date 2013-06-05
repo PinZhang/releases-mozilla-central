@@ -53,7 +53,7 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
   BindToOwner(aWindow);
 
   LOG("Register Handler");
-  FMRadioService::Get()->RegisterHandler(this);
+  FMRadioService::Singleton()->RegisterHandler(this);
 
   mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
                                              /* default = */ false);
@@ -69,7 +69,7 @@ void
 FMRadio::Shutdown()
 {
   LOG("Shutdown, Unregister Handler");
-  FMRadioService::Get()->UnregisterHandler(this);
+  FMRadioService::Singleton()->UnregisterHandler(this);
 
   if (!mHasInternalAntenna) {
     LOG("Unregister SWITCH_HEADPHONES observer.");
@@ -132,7 +132,7 @@ FMRadio::Notify(const FMRadioEventArgs& aArgs)
 bool
 FMRadio::Enabled() const
 {
-  return FMRadioService::Get()->IsEnabled();
+  return FMRadioService::Singleton()->IsEnabled();
 }
 
 bool
@@ -144,26 +144,26 @@ FMRadio::AntennaAvailable() const
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  return Enabled() ? Nullable<double>(FMRadioService::Get()->GetFrequency())
+  return Enabled() ? Nullable<double>(FMRadioService::Singleton()->GetFrequency())
                    : Nullable<double>();
 }
 
 double
 FMRadio::FrequencyUpperBound() const
 {
-  return FMRadioService::Get()->GetFrequencyUpperBound();
+  return FMRadioService::Singleton()->GetFrequencyUpperBound();
 }
 
 double
 FMRadio::FrequencyLowerBound() const
 {
-  return FMRadioService::Get()->GetFrequencyLowerBound();
+  return FMRadioService::Singleton()->GetFrequencyLowerBound();
 }
 
 double
 FMRadio::ChannelWidth() const
 {
-  return FMRadioService::Get()->GetChannelWidth();
+  return FMRadioService::Singleton()->GetChannelWidth();
 }
 
 already_AddRefed<DOMRequest>
@@ -175,7 +175,7 @@ FMRadio::Enable(double aFrequency)
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->Enable(aFrequency, r);
+  FMRadioService::Singleton()->Enable(aFrequency, r);
 
   return r.forget();
 }
@@ -189,7 +189,7 @@ FMRadio::Disable()
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->Disable(r);
+  FMRadioService::Singleton()->Disable(r);
 
   return r.forget();
 }
@@ -203,7 +203,7 @@ FMRadio::SetFrequency(double aFrequency)
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->SetFrequency(aFrequency, r);
+  FMRadioService::Singleton()->SetFrequency(aFrequency, r);
 
   return r.forget();
 }
@@ -217,7 +217,7 @@ FMRadio::SeekUp()
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->Seek(true, r);
+  FMRadioService::Singleton()->Seek(true, r);
 
   return r.forget();
 }
@@ -231,7 +231,7 @@ FMRadio::SeekDown()
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->Seek(false, r);
+  FMRadioService::Singleton()->Seek(false, r);
 
   return r.forget();
 }
@@ -245,7 +245,7 @@ FMRadio::CancelSeek()
   }
 
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
-  FMRadioService::Get()->CancelSeek(r);
+  FMRadioService::Singleton()->CancelSeek(r);
 
   return r.forget();
 }

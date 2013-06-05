@@ -814,13 +814,13 @@ IsMainProcess()
 
 // static
 IFMRadioService*
-FMRadioService::Get()
+FMRadioService::Singleton()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!IsMainProcess()) {
     LOG("Return FMRadioChildService for OOP");
-    return FMRadioChildService::Get();
+    return FMRadioChildService::Singleton();
   }
 
   if (sFMRadioService) {

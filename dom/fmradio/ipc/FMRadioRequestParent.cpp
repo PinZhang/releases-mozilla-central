@@ -29,15 +29,15 @@ FMRadioRequestParent::Dispatch()
       LOG("Call Enable");
       EnableRequest request = mRequestType;
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Get()->Enable(request.frequency(),
-                                    replyRunnable.forget().get());
+      FMRadioService::Singleton()->Enable(request.frequency(),
+                                          replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TDisableRequest:
     {
       LOG("Call Disable");
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Get()->Disable(replyRunnable.forget().get());
+      FMRadioService::Singleton()->Disable(replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TSetFrequencyRequest:
@@ -45,8 +45,8 @@ FMRadioRequestParent::Dispatch()
       LOG("Call SetFrequency");
       SetFrequencyRequest request = mRequestType;
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Get()->SetFrequency(request.frequency(),
-                                          replyRunnable.forget().get());
+      FMRadioService::Singleton()->SetFrequency(request.frequency(),
+                                                replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TSeekRequest:
@@ -54,15 +54,15 @@ FMRadioRequestParent::Dispatch()
       LOG("Call Seek");
       SeekRequest request = mRequestType;
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Get()->Seek(request.upward(),
-                                  replyRunnable.forget().get());
+      FMRadioService::Singleton()->Seek(request.upward(),
+                                        replyRunnable.forget().get());
       break;
     }
     case FMRadioRequestType::TCancelSeekRequest:
     {
       LOG("Call CancelSeek");
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Get()->CancelSeek(replyRunnable.forget().get());
+      FMRadioService::Singleton()->CancelSeek(replyRunnable.forget().get());
       break;
     }
     default:

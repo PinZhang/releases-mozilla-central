@@ -5,9 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadioChildService.h"
-#include "FMRadioChild.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/fmradio/FMRadioChild.h"
 #include "mozilla/dom/fmradio/FMRadioRequestChild.h"
 
 #undef LOG
@@ -24,19 +22,14 @@ FMRadioChildService::FMRadioChildService()
   , mSettings(Settings())
 {
   LOG("Constructor");
+  MOZ_COUNT_CTOR(FMRadioChildService);
   mChildEventObserverList = new FMRadioEventObserverList();
-
-  LOG("Init sFMRadioChild");
-  mFMRadioChild = new FMRadioChild();
-  ContentChild::GetSingleton()->SendPFMRadioConstructor(mFMRadioChild);
 }
 
 FMRadioChildService::~FMRadioChildService()
 {
   LOG("Destructor");
-
-  // The FMRadioChild object will be released in ContentChild::DeallocPFMRadio
-  mFMRadioChild = nullptr;
+  MOZ_COUNT_DTOR(FMRadioChildService);
 
   delete mChildEventObserverList;
   mChildEventObserverList = nullptr;
@@ -45,9 +38,10 @@ FMRadioChildService::~FMRadioChildService()
 void
 FMRadioChildService::Init()
 {
-  mFMRadioChild->SendIsEnabled(&mEnabled);
-  mFMRadioChild->SendGetFrequency(&mFrequency);
-  mFMRadioChild->SendGetSettings(&mSettings);
+  ContentChild::GetSingleton()->SendPFMRadioConstructor(this);
+  this->SendIsEnabled(&mEnabled);
+  this->SendGetFrequency(&mFrequency);
+  this->SendGetSettings(&mSettings);
 }
 
 bool
@@ -95,15 +89,15 @@ FMRadioChildService::Disable(ReplyRunnable* aRunnable)
 
 void
 FMRadioChildService::SetFrequency(double aFrequency,
-                                       ReplyRunnable* aRunnable)
+                                  ReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, SetFrequencyRequest(aFrequency));
 }
 
 void
-FMRadioChildService::Seek(bool upward, ReplyRunnable* aRunnable)
+FMRadioChildService::Seek(bool aUpward, ReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable, SeekRequest(upward));
+  SendRequest(aRunnable, SeekRequest(aUpward));
 }
 
 void
@@ -160,13 +154,51 @@ FMRadioChildService::SendRequest(ReplyRunnable* aReplyRunnable,
                                  FMRadioRequestType aType)
 {
   PFMRadioRequestChild* child = new FMRadioRequestChild(aReplyRunnable);
-  mFMRadioChild->SendPFMRadioRequestConstructor(child, aType);
+  this->SendPFMRadioRequestConstructor(child, aType);
   LOG("Request is sent.");
+}
+
+bool
+FMRadioChildService::RecvNotifyFrequencyChanged(const double& aFrequency)
+{
+  LOG("RecvNotifyFrequencyChanged");
+  this->NotifyFrequencyChanged(aFrequency);
+  return true;
+}
+
+bool
+FMRadioChildService::RecvNotifyEnabledChanged(const bool& aEnabled,
+                                              const double& aFrequency)
+{
+  LOG("RecvEnabledChanged");
+  this->NotifyEnabledChanged(aEnabled, aFrequency);
+  return true;
+}
+
+bool
+FMRadioChildService::Recv__delete__()
+{
+  LOG("Recv__delete__");
+  return true;
+}
+
+PFMRadioRequestChild*
+FMRadioChildService::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
+{
+  MOZ_NOT_REACHED("Caller is supposed to manually construct a request");
+  return nullptr;
+}
+
+bool
+FMRadioChildService::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 // static
 FMRadioChildService*
-FMRadioChildService::Get()
+FMRadioChildService::Singleton()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -174,9 +206,6 @@ FMRadioChildService::Get()
     LOG("Return cached sFMRadioChildService");
     return sFMRadioChildService;
   }
-
-  LOG("Create sFMRadioChild");
-  MOZ_ASSERT(!sFMRadioChild);
 
   LOG("Create sFMRadioChildService");
   sFMRadioChildService = new FMRadioChildService();
