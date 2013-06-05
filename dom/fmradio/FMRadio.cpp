@@ -104,19 +104,17 @@ FMRadio::Notify(const SwitchEvent& aEvent)
 }
 
 void
-FMRadio::Notify(const FMRadioEventType& aType)
+FMRadio::Notify(const FMRadioEventArgs& aArgs)
 {
-  switch (aType.type()) {
-    case FMRadioEventType::TFrequencyChangedEvent:
+  switch (aArgs.type) {
+    case FrequencyChanged:
     {
       DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
       break;
     }
-    case FMRadioEventType::TStateChangedEvent:
+    case EnabledChanged:
     {
-      StateChangedEvent event = aType;
-
-      if (event.enabled()) {
+      if (aArgs.enabled) {
         LOG("Fire onenabled");
         DispatchTrustedEvent(ENABLED_EVENT_NAME);
       } else {

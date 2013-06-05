@@ -113,30 +113,24 @@ FMRadioChildService::CancelSeek(ReplyRunnable* aRunnable)
 }
 
 void
-FMRadioChildService::DistributeEvent(const FMRadioEventType& aType)
+FMRadioChildService::NotifyFrequencyChanged(double aFrequency)
 {
-  LOG("We have %d observer to broadcast the event", mChildEventObserverList->Length());
+  LOG("NotifyFrequencyChanged");
+  mFrequency = aFrequency;
+  mChildEventObserverList->Broadcast(FMRadioEventArgs(FrequencyChanged,
+                                                      mEnabled,
+                                                      mFrequency));
+}
 
-  switch (aType.type()) {
-    case FMRadioEventType::TFrequencyChangedEvent:
-    {
-      FrequencyChangedEvent event = aType;
-      mFrequency = event.frequency();
-      break;
-    }
-    case FMRadioEventType::TStateChangedEvent:
-    {
-      StateChangedEvent event = aType;
-      mEnabled = event.enabled();
-      mFrequency = event.frequency();
-      break;
-    }
-    default:
-      NS_RUNTIMEABORT("not reached");
-      break;
-  }
-
-  mChildEventObserverList->Broadcast(aType);
+void
+FMRadioChildService::NotifyEnabledChanged(bool aEnabled, double aFrequency)
+{
+  LOG("NotifyEnabledChanged");
+  mEnabled = aEnabled;
+  mFrequency = aFrequency;
+  mChildEventObserverList->Broadcast(FMRadioEventArgs(EnabledChanged,
+                                                      aEnabled,
+                                                      aFrequency));
 }
 
 void

@@ -41,23 +41,6 @@ union FMRadioRequestType
   CancelSeekRequest;
 };
 
-struct FrequencyChangedEvent
-{
-  double frequency;
-};
-
-struct StateChangedEvent
-{
-  bool enabled;
-  double frequency;
-};
-
-union FMRadioEventType
-{
-  StateChangedEvent;
-  FrequencyChangedEvent;
-};
-
 struct Settings
 {
   double upperBound;
@@ -71,10 +54,8 @@ sync protocol PFMRadio
   manages PFMRadioRequest;
 
 child:
-  /**
-   * Sent when the FM HW is enabled/disabled or frequency is changed.
-   */
-  Notify(FMRadioEventType event);
+  NotifyFrequencyChanged(double frequency);
+  NotifyEnabledChanged(bool enabled, double frequency);
 
   __delete__();
 

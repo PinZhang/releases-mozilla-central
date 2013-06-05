@@ -82,15 +82,15 @@ FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 }
 
 void
-FMRadioParent::Notify(const FMRadioEventType& aType)
+FMRadioParent::Notify(const FMRadioEventArgs& aArgs)
 {
-  switch (aType.type()) {
-    case FMRadioEventType::TStateChangedEvent:
-    case FMRadioEventType::TFrequencyChangedEvent:
-    {
-      unused << this->SendNotify(aType);
+  switch (aArgs.type) {
+    case FrequencyChanged:
+      unused << this->SendNotifyFrequencyChanged(aArgs.frequency);
       break;
-    }
+    case EnabledChanged:
+      unused << this->SendNotifyEnabledChanged(aArgs.enabled, aArgs.frequency);
+      break;
     default:
       NS_RUNTIMEABORT("not reached");
       break;

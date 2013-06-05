@@ -589,9 +589,19 @@ FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 }
 
 void
-FMRadioService::DistributeEvent(const FMRadioEventType& aType)
+FMRadioService::NotifyFrequencyChanged(double aFrequency)
 {
-  mObserverList->Broadcast(aType);
+  mObserverList->Broadcast(FMRadioEventArgs(FrequencyChanged,
+                                            IsFMRadioOn(),
+                                            aFrequency));
+}
+
+void
+FMRadioService::NotifyEnabledChanged(bool aEnabled, double aFrequency)
+{
+  mObserverList->Broadcast(FMRadioEventArgs(EnabledChanged,
+                                            aEnabled,
+                                            aFrequency));
 }
 
 void
@@ -648,7 +658,7 @@ FMRadioService::Notify(const FMRadioOperationInformation& info)
       // The frequency is changed from '0' to some meaningful number, so we
       // should distribute the `FrequencyChangedEvent` manually.
       double frequencyInMHz = mFrequencyInKHz / 1000.0;
-      DistributeEvent(FrequencyChangedEvent(frequencyInMHz));
+      NotifyFrequencyChanged(frequencyInMHz);
 
       break;
     }
@@ -720,7 +730,7 @@ FMRadioService::UpdatePowerState()
     // We pass the frequency with `StateChangedEvent` to make sure the FM app
     // will get the right frequency value when the `onenabled` event is fired.
     double frequencyInMHz = mFrequencyInKHz / 1000.0;
-    DistributeEvent(StateChangedEvent(enabled, frequencyInMHz));
+    NotifyEnabledChanged(enabled, frequencyInMHz);
   }
 }
 
@@ -731,7 +741,7 @@ FMRadioService::UpdateFrequency()
   if (mFrequencyInKHz != frequency) {
     mFrequencyInKHz = frequency;
     double frequencyInMHz = mFrequencyInKHz / 1000.0;
-    DistributeEvent(FrequencyChangedEvent(frequencyInMHz));
+    NotifyFrequencyChanged(frequencyInMHz);
   }
 }
 
