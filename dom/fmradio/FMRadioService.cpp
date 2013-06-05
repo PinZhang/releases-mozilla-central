@@ -270,17 +270,17 @@ private:
 };
 
 void
-FMRadioService::RegisterHandler(FMRadioEventObserver* aHandler)
+FMRadioService::AddObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Register handler");
-  mObserverList->AddObserver(aHandler);
+  mObserverList->AddObserver(aObserver);
 }
 
 void
-FMRadioService::UnregisterHandler(FMRadioEventObserver* aHandler)
+FMRadioService::RemoveObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Unregister handler");
-  mObserverList->RemoveObserver(aHandler);
+  mObserverList->RemoveObserver(aObserver);
 
   if (mObserverList->Length() == 0)
   {

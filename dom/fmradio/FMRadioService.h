@@ -109,8 +109,8 @@ public:
    *
    * Called by FMRadio and FMRadioParent in OOP model.
    */
-  virtual void RegisterHandler(FMRadioEventObserver* aHandler) = 0;
-  virtual void UnregisterHandler(FMRadioEventObserver* aHandler) = 0;
+  virtual void AddObserver(FMRadioEventObserver* aObserver) = 0;
+  virtual void RemoveObserver(FMRadioEventObserver* aObserver) = 0;
 };
 
 class ReadRilSettingTask;
@@ -151,8 +151,8 @@ public:
   virtual void NotifyEnabledChanged(bool aEnabled,
                                     double aFrequency) MOZ_OVERRIDE;
 
-  virtual void RegisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
-  virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
+  virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
+  virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
 
 private:
   class RilSettingsObserver MOZ_FINAL : public nsIObserver
