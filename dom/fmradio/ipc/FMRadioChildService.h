@@ -10,7 +10,7 @@
 #include "FMRadioCommon.h"
 #include "DOMRequest.h"
 #include "FMRadioService.h"
-#include "mozilla/dom/fmradio/PFMRadio.h"
+#include "mozilla/dom/fmradio/PFMRadioChild.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
@@ -18,15 +18,16 @@ class FMRadioChild;
 class FMRadioRequestType;
 
 class FMRadioChildService MOZ_FINAL : public IFMRadioService
+                                    , public PFMRadioChild
 {
   friend class FMRadioChild;
 
 public:
-  static FMRadioChildService* Get();
+  static FMRadioChildService* Singleton();
 
   void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
 
-  /* IFMRadioService interfaces */
+  /* IFMRadioService */
   virtual bool IsEnabled() const MOZ_OVERRIDE;
   virtual double GetFrequency() const MOZ_OVERRIDE;
   virtual double GetFrequencyUpperBound() const MOZ_OVERRIDE;
@@ -35,7 +36,8 @@ public:
 
   virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void SetFrequency(double frequency,
+                            ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
@@ -45,6 +47,23 @@ public:
 
   virtual void RegisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
+
+  /* PFMRadioChild */
+  virtual bool
+  Recv__delete__() MOZ_OVERRIDE;
+
+  virtual bool
+  RecvNotifyFrequencyChanged(const double& aFrequency) MOZ_OVERRIDE;
+
+  virtual bool
+  RecvNotifyEnabledChanged(const bool& aEnabled,
+                           const double& aFrequency) MOZ_OVERRIDE;
+
+  virtual PFMRadioRequestChild*
+  AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
 
 private:
   FMRadioChildService();
@@ -56,7 +75,6 @@ private:
   double mFrequency;
   Settings mSettings;
 
-  FMRadioChild* mFMRadioChild;
   FMRadioEventObserverList* mChildEventObserverList;
 
 private:
