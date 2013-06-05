@@ -53,7 +53,7 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
   BindToOwner(aWindow);
 
   LOG("Register Handler");
-  FMRadioService::Singleton()->RegisterHandler(this);
+  FMRadioService::Singleton()->AddObserver(this);
 
   mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
                                              /* default = */ false);
@@ -69,7 +69,7 @@ void
 FMRadio::Shutdown()
 {
   LOG("Shutdown, Unregister Handler");
-  FMRadioService::Singleton()->UnregisterHandler(this);
+  FMRadioService::Singleton()->RemoveObserver(this);
 
   if (!mHasInternalAntenna) {
     LOG("Unregister SWITCH_HEADPHONES observer.");

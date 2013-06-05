@@ -45,8 +45,8 @@ public:
   virtual void NotifyEnabledChanged(bool aEnabled,
                                     double aFrequency) MOZ_OVERRIDE;
 
-  virtual void RegisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
-  virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
+  virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
+  virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
 
   /* PFMRadioChild */
   virtual bool
