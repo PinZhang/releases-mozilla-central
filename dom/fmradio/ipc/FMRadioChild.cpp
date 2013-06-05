@@ -25,10 +25,19 @@ FMRadioChild::~FMRadioChild()
 }
 
 bool
-FMRadioChild::RecvNotify(const FMRadioEventType& aType)
+FMRadioChild::RecvNotifyFrequencyChanged(const double& aFrequency)
 {
-  LOG("RecvNotify");
-  FMRadioChildService::Get()->DistributeEvent(aType);
+  LOG("RecvNotifyFrequencyChanged");
+  FMRadioChildService::Get()->NotifyFrequencyChanged(aFrequency);
+  return true;
+}
+
+bool
+FMRadioChild::RecvNotifyEnabledChanged(const bool& aEnabled,
+                                       const double& aFrequency)
+{
+  LOG("RecvEnabledChanged");
+  FMRadioChildService::Get()->NotifyEnabledChanged(aEnabled, aFrequency);
   return true;
 }
 

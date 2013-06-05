@@ -99,7 +99,8 @@ public:
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) = 0;
   virtual void CancelSeek(ReplyRunnable* aRunnable) = 0;
 
-  virtual void DistributeEvent(const FMRadioEventType& aType) = 0;
+  virtual void NotifyFrequencyChanged(double aFrequency) = 0;
+  virtual void NotifyEnabledChanged(bool aEnabled, double aFrequency) = 0;
 
   /**
    * Register handler to receive the FM Radio events, including:
@@ -146,7 +147,9 @@ public:
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual void DistributeEvent(const FMRadioEventType& aType) MOZ_OVERRIDE;
+  virtual void NotifyFrequencyChanged(double aFrequency) MOZ_OVERRIDE;
+  virtual void NotifyEnabledChanged(bool aEnabled,
+                                    double aFrequency) MOZ_OVERRIDE;
 
   virtual void RegisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;
   virtual void UnregisterHandler(FMRadioEventObserver* aHandler) MOZ_OVERRIDE;

@@ -27,10 +27,26 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioEventType;
+enum FMRadioEventType
+{
+  FrequencyChanged,
+  EnabledChanged
+};
 
-typedef mozilla::Observer<FMRadioEventType>     FMRadioEventObserver;
-typedef mozilla::ObserverList<FMRadioEventType> FMRadioEventObserverList;
+struct FMRadioEventArgs
+{
+  FMRadioEventArgs(FMRadioEventType aType, bool aEnabled, double aFrequency)
+    : type(aType)
+    , enabled(aEnabled)
+    , frequency(aFrequency) { }
+
+  FMRadioEventType type;
+  bool enabled;
+  double frequency;
+};
+
+typedef mozilla::Observer<FMRadioEventArgs>     FMRadioEventObserver;
+typedef mozilla::ObserverList<FMRadioEventArgs> FMRadioEventObserverList;
 
 END_FMRADIO_NAMESPACE
 

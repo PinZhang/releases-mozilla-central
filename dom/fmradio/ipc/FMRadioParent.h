@@ -41,7 +41,7 @@ public:
   DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
 
   /* Observer Interface */
-  virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
+  virtual void Notify(const FMRadioEventArgs& aArgs) MOZ_OVERRIDE;
 };
 
 END_FMRADIO_NAMESPACE
