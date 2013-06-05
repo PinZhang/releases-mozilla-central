@@ -128,17 +128,17 @@ FMRadioChildService::NotifyEnabledChanged(bool aEnabled, double aFrequency)
 }
 
 void
-FMRadioChildService::RegisterHandler(FMRadioEventObserver* aHandler)
+FMRadioChildService::AddObserver(FMRadioEventObserver* aObserver)
 {
-  mChildEventObserverList->AddObserver(aHandler);
+  mChildEventObserverList->AddObserver(aObserver);
   LOG("Register observer, we have %d observers", mChildEventObserverList->Length());
 }
 
 void
-FMRadioChildService::UnregisterHandler(FMRadioEventObserver* aHandler)
+FMRadioChildService::RemoveObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Unregister observer");
-  mChildEventObserverList->RemoveObserver(aHandler);
+  mChildEventObserverList->RemoveObserver(aObserver);
 
   if (mChildEventObserverList->Length() == 0) {
     LOG("NO handler anymore.");

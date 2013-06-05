@@ -22,7 +22,7 @@ FMRadioParent::FMRadioParent()
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioParent);
 
-  FMRadioService::Singleton()->RegisterHandler(this);
+  FMRadioService::Singleton()->AddObserver(this);
 }
 
 FMRadioParent::~FMRadioParent()
@@ -30,7 +30,7 @@ FMRadioParent::~FMRadioParent()
   LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioParent);
 
-  FMRadioService::Singleton()->UnregisterHandler(this);
+  FMRadioService::Singleton()->RemoveObserver(this);
 }
 
 void
