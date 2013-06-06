@@ -16,79 +16,20 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioRequestParent;
-
-typedef mozilla::AtomicRefCounted<FMRadioRequestParent> RefCountedRequestParent;
-
 class FMRadioRequestParent MOZ_FINAL : public PFMRadioRequestParent
-                                     , public RefCountedRequestParent
+                                     , public ReplyRunnable
 {
 public:
-  FMRadioRequestParent(const FMRadioRequestArgs& aArgs);
+  FMRadioRequestParent();
   ~FMRadioRequestParent();
-
-  void Dispatch();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-private:
-  class ParentReplyRunnable MOZ_FINAL : public ReplyRunnable
-  {
-  public:
-    ParentReplyRunnable(FMRadioRequestParent* aParent)
-      : mParent(aParent)
-    {
-      mCanceled = !(mParent->AddRunnable(this));
-    }
-
-    NS_IMETHOD Run()
-    {
-      NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-      nsresult rv = NS_OK;
-
-      if (!mCanceled) {
-        unused << mParent->Send__delete__(mParent, mResponseType);
-        mParent->RemoveRunnable(this);
-      }
-
-      return rv;
-    }
-
-    NS_IMETHOD Cancel()
-    {
-      mCanceled = true;
-      return NS_OK;
-    }
-
-  private:
-    nsRefPtr<FMRadioRequestParent> mParent;
-    bool mCanceled;
-  };
+  NS_IMETHOD Run();
 
 private:
-  bool AddRunnable(ParentReplyRunnable* aRunnable)
-  {
-    MutexAutoLock lock(mMutex);
-    if (mActorDestroyed)
-      return false;
-
-    mRunnables.AppendElement(aRunnable);
-    return true;
-  }
-
-  void RemoveRunnable(ParentReplyRunnable* aRunnable)
-  {
-    MutexAutoLock lock(mMutex);
-    mRunnables.RemoveElement(aRunnable);
-  }
-
-private:
-  nsAutoRefCnt mRefCnt;
   FMRadioRequestArgs mRequestArgs;
-  Mutex mMutex;
   bool mActorDestroyed;
-  nsTArray<nsRefPtr<ParentReplyRunnable> > mRunnables;
 };
 
 END_FMRADIO_NAMESPACE
