@@ -19,7 +19,6 @@ FMRadioChildService::sFMRadioChildService;
 FMRadioChildService::FMRadioChildService()
   : mEnabled(false)
   , mFrequency(0)
-  , mSettings(Settings())
   , mObserverList(FMRadioEventObserverList())
 {
   LOG("Constructor");
@@ -36,9 +35,13 @@ void
 FMRadioChildService::Init()
 {
   ContentChild::GetSingleton()->SendPFMRadioConstructor(this);
-  this->SendIsEnabled(&mEnabled);
-  this->SendGetFrequency(&mFrequency);
-  this->SendGetSettings(&mSettings);
+  StatusInfo statusInfo;
+  this->SendGetStatusInfo(&statusInfo);
+  mEnabled = statusInfo.enabled();
+  mFrequency = statusInfo.frequency();
+  mUpperBound = statusInfo.upperBound();
+  mLowerBound= statusInfo.lowerBound();
+  mChannelWidth = statusInfo.channelWidth();
 }
 
 bool
@@ -57,19 +60,19 @@ FMRadioChildService::GetFrequency() const
 double
 FMRadioChildService::GetFrequencyUpperBound() const
 {
-  return mSettings.upperBound();
+  return mUpperBound;
 }
 
 double
 FMRadioChildService::GetFrequencyLowerBound() const
 {
-  return mSettings.lowerBound();
+  return mLowerBound;
 }
 
 double
 FMRadioChildService::GetChannelWidth() const
 {
-  return mSettings.channelWidth();
+  return mChannelWidth;
 }
 
 void

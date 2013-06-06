@@ -73,7 +73,9 @@ private:
 
   bool mEnabled;
   double mFrequency;
-  Settings mSettings;
+  double mUpperBound;
+  double mLowerBound;
+  double mChannelWidth;
 
   FMRadioEventObserverList mObserverList;
 

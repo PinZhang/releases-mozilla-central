@@ -41,25 +41,16 @@ FMRadioParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 bool
-FMRadioParent::RecvIsEnabled(bool* aEnabled)
+FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 {
-  *aEnabled = FMRadioService::Singleton()->IsEnabled();
-  return true;
-}
-
-bool
-FMRadioParent::RecvGetFrequency(double* aFrequency)
-{
-  *aFrequency = FMRadioService::Singleton()->GetFrequency();
-  return true;
-}
-
-bool
-FMRadioParent::RecvGetSettings(Settings* aSettings)
-{
-  aSettings->upperBound() = FMRadioService::Singleton()->GetFrequencyUpperBound();
-  aSettings->lowerBound() = FMRadioService::Singleton()->GetFrequencyLowerBound();
-  aSettings->channelWidth() = FMRadioService::Singleton()->GetChannelWidth();
+  aStatusInfo->enabled() = FMRadioService::Singleton()->IsEnabled();
+  aStatusInfo->frequency() = FMRadioService::Singleton()->GetFrequency();
+  aStatusInfo->upperBound() =
+    FMRadioService::Singleton()->GetFrequencyUpperBound();
+  aStatusInfo->lowerBound() =
+    FMRadioService::Singleton()->GetFrequencyLowerBound();
+  aStatusInfo->channelWidth() =
+    FMRadioService::Singleton()->GetChannelWidth();
   return true;
 }
 
