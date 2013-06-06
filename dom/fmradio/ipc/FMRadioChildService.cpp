@@ -143,8 +143,8 @@ void
 FMRadioChildService::SendRequest(ReplyRunnable* aReplyRunnable,
                                  FMRadioRequestArgs aArgs)
 {
-  PFMRadioRequestChild* child = new FMRadioRequestChild(aReplyRunnable);
-  this->SendPFMRadioRequestConstructor(child, aArgs);
+  PFMRadioRequestChild* childRequest = new FMRadioRequestChild(aReplyRunnable);
+  this->SendPFMRadioRequestConstructor(childRequest, aArgs);
   LOG("Request is sent.");
 }
 
