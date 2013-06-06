@@ -115,6 +115,15 @@ public:
 
 class ReadRilSettingTask;
 
+enum FMRadioState
+{
+  Disabled,
+  Disabling,
+  Enabling,
+  Enabled,
+  Seeking
+};
+
 class FMRadioService : public IFMRadioService
                      , public hal::FMRadioObserver
 {
@@ -177,16 +186,14 @@ private:
 
   void DoDisable();
   int32_t RoundFrequency(int32_t aFrequencyInKHz);
+  void SetState(FMRadioState aState);
 
 private:
   bool mEnabled;
+
   int32_t mFrequencyInKHz;
-  /* Indicates if the FM radio is currently being disabled */
-  bool mDisabling;
-  /* Indicates if the FM radio is currently being enabled */
-  bool mEnabling;
-  /* Indicates if the FM radio is currently seeking */
-  bool mSeeking;
+
+  FMRadioState mState;
 
   bool mHasReadRilSetting;
   bool mRilDisabled;
@@ -197,9 +204,7 @@ private:
 
   nsCOMPtr<nsIObserver> mSettingsObserver;
 
-  nsRefPtr<ReplyRunnable> mDisableRequest;
-  nsRefPtr<ReplyRunnable> mEnableRequest;
-  nsRefPtr<ReplyRunnable> mSeekRequest;
+  nsRefPtr<ReplyRunnable> mPendingRequest;
 
   FMRadioEventObserverList mObserverList;
 
