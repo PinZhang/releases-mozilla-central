@@ -32,7 +32,7 @@ struct CancelSeekRequest
 {
 };
 
-union FMRadioRequestType
+union FMRadioRequestArgs
 {
   EnableRequest;
   DisableRequest;
@@ -64,7 +64,7 @@ parent:
   sync GetFrequency() returns (double frequency);
   sync GetSettings() returns (Settings settings);
 
-  PFMRadioRequest(FMRadioRequestType requestType);
+  PFMRadioRequest(FMRadioRequestArgs requestType);
 };
 
 } // namespace fmradio

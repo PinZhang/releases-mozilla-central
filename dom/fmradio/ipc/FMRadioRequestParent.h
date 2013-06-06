@@ -19,7 +19,7 @@ BEGIN_FMRADIO_NAMESPACE
 class FMRadioRequestParent MOZ_FINAL : public PFMRadioRequestParent
 {
 public:
-  FMRadioRequestParent(const FMRadioRequestType& aRequestType);
+  FMRadioRequestParent(const FMRadioRequestArgs& aArgs);
   ~FMRadioRequestParent();
 
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -90,7 +90,7 @@ private:
 
 private:
   nsAutoRefCnt mRefCnt;
-  FMRadioRequestType mRequestType;
+  FMRadioRequestArgs mRequestArgs;
   Mutex mMutex;
   bool mActorDestroyed;
   nsTArray<nsRefPtr<ParentReplyRunnable> > mRunnables;

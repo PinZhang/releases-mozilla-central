@@ -35,7 +35,7 @@ public:
   RecvGetSettings(Settings* aSettings) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestParent*
-  AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
+  AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;

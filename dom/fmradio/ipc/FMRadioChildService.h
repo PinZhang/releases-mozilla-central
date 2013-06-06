@@ -15,7 +15,7 @@
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioChild;
-class FMRadioRequestType;
+class FMRadioRequestArgs;
 
 class FMRadioChildService MOZ_FINAL : public IFMRadioService
                                     , public PFMRadioChild
@@ -25,7 +25,7 @@ class FMRadioChildService MOZ_FINAL : public IFMRadioService
 public:
   static FMRadioChildService* Singleton();
 
-  void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestType aType);
+  void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestArgs aArgs);
 
   /* IFMRadioService */
   virtual bool IsEnabled() const MOZ_OVERRIDE;
@@ -60,7 +60,7 @@ public:
                            const double& aFrequency) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestChild*
-  AllocPFMRadioRequest(const FMRadioRequestType& aRequestType) MOZ_OVERRIDE;
+  AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
 
   virtual bool
   DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
