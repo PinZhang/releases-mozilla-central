@@ -90,7 +90,4 @@ FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
   }
 }
 
-NS_IMPL_THREADSAFE_ADDREF(FMRadioRequestParent)
-NS_IMPL_THREADSAFE_RELEASE(FMRadioRequestParent)
-
 END_FMRADIO_NAMESPACE
