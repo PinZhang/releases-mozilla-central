@@ -64,10 +64,10 @@ FMRadioParent::RecvGetSettings(Settings* aSettings)
 }
 
 PFMRadioRequestParent*
-FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
+FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
 {
   LOG("AllocPFMRadioRequest");
-  nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aRequestType);
+  nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aArgs);
   result->Dispatch();
   return result.forget().get();
 }

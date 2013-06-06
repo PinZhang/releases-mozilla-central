@@ -151,10 +151,10 @@ FMRadioChildService::RemoveObserver(FMRadioEventObserver* aObserver)
 
 void
 FMRadioChildService::SendRequest(ReplyRunnable* aReplyRunnable,
-                                 FMRadioRequestType aType)
+                                 FMRadioRequestArgs aArgs)
 {
   PFMRadioRequestChild* child = new FMRadioRequestChild(aReplyRunnable);
-  this->SendPFMRadioRequestConstructor(child, aType);
+  this->SendPFMRadioRequestConstructor(child, aArgs);
   LOG("Request is sent.");
 }
 
@@ -183,7 +183,7 @@ FMRadioChildService::Recv__delete__()
 }
 
 PFMRadioRequestChild*
-FMRadioChildService::AllocPFMRadioRequest(const FMRadioRequestType& aRequestType)
+FMRadioChildService::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
 {
   MOZ_NOT_REACHED("Caller is supposed to manually construct a request");
   return nullptr;

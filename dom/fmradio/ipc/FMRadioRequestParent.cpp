@@ -5,14 +5,15 @@
 
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
+#include "mozilla/dom/fmradio/PFMRadio.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestParent", args)
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aType)
-  : mRequestType(aType)
+FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestArgs& aArgs)
+  : mRequestArgs(aArgs)
   , mMutex("FMRadioRequestParent::mMutex")
   , mActorDestroyed(false)
 {
@@ -23,42 +24,42 @@ FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestType& aType)
 void
 FMRadioRequestParent::Dispatch()
 {
-  switch (mRequestType.type()) {
-    case FMRadioRequestType::TEnableRequest:
+  switch (mRequestArgs.type()) {
+    case FMRadioRequestArgs::TEnableRequest:
     {
       LOG("Call Enable");
-      EnableRequest request = mRequestType;
+      const EnableRequest& request = mRequestArgs.get_EnableRequest();
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
       FMRadioService::Singleton()->Enable(request.frequency(),
                                           replyRunnable.forget().get());
       break;
     }
-    case FMRadioRequestType::TDisableRequest:
+    case FMRadioRequestArgs::TDisableRequest:
     {
       LOG("Call Disable");
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
       FMRadioService::Singleton()->Disable(replyRunnable.forget().get());
       break;
     }
-    case FMRadioRequestType::TSetFrequencyRequest:
+    case FMRadioRequestArgs::TSetFrequencyRequest:
     {
       LOG("Call SetFrequency");
-      SetFrequencyRequest request = mRequestType;
+      const SetFrequencyRequest& request = mRequestArgs.get_SetFrequencyRequest();
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
       FMRadioService::Singleton()->SetFrequency(request.frequency(),
                                                 replyRunnable.forget().get());
       break;
     }
-    case FMRadioRequestType::TSeekRequest:
+    case FMRadioRequestArgs::TSeekRequest:
     {
       LOG("Call Seek");
-      SeekRequest request = mRequestType;
+      const SeekRequest& request = mRequestArgs.get_SeekRequest();
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
       FMRadioService::Singleton()->Seek(request.upward(),
                                         replyRunnable.forget().get());
       break;
     }
-    case FMRadioRequestType::TCancelSeekRequest:
+    case FMRadioRequestArgs::TCancelSeekRequest:
     {
       LOG("Call CancelSeek");
       nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
