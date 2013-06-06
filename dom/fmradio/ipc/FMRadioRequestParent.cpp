@@ -12,64 +12,11 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequestParent::FMRadioRequestParent(const FMRadioRequestArgs& aArgs)
-  : mRequestArgs(aArgs)
-  , mMutex("FMRadioRequestParent::mMutex")
-  , mActorDestroyed(false)
+FMRadioRequestParent::FMRadioRequestParent()
+  : mActorDestroyed(false)
 {
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
-}
-
-void
-FMRadioRequestParent::Dispatch()
-{
-  switch (mRequestArgs.type()) {
-    case FMRadioRequestArgs::TEnableRequest:
-    {
-      LOG("Call Enable");
-      const EnableRequest& request = mRequestArgs.get_EnableRequest();
-      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Singleton()->Enable(request.frequency(),
-                                          replyRunnable.forget().get());
-      break;
-    }
-    case FMRadioRequestArgs::TDisableRequest:
-    {
-      LOG("Call Disable");
-      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Singleton()->Disable(replyRunnable.forget().get());
-      break;
-    }
-    case FMRadioRequestArgs::TSetFrequencyRequest:
-    {
-      LOG("Call SetFrequency");
-      const SetFrequencyRequest& request = mRequestArgs.get_SetFrequencyRequest();
-      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Singleton()->SetFrequency(request.frequency(),
-                                                replyRunnable.forget().get());
-      break;
-    }
-    case FMRadioRequestArgs::TSeekRequest:
-    {
-      LOG("Call Seek");
-      const SeekRequest& request = mRequestArgs.get_SeekRequest();
-      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Singleton()->Seek(request.upward(),
-                                        replyRunnable.forget().get());
-      break;
-    }
-    case FMRadioRequestArgs::TCancelSeekRequest:
-    {
-      LOG("Call CancelSeek");
-      nsRefPtr<ReplyRunnable> replyRunnable = new ParentReplyRunnable(this);
-      FMRadioService::Singleton()->CancelSeek(replyRunnable.forget().get());
-      break;
-    }
-    default:
-      NS_RUNTIMEABORT("not reached");
-      break;
-  }
 }
 
 FMRadioRequestParent::~FMRadioRequestParent()
@@ -82,12 +29,22 @@ void
 FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   LOG("ActorDestroy: %d", aWhy);
-  MutexAutoLock lock(mMutex);
   mActorDestroyed = true;
-  int32_t count = mRunnables.Length();
-  for (int32_t index = 0; index < count; index++) {
-    mRunnables[index]->Cancel();
-  }
 }
+
+nsresult
+FMRadioRequestParent::Run()
+{
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsresult rv = NS_OK;
+
+  if (!mActorDestroyed) {
+    unused << this->Send__delete__(this, mResponseType);
+  }
+
+  return rv;
+}
+
 
 END_FMRADIO_NAMESPACE

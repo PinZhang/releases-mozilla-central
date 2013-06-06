@@ -51,9 +51,37 @@ PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
 {
   LOG("AllocPFMRadioRequest");
-  nsRefPtr<FMRadioRequestParent> result = new FMRadioRequestParent(aArgs);
-  result->Dispatch();
-  return result.forget().get();
+  nsRefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
+
+  switch (aArgs.type()) {
+    case FMRadioRequestArgs::TEnableRequest:
+      LOG("Call Enable");
+      FMRadioService::Singleton()->Enable(
+        aArgs.get_EnableRequest().frequency(), requestParent);
+      break;
+    case FMRadioRequestArgs::TDisableRequest:
+      LOG("Call Disable");
+      FMRadioService::Singleton()->Disable(requestParent);
+      break;
+    case FMRadioRequestArgs::TSetFrequencyRequest:
+      LOG("Call SetFrequency");
+      FMRadioService::Singleton()->SetFrequency(
+        aArgs.get_SetFrequencyRequest().frequency(), requestParent);
+      break;
+    case FMRadioRequestArgs::TSeekRequest:
+      FMRadioService::Singleton()->Seek(
+        aArgs.get_SeekRequest().upward(), requestParent);
+      break;
+    case FMRadioRequestArgs::TCancelSeekRequest:
+      LOG("Call CancelSeek");
+      FMRadioService::Singleton()->CancelSeek(requestParent);
+      break;
+    default:
+      NS_RUNTIMEABORT("not reached");
+      break;
+  }
+
+  return requestParent.forget().get();
 }
 
 bool
