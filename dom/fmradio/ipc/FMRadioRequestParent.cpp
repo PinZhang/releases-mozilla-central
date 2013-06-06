@@ -5,6 +5,7 @@
 
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/fmradio/PFMRadio.h"
 
 #undef LOG

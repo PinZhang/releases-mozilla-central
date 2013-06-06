@@ -2071,8 +2071,8 @@ ContentParent::AllocPFMRadio()
     }
     return new FMRadioParent();
 #else
-     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
-     return nullptr;
+    MOZ_CRASH();
+    return nullptr;
 #endif
 }
 
@@ -2084,8 +2084,8 @@ ContentParent::DeallocPFMRadio(PFMRadioParent* aActor)
     delete aActor;
     return true;
 #else
-     MOZ_NOT_REACHED("No support for FMRadio on this platform!");
-     return false;
+    MOZ_CRASH();
+    return false;
 #endif
 }
 

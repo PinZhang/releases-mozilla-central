@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FMRadioParent.h"
+#include "mozilla/unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
