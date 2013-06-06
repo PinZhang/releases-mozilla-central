@@ -51,7 +51,7 @@ FMRadioRequestChild::ActorDestroy(ActorDestroyReason aWhy)
 
   // If mReplyRunnable is not nullptr, it means we didn't receive __delete__
   // message normally, and we need cancel and dispatch it to make sure
-  // it could remove itself from FMRadio::mRunnables.
+  // it removes itself from FMRadio::mRunnables.
   mReplyRunnable->Cancel();
   NS_DispatchToMainThread(mReplyRunnable);
 }

@@ -16,14 +16,16 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
+class FMRadioRequestParent;
+
+typedef mozilla::AtomicRefCounted<FMRadioRequestParent> RefCountedRequestParent;
+
 class FMRadioRequestParent MOZ_FINAL : public PFMRadioRequestParent
+                                     , public RefCountedRequestParent
 {
 public:
   FMRadioRequestParent(const FMRadioRequestArgs& aArgs);
   ~FMRadioRequestParent();
-
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
 
   void Dispatch();
 
@@ -34,8 +36,7 @@ private:
   {
   public:
     ParentReplyRunnable(FMRadioRequestParent* aParent)
-      : ReplyRunnable()
-      , mParent(aParent)
+      : mParent(aParent)
     {
       mCanceled = !(mParent->AddRunnable(this));
     }
@@ -47,17 +48,11 @@ private:
       nsresult rv = NS_OK;
 
       if (!mCanceled) {
-        rv = CancelableRun();
+        unused << mParent->Send__delete__(mParent, mResponseType);
         mParent->RemoveRunnable(this);
       }
 
       return rv;
-    }
-
-    nsresult CancelableRun()
-    {
-      unused << mParent->Send__delete__(mParent, mResponseType);
-      return NS_OK;
     }
 
     NS_IMETHOD Cancel()

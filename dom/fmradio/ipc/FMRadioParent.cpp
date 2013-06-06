@@ -33,13 +33,6 @@ FMRadioParent::~FMRadioParent()
   FMRadioService::Singleton()->RemoveObserver(this);
 }
 
-void
-FMRadioParent::ActorDestroy(ActorDestroyReason aWhy)
-{
-  LOG("ActorDestroy");
-  return;
-}
-
 bool
 FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 {

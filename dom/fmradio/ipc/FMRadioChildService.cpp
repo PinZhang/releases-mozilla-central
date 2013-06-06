@@ -23,25 +23,23 @@ FMRadioChildService::FMRadioChildService()
 {
   LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioChildService);
+
+  ContentChild::GetSingleton()->SendPFMRadioConstructor(this);
+
+  StatusInfo statusInfo;
+  this->SendGetStatusInfo(&statusInfo);
+
+  mEnabled = statusInfo.enabled();
+  mFrequency = statusInfo.frequency();
+  mUpperBound = statusInfo.upperBound();
+  mLowerBound= statusInfo.lowerBound();
+  mChannelWidth = statusInfo.channelWidth();
 }
 
 FMRadioChildService::~FMRadioChildService()
 {
   LOG("Destructor");
   MOZ_COUNT_DTOR(FMRadioChildService);
-}
-
-void
-FMRadioChildService::Init()
-{
-  ContentChild::GetSingleton()->SendPFMRadioConstructor(this);
-  StatusInfo statusInfo;
-  this->SendGetStatusInfo(&statusInfo);
-  mEnabled = statusInfo.enabled();
-  mFrequency = statusInfo.frequency();
-  mUpperBound = statusInfo.upperBound();
-  mLowerBound= statusInfo.lowerBound();
-  mChannelWidth = statusInfo.channelWidth();
 }
 
 bool
@@ -139,14 +137,6 @@ FMRadioChildService::RemoveObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Unregister observer");
   mObserverList.RemoveObserver(aObserver);
-
-  if (mObserverList.Length() == 0) {
-    LOG("NO handler anymore.");
-    sFMRadioChildService = nullptr;
-    delete this;
-  } else {
-    LOG("We have %d observer left", mObserverList.Length());
-  }
 }
 
 void
@@ -209,8 +199,6 @@ FMRadioChildService::Singleton()
 
   LOG("Create sFMRadioChildService");
   sFMRadioChildService = new FMRadioChildService();
-
-  sFMRadioChildService->Init();
 
   return sFMRadioChildService;
 }
