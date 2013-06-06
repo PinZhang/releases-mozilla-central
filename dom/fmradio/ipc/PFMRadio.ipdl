@@ -56,14 +56,33 @@ sync protocol PFMRadio
   manages PFMRadioRequest;
 
 child:
+  /**
+   * Sent when the frequency is changed.
+   */
   NotifyFrequencyChanged(double frequency);
+  /**
+   * Sent when the power state of FM radio HW is changed.
+   */
   NotifyEnabledChanged(bool enabled, double frequency);
 
   __delete__();
 
 parent:
+  /**
+   * Get the current status infomation of FM radio HW synchronously.
+   * Sent when the singleton object of FMRadioChildService is initialized.
+   */
   sync GetStatusInfo() returns (StatusInfo info);
 
+  /**
+   * Send request to parent process to operate the FM radio HW.
+   *
+   * We don't have separate Enable/SetFrequency/etc. methods instead here,
+   * because we can leverage the IPC messaging mechanism to manage the mapping
+   * of the asynchronous request and the DOMRequest we returned to the caller
+   * on web content, otherwise, we have to do the mapping stuff manually which
+   * is more error prone.
+   */
   PFMRadioRequest(FMRadioRequestArgs requestType);
 };
 
