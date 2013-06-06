@@ -26,13 +26,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   virtual bool
-  RecvIsEnabled(bool* aEnabled) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvGetFrequency(double* aFrequency) MOZ_OVERRIDE;
-
-  bool
-  RecvGetSettings(Settings* aSettings) MOZ_OVERRIDE;
+  RecvGetStatusInfo(StatusInfo* aStatusInfo) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestParent*
   AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
