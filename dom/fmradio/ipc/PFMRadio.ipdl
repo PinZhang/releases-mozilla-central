@@ -41,8 +41,10 @@ union FMRadioRequestArgs
   CancelSeekRequest;
 };
 
-struct Settings
+struct StatusInfo
 {
+  bool enabled;
+  double frequency;
   double upperBound;
   double lowerBound;
   double channelWidth;
@@ -60,9 +62,7 @@ child:
   __delete__();
 
 parent:
-  sync IsEnabled() returns (bool enabled);
-  sync GetFrequency() returns (double frequency);
-  sync GetSettings() returns (Settings settings);
+  sync GetStatusInfo() returns (StatusInfo info);
 
   PFMRadioRequest(FMRadioRequestArgs requestType);
 };
