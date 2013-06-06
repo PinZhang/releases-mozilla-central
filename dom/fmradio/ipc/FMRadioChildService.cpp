@@ -20,19 +20,16 @@ FMRadioChildService::FMRadioChildService()
   : mEnabled(false)
   , mFrequency(0)
   , mSettings(Settings())
+  , mObserverList(FMRadioEventObserverList())
 {
   LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioChildService);
-  mChildEventObserverList = new FMRadioEventObserverList();
 }
 
 FMRadioChildService::~FMRadioChildService()
 {
   LOG("Destructor");
   MOZ_COUNT_DTOR(FMRadioChildService);
-
-  delete mChildEventObserverList;
-  mChildEventObserverList = nullptr;
 }
 
 void
@@ -111,9 +108,9 @@ FMRadioChildService::NotifyFrequencyChanged(double aFrequency)
 {
   LOG("NotifyFrequencyChanged");
   mFrequency = aFrequency;
-  mChildEventObserverList->Broadcast(FMRadioEventArgs(FrequencyChanged,
-                                                      mEnabled,
-                                                      mFrequency));
+  mObserverList.Broadcast(FMRadioEventArgs(FrequencyChanged,
+                                           mEnabled,
+                                           mFrequency));
 }
 
 void
@@ -122,30 +119,30 @@ FMRadioChildService::NotifyEnabledChanged(bool aEnabled, double aFrequency)
   LOG("NotifyEnabledChanged");
   mEnabled = aEnabled;
   mFrequency = aFrequency;
-  mChildEventObserverList->Broadcast(FMRadioEventArgs(EnabledChanged,
-                                                      aEnabled,
-                                                      aFrequency));
+  mObserverList.Broadcast(FMRadioEventArgs(EnabledChanged,
+                                           aEnabled,
+                                           aFrequency));
 }
 
 void
 FMRadioChildService::AddObserver(FMRadioEventObserver* aObserver)
 {
-  mChildEventObserverList->AddObserver(aObserver);
-  LOG("Register observer, we have %d observers", mChildEventObserverList->Length());
+  mObserverList.AddObserver(aObserver);
+  LOG("Register observer, we have %d observers", mObserverList.Length());
 }
 
 void
 FMRadioChildService::RemoveObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Unregister observer");
-  mChildEventObserverList->RemoveObserver(aObserver);
+  mObserverList.RemoveObserver(aObserver);
 
-  if (mChildEventObserverList->Length() == 0) {
+  if (mObserverList.Length() == 0) {
     LOG("NO handler anymore.");
     sFMRadioChildService = nullptr;
     delete this;
   } else {
-    LOG("We have %d observer left", mChildEventObserverList->Length());
+    LOG("We have %d observer left", mObserverList.Length());
   }
 }
 

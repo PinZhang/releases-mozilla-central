@@ -75,7 +75,7 @@ private:
   double mFrequency;
   Settings mSettings;
 
-  FMRadioEventObserverList* mChildEventObserverList;
+  FMRadioEventObserverList mObserverList;
 
 private:
   static FMRadioChildService* sFMRadioChildService;

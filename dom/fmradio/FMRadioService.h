@@ -201,7 +201,7 @@ private:
   nsRefPtr<ReplyRunnable> mEnableRequest;
   nsRefPtr<ReplyRunnable> mSeekRequest;
 
-  FMRadioEventObserverList* mObserverList;
+  FMRadioEventObserverList mObserverList;
 
 private:
   static nsRefPtr<FMRadioService> sFMRadioService;
