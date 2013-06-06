@@ -9,9 +9,6 @@
 
 #include "FMRadioCommon.h"
 #include "mozilla/dom/fmradio/PFMRadioRequestParent.h"
-#include "mozilla/dom/fmradio/PFMRadio.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/unused.h"
 #include "FMRadioService.h"
 
 BEGIN_FMRADIO_NAMESPACE
@@ -28,7 +25,6 @@ public:
   NS_IMETHOD Run();
 
 private:
-  FMRadioRequestArgs mRequestArgs;
   bool mActorDestroyed;
 };
 
