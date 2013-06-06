@@ -126,15 +126,13 @@ public:
     switch (mResponseType.type()) {
       case FMRadioResponseType::TErrorResponse:
       {
-        ErrorResponse response = mResponseType;
+        const ErrorResponse& response = mResponseType.get_ErrorResponse();
         FireError(response.error());
         break;
       }
       case FMRadioResponseType::TSuccessResponse:
-      {
         FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
         break;
-      }
       default:
         NS_RUNTIMEABORT("not reached");
         break;

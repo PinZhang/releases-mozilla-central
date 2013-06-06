@@ -108,12 +108,9 @@ FMRadio::Notify(const FMRadioEventArgs& aArgs)
 {
   switch (aArgs.type) {
     case FrequencyChanged:
-    {
       DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
       break;
-    }
     case EnabledChanged:
-    {
       if (aArgs.enabled) {
         LOG("Fire onenabled");
         DispatchTrustedEvent(ENABLED_EVENT_NAME);
@@ -122,7 +119,6 @@ FMRadio::Notify(const FMRadioEventArgs& aArgs)
         DispatchTrustedEvent(DISABLED_EVENT_NAME);
       }
       break;
-    }
     default:
       MOZ_NOT_REACHED();
       break;
