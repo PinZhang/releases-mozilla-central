@@ -287,14 +287,11 @@ FMRadioService::RemoveObserver(FMRadioEventObserver* aObserver)
   if (mObserverList.Length() == 0)
   {
     // No observer in the list means no app is using WebFM API, so we should
-    // turn off the FM HW.
+    // turn off the FM radio HW.
     if (IsFMRadioOn()) {
       LOG("Turn off FM HW");
       NS_DispatchToMainThread(new DisableRunnable());
     }
-
-    LOG("No observer in the list, destroy myself");
-    sFMRadioService = nullptr;
   }
 }
 
