@@ -50,6 +50,7 @@ FMRadioService::FMRadioService()
   , mDisableRequest(nullptr)
   , mEnableRequest(nullptr)
   , mSeekRequest(nullptr)
+  , mObserverList(FMRadioEventObserverList())
 {
   LOG("constructor");
 
@@ -101,8 +102,6 @@ FMRadioService::FMRadioService()
   }
 
   RegisterFMRadioObserver(this);
-
-  mObserverList = new FMRadioEventObserverList();
 }
 
 FMRadioService::~FMRadioService()
@@ -114,8 +113,6 @@ FMRadioService::~FMRadioService()
     NS_WARNING("Can't unregister observers, or already unregistered");
   }
   UnregisterFMRadioObserver(this);
-  delete mObserverList;
-  mObserverList = nullptr;
 }
 
 class EnableRunnable MOZ_FINAL : public nsRunnable
@@ -273,16 +270,16 @@ void
 FMRadioService::AddObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Register handler");
-  mObserverList->AddObserver(aObserver);
+  mObserverList.AddObserver(aObserver);
 }
 
 void
 FMRadioService::RemoveObserver(FMRadioEventObserver* aObserver)
 {
   LOG("Unregister handler");
-  mObserverList->RemoveObserver(aObserver);
+  mObserverList.RemoveObserver(aObserver);
 
-  if (mObserverList->Length() == 0)
+  if (mObserverList.Length() == 0)
   {
     // No observer in the list means no app is using WebFM API, so we should
     // turn off the FM HW.
@@ -591,17 +588,17 @@ FMRadioService::CancelSeek(ReplyRunnable* aRunnable)
 void
 FMRadioService::NotifyFrequencyChanged(double aFrequency)
 {
-  mObserverList->Broadcast(FMRadioEventArgs(FrequencyChanged,
-                                            IsFMRadioOn(),
-                                            aFrequency));
+  mObserverList.Broadcast(FMRadioEventArgs(FrequencyChanged,
+                                           IsFMRadioOn(),
+                                           aFrequency));
 }
 
 void
 FMRadioService::NotifyEnabledChanged(bool aEnabled, double aFrequency)
 {
-  mObserverList->Broadcast(FMRadioEventArgs(EnabledChanged,
-                                            aEnabled,
-                                            aFrequency));
+  mObserverList.Broadcast(FMRadioEventArgs(EnabledChanged,
+                                           aEnabled,
+                                           aFrequency));
 }
 
 void
