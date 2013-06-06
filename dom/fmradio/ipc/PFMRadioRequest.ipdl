@@ -23,13 +23,20 @@ union FMRadioResponseType
   SuccessResponse;
 };
 
+/**
+ * The protocol is used for sending asynchronous operation requests of
+ * FM radio HW from child to parent, and the type of the request is defined in
+ * FMRadioRequestArgs.
+ *
+ * When the request completed, the result, i.e. FMRadioResponseType, will be
+ * sent back to child from parent in the `__delete__` message.
+ */
 async protocol PFMRadioRequest
 {
   manager PFMRadio;
 
 child:
   __delete__(FMRadioResponseType response);
-
 };
 
 } // namespace fmradio
