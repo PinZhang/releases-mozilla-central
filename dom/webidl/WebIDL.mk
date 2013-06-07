@@ -92,7 +92,6 @@ webidl_files = \
   FileReaderSync.webidl \
   FileRequest.webidl \
   FocusEvent.webidl \
-  FMRadio.webidl \
   FormData.webidl \
   Function.webidl \
   GainNode.webidl \
@@ -518,6 +517,10 @@ webidl_files += \
   SpeechRecognitionError.webidl \
   SpeechRecognitionEvent.webidl \
   $(NULL)
+endif
+
+ifdef MOZ_B2G_FM
+webidl_files += FMRadio.webidl
 endif
 
 ifdef ENABLE_TESTS
