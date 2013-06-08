@@ -35,6 +35,7 @@ BEGIN_FMRADIO_NAMESPACE
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
   , mHasInternalAntenna(false)
+  , mIsShutdown(false)
 {
   LOG("FMRadio is initialized.");
 
@@ -76,12 +77,7 @@ FMRadio::Shutdown()
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 
-  int32_t count = mRunnables.Length();
-  for (int32_t index = 0; index < count; index++) {
-    mRunnables[index]->Cancel();
-  }
-
-  LOG("FMRadio is shutdown");
+  mIsShutdown = true;
 }
 
 JSObject*
@@ -170,7 +166,9 @@ FMRadio::Enable(double aFrequency)
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->Enable(aFrequency, r);
 
   return r.forget();
@@ -184,7 +182,9 @@ FMRadio::Disable()
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->Disable(r);
 
   return r.forget();
@@ -198,7 +198,9 @@ FMRadio::SetFrequency(double aFrequency)
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->SetFrequency(aFrequency, r);
 
   return r.forget();
@@ -212,7 +214,9 @@ FMRadio::SeekUp()
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->Seek(true, r);
 
   return r.forget();
@@ -226,7 +230,9 @@ FMRadio::SeekDown()
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->Seek(false, r);
 
   return r.forget();
@@ -240,7 +246,9 @@ FMRadio::CancelSeek()
     return nullptr;
   }
 
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  nsWeakPtr weakFMRadio = do_GetWeakReference(
+    static_cast<nsIDOMEventTarget*>(this));
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
   FMRadioService::Singleton()->CancelSeek(r);
 
   return r.forget();
@@ -266,6 +274,13 @@ FMRadio::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
 
   return fmRadio.forget();
 }
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FMRadio)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(FMRadio, nsDOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FMRadio, nsDOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FMRadioRequest, DOMRequest)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
