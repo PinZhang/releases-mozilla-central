@@ -12,10 +12,6 @@
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioParent", args)
 
-// The pref indicates if the device has an internal antenna.
-// If the pref is true, the antanna will be always available.
-#define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
-
 BEGIN_FMRADIO_NAMESPACE
 
 FMRadioParent::FMRadioParent()
@@ -55,25 +51,25 @@ FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
   nsRefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
 
   switch (aArgs.type()) {
-    case FMRadioRequestArgs::TEnableRequest:
+    case FMRadioRequestArgs::TEnableRequestArgs:
       LOG("Call Enable");
       FMRadioService::Singleton()->Enable(
-        aArgs.get_EnableRequest().frequency(), requestParent);
+        aArgs.get_EnableRequestArgs().frequency(), requestParent);
       break;
-    case FMRadioRequestArgs::TDisableRequest:
+    case FMRadioRequestArgs::TDisableRequestArgs:
       LOG("Call Disable");
       FMRadioService::Singleton()->Disable(requestParent);
       break;
-    case FMRadioRequestArgs::TSetFrequencyRequest:
+    case FMRadioRequestArgs::TSetFrequencyRequestArgs:
       LOG("Call SetFrequency");
       FMRadioService::Singleton()->SetFrequency(
-        aArgs.get_SetFrequencyRequest().frequency(), requestParent);
+        aArgs.get_SetFrequencyRequestArgs().frequency(), requestParent);
       break;
-    case FMRadioRequestArgs::TSeekRequest:
+    case FMRadioRequestArgs::TSeekRequestArgs:
       FMRadioService::Singleton()->Seek(
-        aArgs.get_SeekRequest().upward(), requestParent);
+        aArgs.get_SeekRequestArgs().upward(), requestParent);
       break;
-    case FMRadioRequestArgs::TCancelSeekRequest:
+    case FMRadioRequestArgs::TCancelSeekRequestArgs:
       LOG("Call CancelSeek");
       FMRadioService::Singleton()->CancelSeek(requestParent);
       break;
@@ -95,14 +91,17 @@ FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
 }
 
 void
-FMRadioParent::Notify(const FMRadioEventArgs& aArgs)
+FMRadioParent::Notify(const FMRadioEventType& aType)
 {
-  switch (aArgs.type) {
+  switch (aType) {
     case FrequencyChanged:
-      unused << this->SendNotifyFrequencyChanged(aArgs.frequency);
+      unused << SendNotifyFrequencyChanged(
+        FMRadioService::Singleton()->GetFrequency());
       break;
     case EnabledChanged:
-      unused << this->SendNotifyEnabledChanged(aArgs.enabled, aArgs.frequency);
+      unused << SendNotifyEnabledChanged(
+        FMRadioService::Singleton()->IsEnabled(),
+        FMRadioService::Singleton()->GetFrequency());
       break;
     default:
       NS_RUNTIMEABORT("not reached");

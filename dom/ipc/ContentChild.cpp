@@ -958,23 +958,14 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
 #endif
 }
 
-#undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "FMRadio ContentChild" , ## args)
-#else
-#define LOG(args...)
-#endif
-
 PFMRadioChild*
 ContentChild::AllocPFMRadio()
 {
 #ifdef MOZ_B2G_FM
-    LOG("AllocPFMRadio");
-    MOZ_NOT_REACHED("No one should be allocating PFMRadioChild actors");
+    NS_RUNTIMEABORT("No one should be allocating PFMRadioChild actors");
     return nullptr;
 #else
-    MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
     return nullptr;
 #endif
 }
@@ -983,11 +974,10 @@ bool
 ContentChild::DeallocPFMRadio(PFMRadioChild* aActor)
 {
 #ifdef MOZ_B2G_FM
-    LOG("DeallocPFMRadio");
     delete aActor;
     return true;
 #else
-    MOZ_NOT_REACHED("No support for FMRadio on this platform!");
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
     return false;
 #endif
 }
