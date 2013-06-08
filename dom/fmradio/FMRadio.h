@@ -12,6 +12,7 @@
 #include "mozilla/HalTypes.h"
 #include "DOMRequest.h"
 #include "FMRadioService.h"
+#include "nsWeakReference.h"
 
 class nsPIDOMWindow;
 class nsIScriptContext;
@@ -21,21 +22,26 @@ BEGIN_FMRADIO_NAMESPACE
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::SwitchObserver
                         , public FMRadioEventObserver
+                        , public nsSupportsWeakReference
 {
+  friend class FMRadioRequest;
+
 public:
   FMRadio();
   ~FMRadio();
+
+  NS_DECL_ISUPPORTS_INHERITED
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(nsDOMEventTargetHelper)
 
   void Init(nsPIDOMWindow *aWindow);
   void Shutdown();
 
-  /* Observer Interface */
+  /* hal::SwitchObserver */
   virtual void Notify(const hal::SwitchEvent& aEvent) MOZ_OVERRIDE;
+  /* FMRadioEventObserver */
   virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
-  /* WebIDL Interface */
   nsPIDOMWindow * GetParentObject() const
   {
     return GetOwner();
@@ -76,20 +82,10 @@ public:
   static already_AddRefed<FMRadio>
   CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow);
 
-  void AddRunnable(ReplyRunnable* aRunnable)
-  {
-    mRunnables.AppendElement(aRunnable);
-  }
-
-  void RemoveRunnable(ReplyRunnable* aRunnable)
-  {
-    mRunnables.RemoveElement(aRunnable);
-  }
-
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
-  nsTArray<nsRefPtr<ReplyRunnable> > mRunnables;
+  bool mIsShutdown;
 };
 
 class FMRadioRequest MOZ_FINAL : public ReplyRunnable
@@ -99,13 +95,9 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FMRadioRequest, DOMRequest)
 
-  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
+  FMRadioRequest(nsPIDOMWindow* aWindow, nsWeakPtr aFMRadio)
     : DOMRequest(aWindow)
-    , mFMRadio(aFMRadio)
-    , mCanceled(false)
-  {
-    mFMRadio->AddRunnable(this);
-  }
+    , mFMRadio(aFMRadio) { }
 
   ~FMRadioRequest() { }
 
@@ -113,37 +105,37 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-    if (!mCanceled) {
-      switch (mResponseType.type()) {
-        case FMRadioResponseType::TErrorResponse:
-        {
-          const ErrorResponse& response = mResponseType.get_ErrorResponse();
-          FireError(response.error());
-          break;
-        }
-        case FMRadioResponseType::TSuccessResponse:
-          FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
-          break;
-        default:
-          NS_RUNTIMEABORT("not reached");
-          break;
-      }
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mFMRadio);
+    if (!target) {
+      return NS_OK;
+    }
 
-      mFMRadio->RemoveRunnable(this);
+    FMRadio* fmRadio = static_cast<FMRadio*>(
+      static_cast<nsIDOMEventTarget*>(target));
+    if (fmRadio->mIsShutdown) {
+      return NS_OK;
+    }
+
+    switch (mResponseType.type()) {
+      case FMRadioResponseType::TErrorResponse:
+      {
+        const ErrorResponse& response = mResponseType.get_ErrorResponse();
+        FireError(response.error());
+        break;
+      }
+      case FMRadioResponseType::TSuccessResponse:
+        FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
+        break;
+      default:
+        NS_RUNTIMEABORT("not reached");
+        break;
     }
 
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel()
-  {
-    mCanceled = true;
-    return NS_OK;
-  }
-
 private:
-  nsRefPtr<FMRadio> mFMRadio;
-  bool mCanceled;
+  nsWeakPtr mFMRadio;
 };
 
 END_FMRADIO_NAMESPACE
