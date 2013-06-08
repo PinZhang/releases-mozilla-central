@@ -36,15 +36,13 @@ FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 nsresult
 FMRadioRequestParent::Run()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsresult rv = NS_OK;
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   if (!mActorDestroyed) {
-    unused << this->Send__delete__(this, mResponseType);
+    unused << Send__delete__(this, mResponseType);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 

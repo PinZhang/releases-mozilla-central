@@ -4,26 +4,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_fmradio_ipc_fmradiochildservice_h__
-#define mozilla_dom_fmradio_ipc_fmradiochildservice_h__
+#ifndef mozilla_dom_fmradio_ipc_fmradiochild_h__
+#define mozilla_dom_fmradio_ipc_fmradiochild_h__
 
 #include "FMRadioCommon.h"
 #include "DOMRequest.h"
 #include "FMRadioService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
+#include "mozilla/StaticPtr.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioChild;
-class FMRadioRequestArgs;
-
-class FMRadioChildService MOZ_FINAL : public IFMRadioService
-                                    , public PFMRadioChild
+class FMRadioChild MOZ_FINAL : public IFMRadioService
+                             , public PFMRadioChild
 {
-  friend class FMRadioChild;
-
 public:
-  static FMRadioChildService* Singleton();
+  static FMRadioChild* Singleton();
+  ~FMRadioChild();
 
   void SendRequest(ReplyRunnable* aReplyRunnable, FMRadioRequestArgs aArgs);
 
@@ -40,10 +37,6 @@ public:
                             ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-
-  virtual void NotifyFrequencyChanged(double aFrequency) MOZ_OVERRIDE;
-  virtual void NotifyEnabledChanged(bool aEnabled,
-                                    double aFrequency) MOZ_OVERRIDE;
 
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
@@ -66,10 +59,11 @@ public:
   DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
 
 private:
-  FMRadioChildService();
-  ~FMRadioChildService();
+  FMRadioChild();
 
   void Init();
+
+  inline void NotifyFMRadioEvent(FMRadioEventType aType);
 
   bool mEnabled;
   double mFrequency;
@@ -80,9 +74,9 @@ private:
   FMRadioEventObserverList mObserverList;
 
 private:
-  static FMRadioChildService* sFMRadioChildService;
+  static StaticAutoPtr<FMRadioChild> sFMRadioChild;
 };
 
 END_FMRADIO_NAMESPACE
 
-#endif // mozilla_dom_fmradio_ipc_fmradiochildservice_h__
+#endif // mozilla_dom_fmradio_ipc_fmradiochild_h__

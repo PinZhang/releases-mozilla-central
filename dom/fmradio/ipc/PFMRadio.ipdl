@@ -9,36 +9,36 @@ namespace mozilla {
 namespace dom {
 namespace fmradio {
 
-struct EnableRequest
+struct EnableRequestArgs
 {
   double frequency;
 };
 
-struct DisableRequest
+struct DisableRequestArgs
 {
 };
 
-struct SetFrequencyRequest
+struct SetFrequencyRequestArgs
 {
   double frequency;
 };
 
-struct SeekRequest
+struct SeekRequestArgs
 {
   bool upward;
 };
 
-struct CancelSeekRequest
+struct CancelSeekRequestArgs
 {
 };
 
 union FMRadioRequestArgs
 {
-  EnableRequest;
-  DisableRequest;
-  SetFrequencyRequest;
-  SeekRequest;
-  CancelSeekRequest;
+  EnableRequestArgs;
+  DisableRequestArgs;
+  SetFrequencyRequestArgs;
+  SeekRequestArgs;
+  CancelSeekRequestArgs;
 };
 
 struct StatusInfo
@@ -70,7 +70,7 @@ child:
 parent:
   /**
    * Get the current status infomation of FM radio HW synchronously.
-   * Sent when the singleton object of FMRadioChildService is initialized.
+   * Sent when the singleton object of FMRadioChild is initialized.
    */
   sync GetStatusInfo() returns (StatusInfo info);
 

@@ -33,7 +33,7 @@ public:
 
   /* Observer Interface */
   virtual void Notify(const hal::SwitchEvent& aEvent) MOZ_OVERRIDE;
-  virtual void Notify(const FMRadioEventArgs& aArgs) MOZ_OVERRIDE;
+  virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
   /* WebIDL Interface */
   nsPIDOMWindow * GetParentObject() const
@@ -111,32 +111,27 @@ public:
 
   NS_IMETHOD Run()
   {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
     if (!mCanceled) {
-      CancelableRun();
+      switch (mResponseType.type()) {
+        case FMRadioResponseType::TErrorResponse:
+        {
+          const ErrorResponse& response = mResponseType.get_ErrorResponse();
+          FireError(response.error());
+          break;
+        }
+        case FMRadioResponseType::TSuccessResponse:
+          FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
+          break;
+        default:
+          NS_RUNTIMEABORT("not reached");
+          break;
+      }
+
       mFMRadio->RemoveRunnable(this);
     }
 
-    return NS_OK;
-  }
-
-  nsresult CancelableRun()
-  {
-    switch (mResponseType.type()) {
-      case FMRadioResponseType::TErrorResponse:
-      {
-        const ErrorResponse& response = mResponseType.get_ErrorResponse();
-        FireError(response.error());
-        break;
-      }
-      case FMRadioResponseType::TSuccessResponse:
-        FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
-        break;
-      default:
-        NS_RUNTIMEABORT("not reached");
-        break;
-    }
     return NS_OK;
   }
 
