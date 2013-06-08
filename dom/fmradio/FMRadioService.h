@@ -10,6 +10,7 @@
 #include "mozilla/dom/fmradio/PFMRadioRequest.h"
 #include "FMRadioCommon.h"
 #include "mozilla/Hal.h"
+#include "mozilla/StaticPtr.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
@@ -28,7 +29,6 @@ public:
 protected:
   FMRadioResponseType mResponseType;
 };
-
 /**
  * The FMRadio Service Interface for FMRadio.
  *
@@ -99,9 +99,6 @@ public:
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) = 0;
   virtual void CancelSeek(ReplyRunnable* aRunnable) = 0;
 
-  virtual void NotifyFrequencyChanged(double aFrequency) = 0;
-  virtual void NotifyEnabledChanged(bool aEnabled, double aFrequency) = 0;
-
   /**
    * Register handler to receive the FM Radio events, including:
    *   - StateChangedEvent
@@ -113,8 +110,6 @@ public:
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) = 0;
 };
 
-class ReadRilSettingTask;
-
 enum FMRadioState
 {
   Disabled,
@@ -124,26 +119,22 @@ enum FMRadioState
   Seeking
 };
 
-class FMRadioService : public IFMRadioService
-                     , public hal::FMRadioObserver
+class FMRadioService MOZ_FINAL : public IFMRadioService
+                               , public hal::FMRadioObserver
 {
   friend class ReadRilSettingTask;
+  friend class RilSettingsObserver;
+  friend class SetFrequencyRunnable;
 
 public:
   /**
    * Static method to return the singleton instance.
    *
-   * If it's in the child process, we will get an object of FMRadioChildService.
+   * If it's in the child process, we will get an object of FMRadioChild.
    */
   static IFMRadioService* Singleton();
+  virtual ~FMRadioService();
 
-  void UpdatePowerState();
-  void UpdateFrequency();
-
-  /* FMRadioObserver */
-  virtual void Notify(const hal::FMRadioOperationInformation& info) MOZ_OVERRIDE;
-
-  /* IFMRadioService */
   virtual bool IsEnabled() const MOZ_OVERRIDE;
   virtual double GetFrequency() const MOZ_OVERRIDE;
   virtual double GetFrequencyUpperBound() const MOZ_OVERRIDE;
@@ -156,37 +147,23 @@ public:
   virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
   virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual void NotifyFrequencyChanged(double aFrequency) MOZ_OVERRIDE;
-  virtual void NotifyEnabledChanged(bool aEnabled,
-                                    double aFrequency) MOZ_OVERRIDE;
-
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
 
-private:
-  class RilSettingsObserver MOZ_FINAL : public nsIObserver
-  {
-  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
+  /* FMRadioObserver */
+  void Notify(const hal::FMRadioOperationInformation& info) MOZ_OVERRIDE;
 
-    RilSettingsObserver(FMRadioService* aService)
-      : mService(aService) { }
-    ~RilSettingsObserver() { }
-
-  private:
-    // We don't add reference for FMRadioService object, or there is no chance
-    // to release it.
-    FMRadioService* mService;
-  };
-
-private:
+protected:
   FMRadioService();
-  ~FMRadioService();
 
-  void DoDisable();
+private:
   int32_t RoundFrequency(int32_t aFrequencyInKHz);
+
+  void NotifyFMRadioEvent(FMRadioEventType aType);
+  void DoDisable();
   void SetState(FMRadioState aState);
+  void UpdatePowerState();
+  void UpdateFrequency();
 
 private:
   bool mEnabled;
@@ -209,7 +186,7 @@ private:
   FMRadioEventObserverList mObserverList;
 
 private:
-  static nsRefPtr<FMRadioService> sFMRadioService;
+  static StaticRefPtr<FMRadioService> sFMRadioService;
 };
 
 END_FMRADIO_NAMESPACE

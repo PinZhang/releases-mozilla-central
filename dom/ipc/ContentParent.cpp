@@ -2232,25 +2232,16 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
 #endif
 }
 
-#undef LOG
-#if defined(MOZ_WIDGET_GONK)
-#include <android/log.h>
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "FMRadio ContentParent" , ## args)
-#else
-#define LOG(args...)
-#endif
-
 PFMRadioParent*
 ContentParent::AllocPFMRadio()
 {
 #ifdef MOZ_B2G_FM
-    LOG("AllocPFMRadio");
     if (!AssertAppProcessPermission(this, "fmradio")) {
         return nullptr;
     }
     return new FMRadioParent();
 #else
-    MOZ_CRASH();
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
     return nullptr;
 #endif
 }
@@ -2259,11 +2250,10 @@ bool
 ContentParent::DeallocPFMRadio(PFMRadioParent* aActor)
 {
 #ifdef MOZ_B2G_FM
-    LOG("DeallocPFMRadio");
     delete aActor;
     return true;
 #else
-    MOZ_CRASH();
+    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
     return false;
 #endif
 }
