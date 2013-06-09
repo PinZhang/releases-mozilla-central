@@ -45,5 +45,5 @@ FMRadioRequestParent::Run()
   return NS_OK;
 }
 
-
 END_FMRADIO_NAMESPACE
+
