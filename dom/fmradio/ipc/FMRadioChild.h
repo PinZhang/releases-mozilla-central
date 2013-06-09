@@ -15,6 +15,14 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
+/**
+ * FMRadioChild plays two roles:
+ *   - Kind of proxy of FMRadioService
+ *     Redirect all the requests  coming from web content to FMRadioService
+ *     in parent through IPC channel.
+ *   - Child Actor of PFMRadio
+ *     IPC channel to transfer the requests.
+ */
 class FMRadioChild MOZ_FINAL : public IFMRadioService
                              , public PFMRadioChild
 {
