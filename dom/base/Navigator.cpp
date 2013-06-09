@@ -1187,8 +1187,7 @@ Navigator::GetMozFMRadio(nsISupports** aFMRadio)
     NS_ENSURE_TRUE(mFMRadio, NS_OK);
   }
 
-  NS_ADDREF(*aFMRadio = static_cast<nsISupports*>(
-    static_cast<nsIDOMEventTarget*>(mFMRadio)));
+  NS_ADDREF(*aFMRadio = static_cast<nsIDOMEventTarget*>(mFMRadio));
 
   return NS_OK;
 }
