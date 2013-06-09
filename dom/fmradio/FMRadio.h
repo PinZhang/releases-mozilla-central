@@ -112,17 +112,15 @@ public:
 
     FMRadio* fmRadio = static_cast<FMRadio*>(
       static_cast<nsIDOMEventTarget*>(target));
+
     if (fmRadio->mIsShutdown) {
       return NS_OK;
     }
 
     switch (mResponseType.type()) {
       case FMRadioResponseType::TErrorResponse:
-      {
-        const ErrorResponse& response = mResponseType.get_ErrorResponse();
-        FireError(response.error());
+        FireError(mResponseType.get_ErrorResponse().error());
         break;
-      }
       case FMRadioResponseType::TSuccessResponse:
         FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
         break;
@@ -141,3 +139,4 @@ private:
 END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_FMRadio_h
+

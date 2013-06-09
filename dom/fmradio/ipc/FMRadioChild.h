@@ -80,3 +80,4 @@ private:
 END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_ipc_fmradiochild_h__
+

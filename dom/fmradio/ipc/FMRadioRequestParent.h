@@ -31,3 +31,4 @@ private:
 END_FMRADIO_NAMESPACE
 
 #endif // mozilla_dom_fmradio_ipc_fmradiorequestparent_h__
+
