@@ -32,28 +32,8 @@ FMRadioRequestChild::Recv__delete__(const FMRadioResponseType& aType)
 
   mReplyRunnable->SetReply(aType);
   NS_DispatchToMainThread(mReplyRunnable);
-  // We set mReplyRunnable to nullptr to make sure we can handle it correctly
-  // in ActorDestroy().
-  mReplyRunnable = nullptr;
+
   return true;
-}
-
-void
-FMRadioRequestChild::ActorDestroy(ActorDestroyReason aWhy)
-{
-  LOG("ActorDestroy");
-
-  if (!mReplyRunnable) {
-    return;
-  }
-
-  LOG("Window is closed: %d", aWhy);
-
-  // If mReplyRunnable is not nullptr, it means we didn't receive __delete__
-  // message normally, and we need cancel and dispatch it to make sure
-  // it removes itself from FMRadio::mRunnables.
-  mReplyRunnable->Cancel();
-  NS_DispatchToMainThread(mReplyRunnable);
 }
 
 END_FMRADIO_NAMESPACE

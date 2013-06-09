@@ -565,8 +565,12 @@ FMRadioService::SetFrequency(double aFrequencyInMHz, ReplyRunnable* aRunnable)
 
   switch (mState) {
     case Disabled:
-    case Enabling:
+      LOG("It's Disabled");
       aRunnable->SetReply(ErrorResponse(NS_LITERAL_STRING("It's disabled")));
+      NS_DispatchToMainThread(aRunnable);
+      return;
+    case Enabling:
+      aRunnable->SetReply(ErrorResponse(NS_LITERAL_STRING("It's enabling")));
       NS_DispatchToMainThread(aRunnable);
       return;
     case Disabling:
@@ -598,6 +602,10 @@ FMRadioService::Seek(bool upward, ReplyRunnable* aRunnable)
 
   switch (mState) {
     case Enabling:
+      LOG("It's Enabling");
+      aRunnable->SetReply(ErrorResponse(NS_LITERAL_STRING("It's enabling")));
+      NS_DispatchToMainThread(aRunnable);
+      return;
     case Disabled:
       LOG("It's disabled");
       aRunnable->SetReply(ErrorResponse(NS_LITERAL_STRING("It's disabled")));
