@@ -166,6 +166,9 @@ FMRadio::Enable(double aFrequency)
     return nullptr;
   }
 
+  // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
+  // which both inherits from nsISupports, so |nsISupports| is an ambiguous
+  // base of |FMRadio|, we have to cast |this| to one of the base classes.
   nsWeakPtr weakFMRadio = do_GetWeakReference(
     static_cast<nsIDOMEventTarget*>(this));
   nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
