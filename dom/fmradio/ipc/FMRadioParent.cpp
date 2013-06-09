@@ -110,3 +110,4 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
 }
 
 END_FMRADIO_NAMESPACE
+
