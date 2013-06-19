@@ -179,7 +179,7 @@ pref("content.sink.perf_parse_time", 50000000);
 pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 
 // plugins
-pref("plugin.disable", true);
+pref("plugin.disable", false);
 pref("dom.ipc.plugins.enabled", true);
 
 // product URLs
@@ -525,7 +525,7 @@ pref("device.storage.enabled", true);
 
 // Enable system message
 pref("dom.sysmsg.enabled", true);
-pref("media.plugins.enabled", false);
+pref("media.plugins.enabled", true);
 pref("media.omx.enabled", true);
 
 // Disable printing (particularly, window.print())

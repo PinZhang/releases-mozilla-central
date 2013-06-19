@@ -156,6 +156,10 @@ if os_posix:
         CPP_SOURCES += [
             'message_pump_android.cc',
         ]
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        CPP_SOURCES += [
+            'message_pump_gonk.cc',
+        ]
 
 if os_macosx:
     CPP_SOURCES += [

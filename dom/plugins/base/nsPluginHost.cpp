@@ -2096,7 +2096,7 @@ nsresult nsPluginHost::ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
 
 nsresult nsPluginHost::LoadPlugins()
 {
-#ifdef ANDROID
+#ifdef MOZ_WIDGET_ANDROID
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     return NS_OK;
   }
