@@ -153,13 +153,14 @@ if os_posix:
         'process_watcher_posix_sigchld.cc',
     ]
     if CONFIG['OS_TARGET'] == 'Android':
-        CPP_SOURCES += [
-            'message_pump_android.cc',
-        ]
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        CPP_SOURCES += [
-            'message_pump_gonk.cc',
-        ]
+	    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+	        CPP_SOURCES += [
+	            'message_pump_gonk.cc',
+	        ]
+	    else:
+	        CPP_SOURCES += [
+	            'message_pump_android.cc',
+	        ]
 
 if os_macosx:
     CPP_SOURCES += [

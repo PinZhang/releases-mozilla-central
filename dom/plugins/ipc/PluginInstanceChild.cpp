@@ -1243,8 +1243,12 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
     if (mPluginIface->setwindow)
         (void) mPluginIface->setwindow(&mData, &mWindow);
 
-#elif defined(ANDROID)
+#elif defined(MOZ_WIDGET_ANDROID)
     // TODO: Need Android impl
+#elif defined(MOZ_WIDGET_GONK)
+    // TODO: Always use asynchronous drawing for OOP windowless plugins, and plugins on Gonk is
+    // OOP and only the windowless mode (window type NPWindowTypeDrawable) is implemented so far,
+    // if synchronous rendering is desired, please do some work here.
 #elif defined(MOZ_WIDGET_QT)
     // TODO: Need QT-nonX impl
 #else
@@ -2915,6 +2919,14 @@ PluginInstanceChild::CreateOptSurface(void)
     NS_RUNTIMEABORT("Shared-memory drawing not expected on Windows.");
 #endif
 
+#ifdef MOZ_WIDGET_GONK
+    if (mSurfaceType == gfxASurface::SurfaceTypeImage) {
+      mCurrentSurface =
+              gfxSharedImageSurface::Create(this, gfxIntSize(mWindow.width, mWindow.height), format);
+      return true;
+    }
+#endif
+
     // Make common shmem implementation working for any platform
     mCurrentSurface =
         gfxSharedImageSurface::CreateUnsafe(this, gfxIntSize(mWindow.width, mWindow.height), format);
@@ -3299,6 +3311,19 @@ PluginInstanceChild::PaintRectToPlatformSurface(const nsIntRect& aRect,
     ::SelectClipRgn((HDC) mWindow.window, NULL);
     ::IntersectClipRect((HDC) mWindow.window, rect.left, rect.top, rect.right, rect.bottom);
     mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
+#elif defined(MOZ_WIDGET_GONK)
+    NS_ASSERTION(aSurface->GetType() == gfxASurface::SurfaceTypeImage, "Expected Image surface.");
+    nsRefPtr<gfxImageSurface> image = aSurface->GetAsImageSurface();
+    // For now, paint event is the one and only event we pass to plugins.
+    NPRect nprect = {(uint16_t)aRect.y, (uint16_t)aRect.x, (uint16_t)aRect.YMost(), (uint16_t)aRect.XMost()};
+    NPEvent paintEvent = {
+        NPEventTypePaint,
+        uint32_t((char*)image->Data()),
+        uint32_t((NPRect*)&nprect),
+        uint32_t((gfxASurface::gfxImageFormat)image->Format())
+    };
+    mPluginIface->event(&mData, reinterpret_cast<void*>(&paintEvent));
+    aSurface->MarkDirty(gfxRect(aRect.x, aRect.y, aRect.width, aRect.height));
 #else
     NS_RUNTIMEABORT("Surface type not implemented.");
 #endif

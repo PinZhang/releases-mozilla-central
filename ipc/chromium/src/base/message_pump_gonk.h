@@ -34,7 +34,7 @@ class MessagePumpForUI : public MessagePump {
   virtual void Run(Delegate* delegate);
   virtual void Quit();
   virtual void ScheduleWork();
-  virtual void ScheduleDelayedWork(const Time& delayed_work_time);
+  virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
 
   nsresult  Init();
   // Internal methods used for processing the pump callbacks.  They are
@@ -62,7 +62,7 @@ class MessagePumpForUI : public MessagePump {
   RunState* state_;
 
   // This is the time when we need to do delayed work.
-  Time delayed_work_time_;
+  TimeTicks delayed_work_time_;
 
   bool work_scheduled;
 

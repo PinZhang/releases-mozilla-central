@@ -474,6 +474,13 @@ typedef enum {
   NPWindowTypeDrawable
 } NPWindowType;
 
+/*
+ * The type of plugin events
+ */
+typedef enum {
+  NPEventTypePaint = 1
+} NPEventType;
+
 typedef struct _NPWindow
 {
   void* window;  /* Platform specific window handle */
@@ -552,6 +559,14 @@ typedef struct _NPEvent
 } NPEvent;
 #elif defined(XP_UNIX) && defined(MOZ_X11)
 typedef XEvent NPEvent;
+#elif defined(MOZ_WIDGET_GONK)
+typedef struct _NPEvent
+{
+  NPEventType event;
+  uint32_t wParam;
+  uint32_t lParam;
+  uint32_t uParam;
+} NPEvent;
 #else
 typedef void*  NPEvent;
 #endif
