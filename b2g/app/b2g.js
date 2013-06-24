@@ -180,7 +180,7 @@ pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chr
 
 // plugins
 pref("plugin.disable", false);
-pref("dom.ipc.plugins.enabled", true);
+pref("dom.ipc.plugins.enabled", false);
 
 // product URLs
 // The breakpad report server to link to in about:crashes

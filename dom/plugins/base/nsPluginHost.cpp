@@ -1078,14 +1078,16 @@ nsPluginHost::IsPluginClickToPlayForType(const nsACString &aMimeType, bool *aRes
   nsresult rv = GetBlocklistStateForType(aMimeType.Data(), &blocklistState);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if ((mPluginsClickToPlay && plugin->IsClicktoplay()) ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE ||
-      blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
-    *aResult = true;
-  }
-  else {
-    *aResult = false;
-  }
+  // if ((mPluginsClickToPlay && plugin->IsClicktoplay()) ||
+  //     blocklistState == nsIBlocklistService::STATE_VULNERABLE_NO_UPDATE ||
+  //     blocklistState == nsIBlocklistService::STATE_VULNERABLE_UPDATE_AVAILABLE) {
+  //   *aResult = true;
+  // }
+  // else {
+  //   *aResult = false;
+  // }
+
+  *aResult = false;
 
   return NS_OK;
 }
