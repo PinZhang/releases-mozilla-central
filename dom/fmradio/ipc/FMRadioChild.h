@@ -39,12 +39,13 @@ public:
   virtual double GetFrequencyLowerBound() const MOZ_OVERRIDE;
   virtual double GetChannelWidth() const MOZ_OVERRIDE;
 
-  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void Enable(double aFrequency, ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void Disable(ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
   virtual void SetFrequency(double frequency,
-                            ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                            ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void Seek(mozilla::hal::FMRadioSeekDirection aDirection,
+                    ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void CancelSeek(ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
 
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;

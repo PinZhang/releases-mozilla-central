@@ -11,6 +11,8 @@
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadioChild", args)
 
+using namespace mozilla::hal;
+
 BEGIN_FMRADIO_NAMESPACE
 
 StaticAutoPtr<FMRadioChild> FMRadioChild::sFMRadioChild;
@@ -73,34 +75,34 @@ FMRadioChild::GetChannelWidth() const
 }
 
 void
-FMRadioChild::Enable(double aFrequency, ReplyRunnable* aRunnable)
+FMRadioChild::Enable(double aFrequency, ReplyRunnable* aReplyRunnable)
 {
-  SendRequest(aRunnable, EnableRequestArgs(aFrequency));
+  SendRequest(aReplyRunnable, EnableRequestArgs(aFrequency));
 }
 
 void
-FMRadioChild::Disable(ReplyRunnable* aRunnable)
+FMRadioChild::Disable(ReplyRunnable* aReplyRunnable)
 {
-  SendRequest(aRunnable, DisableRequestArgs());
+  SendRequest(aReplyRunnable, DisableRequestArgs());
 }
 
 void
 FMRadioChild::SetFrequency(double aFrequency,
-                                  ReplyRunnable* aRunnable)
+                                  ReplyRunnable* aReplyRunnable)
 {
-  SendRequest(aRunnable, SetFrequencyRequestArgs(aFrequency));
+  SendRequest(aReplyRunnable, SetFrequencyRequestArgs(aFrequency));
 }
 
 void
-FMRadioChild::Seek(bool aUpward, ReplyRunnable* aRunnable)
+FMRadioChild::Seek(FMRadioSeekDirection aDirection, ReplyRunnable* aReplyRunnable)
 {
-  SendRequest(aRunnable, SeekRequestArgs(aUpward));
+  SendRequest(aReplyRunnable, SeekRequestArgs(aDirection));
 }
 
 void
-FMRadioChild::CancelSeek(ReplyRunnable* aRunnable)
+FMRadioChild::CancelSeek(ReplyRunnable* aReplyRunnable)
 {
-  SendRequest(aRunnable, CancelSeekRequestArgs());
+  SendRequest(aReplyRunnable, CancelSeekRequestArgs());
 }
 
 inline void
@@ -163,7 +165,7 @@ FMRadioChild::Recv__delete__()
 PFMRadioRequestChild*
 FMRadioChild::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
 {
-  NS_RUNTIMEABORT("Caller is supposed to manually construct a request");
+  MOZ_CRASH();
   return nullptr;
 }
 
@@ -178,6 +180,7 @@ FMRadioChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
 FMRadioChild*
 FMRadioChild::Singleton()
 {
+  MOZ_ASSERT(XRE_GetProcessType() != GeckoProcessType_Default);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sFMRadioChild) {

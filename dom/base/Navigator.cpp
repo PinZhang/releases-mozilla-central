@@ -1170,6 +1170,8 @@ NS_IMETHODIMP Navigator::GetMozNotification(nsISupports** aRetVal)
 
 #ifdef MOZ_B2G_FM
 
+using mozilla::dom::fmradio::FMRadio;
+
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorFMRadio
 //*****************************************************************************
@@ -1183,11 +1185,11 @@ Navigator::GetMozFMRadio(nsISupports** aFMRadio)
     nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
     NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
 
-    mFMRadio = fmradio::FMRadio::CheckPermissionAndCreateInstance(win);
-    NS_ENSURE_TRUE(mFMRadio, NS_OK);
+    mFMRadio = FMRadio::CheckPermissionAndCreateInstance(win);
   }
 
-  NS_ADDREF(*aFMRadio = static_cast<nsIDOMEventTarget*>(mFMRadio));
+  nsRefPtr<nsISupports> radio = static_cast<nsIDOMEventTarget*>(mFMRadio);
+  radio.forget(aFMRadio);
 
   return NS_OK;
 }
