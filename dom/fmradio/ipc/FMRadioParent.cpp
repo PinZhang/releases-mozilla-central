@@ -19,7 +19,7 @@ FMRadioParent::FMRadioParent()
   LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioParent);
 
-  FMRadioService::Singleton()->AddObserver(this);
+  IFMRadioService::Singleton()->AddObserver(this);
 }
 
 FMRadioParent::~FMRadioParent()
@@ -27,20 +27,20 @@ FMRadioParent::~FMRadioParent()
   LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioParent);
 
-  FMRadioService::Singleton()->RemoveObserver(this);
+  IFMRadioService::Singleton()->RemoveObserver(this);
 }
 
 bool
 FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 {
-  aStatusInfo->enabled() = FMRadioService::Singleton()->IsEnabled();
-  aStatusInfo->frequency() = FMRadioService::Singleton()->GetFrequency();
+  aStatusInfo->enabled() = IFMRadioService::Singleton()->IsEnabled();
+  aStatusInfo->frequency() = IFMRadioService::Singleton()->GetFrequency();
   aStatusInfo->upperBound() =
-    FMRadioService::Singleton()->GetFrequencyUpperBound();
+    IFMRadioService::Singleton()->GetFrequencyUpperBound();
   aStatusInfo->lowerBound() =
-    FMRadioService::Singleton()->GetFrequencyLowerBound();
+    IFMRadioService::Singleton()->GetFrequencyLowerBound();
   aStatusInfo->channelWidth() =
-    FMRadioService::Singleton()->GetChannelWidth();
+    IFMRadioService::Singleton()->GetChannelWidth();
   return true;
 }
 
@@ -53,29 +53,28 @@ FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
   switch (aArgs.type()) {
     case FMRadioRequestArgs::TEnableRequestArgs:
       LOG("Call Enable");
-      FMRadioService::Singleton()->Enable(
+      IFMRadioService::Singleton()->Enable(
         aArgs.get_EnableRequestArgs().frequency(), requestParent);
       break;
     case FMRadioRequestArgs::TDisableRequestArgs:
       LOG("Call Disable");
-      FMRadioService::Singleton()->Disable(requestParent);
+      IFMRadioService::Singleton()->Disable(requestParent);
       break;
     case FMRadioRequestArgs::TSetFrequencyRequestArgs:
       LOG("Call SetFrequency");
-      FMRadioService::Singleton()->SetFrequency(
+      IFMRadioService::Singleton()->SetFrequency(
         aArgs.get_SetFrequencyRequestArgs().frequency(), requestParent);
       break;
     case FMRadioRequestArgs::TSeekRequestArgs:
-      FMRadioService::Singleton()->Seek(
-        aArgs.get_SeekRequestArgs().upward(), requestParent);
+      IFMRadioService::Singleton()->Seek(
+        aArgs.get_SeekRequestArgs().direction(), requestParent);
       break;
     case FMRadioRequestArgs::TCancelSeekRequestArgs:
       LOG("Call CancelSeek");
-      FMRadioService::Singleton()->CancelSeek(requestParent);
+      IFMRadioService::Singleton()->CancelSeek(requestParent);
       break;
     default:
-      NS_RUNTIMEABORT("not reached");
-      break;
+      MOZ_CRASH();
   }
 
   return requestParent.forget().get();
@@ -96,12 +95,12 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
   switch (aType) {
     case FrequencyChanged:
       unused << SendNotifyFrequencyChanged(
-        FMRadioService::Singleton()->GetFrequency());
+        IFMRadioService::Singleton()->GetFrequency());
       break;
     case EnabledChanged:
       unused << SendNotifyEnabledChanged(
-        FMRadioService::Singleton()->IsEnabled(),
-        FMRadioService::Singleton()->GetFrequency());
+        IFMRadioService::Singleton()->IsEnabled(),
+        IFMRadioService::Singleton()->GetFrequency());
       break;
     default:
       NS_RUNTIMEABORT("not reached");

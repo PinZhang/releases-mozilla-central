@@ -1057,6 +1057,8 @@ Navigator::GetMozNotification(ErrorResult& aRv)
 
 #ifdef MOZ_B2G_FM
 
+using mozilla::dom::fmradio::FMRadio;
+
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorFMRadio
 //*****************************************************************************
@@ -1071,7 +1073,7 @@ Navigator::GetMozFMRadio(ErrorResult& aRv)
 
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mFMRadio = fmradio::FMRadio::CheckPermissionAndCreateInstance(mWindow);
+    mFMRadio = FMRadio::CheckPermissionAndCreateInstance(mWindow);
 
     if (!mFMRadio) {
       aRv.Throw(NS_ERROR_UNEXPECTED);

@@ -14,7 +14,7 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class ReplyRunnable : public nsCancelableRunnable
+class ReplyRunnable : public nsRunnable
 {
 public:
   ReplyRunnable() : mResponseType(SuccessResponse()) {}
@@ -29,33 +29,37 @@ public:
 protected:
   FMRadioResponseType mResponseType;
 };
+
 /**
  * The FMRadio Service Interface for FMRadio.
  *
- * All the requests coming from the content page will be redirected to the
- * concrete class object respectively.
- *
- * There are two concrete classes which implement the interface:
+ * There are two concrete classes which implement this interface:
  *  - FMRadioService
  *    It's used in the main process, implements all the logics about FM Radio.
  *
  *  - FMRadioChildService
- *    It's used in OOP subprocess, it's a kind of proxy which just send all
+ *    It's used in subprocess. It's a kind of proxy which just sends all
  *    the requests to main process through IPC channel.
  *
- * Consider navigator.mozFMRadio.enable(), here is the call sequences:
+ * All the requests coming from the content page will be redirected to the
+ * concrete class object.
+ *
+ * Consider navigator.mozFMRadio.enable(). Here is the call sequence:
  *  - OOP
- *    (1) Call navigator.mozFMRadio.enable().
- *    (2) Return a DOMRequest object, and call FMRadioChildService.Enable() with
- *        a ReplyRunnable object.
- *    (3) Send IPC message to main process.
- *    (4) Call FMRadioService::Enable() with a ReplyRunnable object.
- *    (5) Call hal::EnableFMRadio().
- *    (6) Notify FMRadioService object when FM radio HW is enabled.
- *    (7) Dispatch the ReplyRunnable object created in (4).
- *    (8) Send IPC message back to child process.
- *    (9) Dispatch the ReplyRunnable object created in (2).
- *   (10) Fire success callback of the DOMRequest Object created in (2).
+ *    Child:
+ *      (1) Call navigator.mozFMRadio.enable().
+ *      (2) Return a DOMRequest object, and call FMRadioChildService.Enable() with
+ *          a ReplyRunnable object.
+ *      (3) Send IPC message to main process.
+ *    Parent:
+ *      (4) Call FMRadioService::Enable() with a ReplyRunnable object.
+ *      (5) Call hal::EnableFMRadio().
+ *      (6) Notify FMRadioService object when FM radio HW is enabled.
+ *      (7) Dispatch the ReplyRunnable object created in (4).
+ *      (8) Send IPC message back to child process.
+ *    Child:
+ *      (9) Dispatch the ReplyRunnable object created in (2).
+ *     (10) Fire success callback of the DOMRequest Object created in (2).
  *                     _ _ _ _ _ _ _ _ _ _ _ _ _ _
  *                    |            OOP            |
  *                    |                           |
@@ -93,21 +97,28 @@ public:
   virtual double GetFrequencyLowerBound() const = 0;
   virtual double GetChannelWidth() const = 0;
 
-  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) = 0;
-  virtual void Disable(ReplyRunnable* aRunnable) = 0;
-  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) = 0;
-  virtual void Seek(bool upward, ReplyRunnable* aRunnable) = 0;
-  virtual void CancelSeek(ReplyRunnable* aRunnable) = 0;
+  virtual void Enable(double aFrequency, ReplyRunnable* aReplyRunnable) = 0;
+  virtual void Disable(ReplyRunnable* aReplyRunnable) = 0;
+  virtual void SetFrequency(double aFrequency, ReplyRunnable* aReplyRunnable) = 0;
+  virtual void Seek(mozilla::hal::FMRadioSeekDirection aDirection,
+                    ReplyRunnable* aReplyRunnable) = 0;
+  virtual void CancelSeek(ReplyRunnable* aReplyRunnable) = 0;
 
   /**
    * Register handler to receive the FM Radio events, including:
    *   - StateChangedEvent
    *   - FrequencyChangedEvent
    *
-   * Called by FMRadio and FMRadioParent in OOP model.
+   * Called by FMRadio and FMRadioParent.
    */
   virtual void AddObserver(FMRadioEventObserver* aObserver) = 0;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) = 0;
+
+  /**
+   * Static method to return the singleton instance. If it's in the child
+   * process, we will get an object of FMRadioChild.
+   */
+  static IFMRadioService* Singleton();
 };
 
 enum FMRadioState
@@ -127,12 +138,7 @@ class FMRadioService MOZ_FINAL : public IFMRadioService
   friend class SetFrequencyRunnable;
 
 public:
-  /**
-   * Static method to return the singleton instance.
-   *
-   * If it's in the child process, we will get an object of FMRadioChild.
-   */
-  static IFMRadioService* Singleton();
+  static FMRadioService* Singleton();
   virtual ~FMRadioService();
 
   virtual bool IsEnabled() const MOZ_OVERRIDE;
@@ -141,23 +147,24 @@ public:
   virtual double GetFrequencyLowerBound() const MOZ_OVERRIDE;
   virtual double GetChannelWidth() const MOZ_OVERRIDE;
 
-  virtual void Enable(double aFrequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void Disable(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void SetFrequency(double frequency, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void Seek(bool upward, ReplyRunnable* aRunnable) MOZ_OVERRIDE;
-  virtual void CancelSeek(ReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  virtual void Enable(double aFrequency, ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void Disable(ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void SetFrequency(double aFrequency, ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void Seek(mozilla::hal::FMRadioSeekDirection aDirection,
+                    ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
+  virtual void CancelSeek(ReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
 
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
 
   /* FMRadioObserver */
-  void Notify(const hal::FMRadioOperationInformation& info) MOZ_OVERRIDE;
+  void Notify(const hal::FMRadioOperationInformation& aInfo) MOZ_OVERRIDE;
 
 protected:
   FMRadioService();
 
 private:
-  int32_t RoundFrequency(int32_t aFrequencyInKHz);
+  int32_t RoundFrequency(double aFrequencyInMHz);
 
   void NotifyFMRadioEvent(FMRadioEventType aType);
   void DoDisable();
@@ -168,16 +175,16 @@ private:
 private:
   bool mEnabled;
 
-  int32_t mFrequencyInKHz;
+  int32_t mPendingFrequencyInKHz;
 
   FMRadioState mState;
 
   bool mHasReadRilSetting;
   bool mRilDisabled;
 
-  double mUpperBoundInMHz;
-  double mLowerBoundInMHz;
-  double mChannelWidthInMHz;
+  double mUpperBoundInKHz;
+  double mLowerBoundInKHz;
+  double mChannelWidthInKHz;
 
   nsCOMPtr<nsIObserver> mSettingsObserver;
 

@@ -21,16 +21,50 @@
 // If the pref is true, the antanna will be always available.
 #define DOM_FM_ANTENNA_INTERNAL_PREF "dom.fmradio.antenna.internal"
 
-#define ENABLED_EVENT_NAME         NS_LITERAL_STRING("enabled")
-#define DISABLED_EVENT_NAME        NS_LITERAL_STRING("disabled")
-#define FREQUENCYCHANGE_EVENT_NAME NS_LITERAL_STRING("frequencychange")
-#define ANTENNAAVAILABLECHANGE_EVENT_NAME \
-  NS_LITERAL_STRING("antennaavailablechange")
-
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
 BEGIN_FMRADIO_NAMESPACE
+
+FMRadioRequest::FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
+  : DOMRequest(aWindow)
+{
+  // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
+  // which both inherits from nsISupports, so |nsISupports| is an ambiguous
+  // base of |FMRadio|, we have to cast |aFMRadio| to one of the base classes.
+  mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
+}
+
+NS_IMETHODIMP
+FMRadioRequest::Run()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
+  nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mFMRadio);
+  if (!target) {
+    return NS_OK;
+  }
+
+  FMRadio* fmRadio = static_cast<FMRadio*>(
+    static_cast<nsIDOMEventTarget*>(target));
+
+  if (fmRadio->mIsShutdown) {
+    return NS_OK;
+  }
+
+  switch (mResponseType.type()) {
+    case FMRadioResponseType::TErrorResponse:
+      FireError(mResponseType.get_ErrorResponse().error());
+      break;
+    case FMRadioResponseType::TSuccessResponse:
+      FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
+      break;
+    default:
+      MOZ_CRASH();
+  }
+
+  return NS_OK;
+}
 
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
@@ -54,7 +88,7 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
   BindToOwner(aWindow);
 
   LOG("Register Handler");
-  FMRadioService::Singleton()->AddObserver(this);
+  IFMRadioService::Singleton()->AddObserver(this);
 
   mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
                                              /* default = */ false);
@@ -70,7 +104,7 @@ void
 FMRadio::Shutdown()
 {
   LOG("Shutdown, Unregister Handler");
-  FMRadioService::Singleton()->RemoveObserver(this);
+  IFMRadioService::Singleton()->RemoveObserver(this);
 
   if (!mHasInternalAntenna) {
     LOG("Unregister SWITCH_HEADPHONES observer.");
@@ -95,7 +129,7 @@ FMRadio::Notify(const SwitchEvent& aEvent)
     LOG("Antenna state is changed!");
     mHeadphoneState = aEvent.status();
 
-    DispatchTrustedEvent(ANTENNAAVAILABLECHANGE_EVENT_NAME);
+    DispatchTrustedEvent(NS_LITERAL_STRING("antennaavailablechange"));
   }
 }
 
@@ -104,27 +138,26 @@ FMRadio::Notify(const FMRadioEventType& aType)
 {
   switch (aType) {
     case FrequencyChanged:
-      DispatchTrustedEvent(FREQUENCYCHANGE_EVENT_NAME);
+      DispatchTrustedEvent(NS_LITERAL_STRING("frequencychange"));
       break;
     case EnabledChanged:
-      if (FMRadioService::Singleton()->IsEnabled()) {
+      if (IFMRadioService::Singleton()->IsEnabled()) {
         LOG("Fire onenabled");
-        DispatchTrustedEvent(ENABLED_EVENT_NAME);
+        DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
         LOG("Fire ondisabled");
-        DispatchTrustedEvent(DISABLED_EVENT_NAME);
+        DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
       }
       break;
     default:
       MOZ_CRASH();
-      break;
   }
 }
 
 bool
 FMRadio::Enabled() const
 {
-  return FMRadioService::Singleton()->IsEnabled();
+  return IFMRadioService::Singleton()->IsEnabled();
 }
 
 bool
@@ -136,26 +169,27 @@ FMRadio::AntennaAvailable() const
 Nullable<double>
 FMRadio::GetFrequency() const
 {
-  return Enabled() ? Nullable<double>(FMRadioService::Singleton()->GetFrequency())
-                   : Nullable<double>();
+  return Enabled() ?
+    Nullable<double>(IFMRadioService::Singleton()->GetFrequency()) :
+    Nullable<double>();
 }
 
 double
 FMRadio::FrequencyUpperBound() const
 {
-  return FMRadioService::Singleton()->GetFrequencyUpperBound();
+  return IFMRadioService::Singleton()->GetFrequencyUpperBound();
 }
 
 double
 FMRadio::FrequencyLowerBound() const
 {
-  return FMRadioService::Singleton()->GetFrequencyLowerBound();
+  return IFMRadioService::Singleton()->GetFrequencyLowerBound();
 }
 
 double
 FMRadio::ChannelWidth() const
 {
-  return FMRadioService::Singleton()->GetChannelWidth();
+  return IFMRadioService::Singleton()->GetChannelWidth();
 }
 
 already_AddRefed<DOMRequest>
@@ -166,13 +200,8 @@ FMRadio::Enable(double aFrequency)
     return nullptr;
   }
 
-  // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
-  // which both inherits from nsISupports, so |nsISupports| is an ambiguous
-  // base of |FMRadio|, we have to cast |this| to one of the base classes.
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->Enable(aFrequency, r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->Enable(aFrequency, r);
 
   return r.forget();
 }
@@ -185,10 +214,8 @@ FMRadio::Disable()
     return nullptr;
   }
 
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->Disable(r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->Disable(r);
 
   return r.forget();
 }
@@ -201,10 +228,8 @@ FMRadio::SetFrequency(double aFrequency)
     return nullptr;
   }
 
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->SetFrequency(aFrequency, r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->SetFrequency(aFrequency, r);
 
   return r.forget();
 }
@@ -217,10 +242,8 @@ FMRadio::SeekUp()
     return nullptr;
   }
 
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->Seek(true, r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->Seek(FM_RADIO_SEEK_DIRECTION_UP, r);
 
   return r.forget();
 }
@@ -233,10 +256,8 @@ FMRadio::SeekDown()
     return nullptr;
   }
 
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->Seek(false, r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->Seek(FM_RADIO_SEEK_DIRECTION_DOWN, r);
 
   return r.forget();
 }
@@ -249,10 +270,8 @@ FMRadio::CancelSeek()
     return nullptr;
   }
 
-  nsWeakPtr weakFMRadio = do_GetWeakReference(
-    static_cast<nsIDOMEventTarget*>(this));
-  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, weakFMRadio);
-  FMRadioService::Singleton()->CancelSeek(r);
+  nsRefPtr<FMRadioRequest> r = new FMRadioRequest(win, this);
+  IFMRadioService::Singleton()->CancelSeek(r);
 
   return r.forget();
 }
