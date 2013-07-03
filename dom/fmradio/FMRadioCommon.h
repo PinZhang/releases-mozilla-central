@@ -10,7 +10,7 @@
 #include "mozilla/Observer.h"
 
 #undef FM_LOG
-#if defined(MOZ_WIDGET_GONK)
+#if defined(ANDROID)
 #include <android/log.h>
 #define FM_LOG(FMRADIO_LOG_INFO, args...) \
   __android_log_print(ANDROID_LOG_INFO, \

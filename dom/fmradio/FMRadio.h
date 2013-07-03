@@ -94,42 +94,11 @@ class FMRadioRequest MOZ_FINAL : public ReplyRunnable
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  FMRadioRequest(nsPIDOMWindow* aWindow, nsWeakPtr aFMRadio)
-    : DOMRequest(aWindow)
-    , mFMRadio(aFMRadio) { }
+  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio);
 
   ~FMRadioRequest() { }
 
-  NS_IMETHOD Run()
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-    nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mFMRadio);
-    if (!target) {
-      return NS_OK;
-    }
-
-    FMRadio* fmRadio = static_cast<FMRadio*>(
-      static_cast<nsIDOMEventTarget*>(target));
-
-    if (fmRadio->mIsShutdown) {
-      return NS_OK;
-    }
-
-    switch (mResponseType.type()) {
-      case FMRadioResponseType::TErrorResponse:
-        FireError(mResponseType.get_ErrorResponse().error());
-        break;
-      case FMRadioResponseType::TSuccessResponse:
-        FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
-        break;
-      default:
-        NS_RUNTIMEABORT("not reached");
-        break;
-    }
-
-    return NS_OK;
-  }
+  NS_IMETHOD Run();
 
 private:
   nsWeakPtr mFMRadio;

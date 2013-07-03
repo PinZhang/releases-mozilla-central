@@ -2241,7 +2241,7 @@ ContentParent::AllocPFMRadio()
     }
     return new FMRadioParent();
 #else
-    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
+    NS_WARNING("No support for FMRadio on this platform!");
     return nullptr;
 #endif
 }
@@ -2253,7 +2253,7 @@ ContentParent::DeallocPFMRadio(PFMRadioParent* aActor)
     delete aActor;
     return true;
 #else
-    NS_RUNTIMEABORT("No support for FMRadio on this platform!");
+    NS_WARNING("No support for FMRadio on this platform!");
     return false;
 #endif
 }
