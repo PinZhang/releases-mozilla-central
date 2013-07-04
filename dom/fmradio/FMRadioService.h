@@ -37,7 +37,7 @@ protected:
  *  - FMRadioService
  *    It's used in the main process, implements all the logics about FM Radio.
  *
- *  - FMRadioChildService
+ *  - FMRadioChild
  *    It's used in subprocess. It's a kind of proxy which just sends all
  *    the requests to main process through IPC channel.
  *
@@ -48,8 +48,8 @@ protected:
  *  - OOP
  *    Child:
  *      (1) Call navigator.mozFMRadio.enable().
- *      (2) Return a DOMRequest object, and call FMRadioChildService.Enable() with
- *          a ReplyRunnable object.
+ *      (2) Return a DOMRequest object, and call FMRadioChild.Enable() with a
+ *          ReplyRunnable object.
  *      (3) Send IPC message to main process.
  *    Parent:
  *      (4) Call FMRadioService::Enable() with a ReplyRunnable object.
@@ -63,7 +63,7 @@ protected:
  *                     _ _ _ _ _ _ _ _ _ _ _ _ _ _
  *                    |            OOP            |
  *                    |                           |
- *   Page  FMRadio    |  FMRadioChildService  IPC |    FMRadioService   Hal
+ *   Page  FMRadio    |    FMRadioChild       IPC |    FMRadioService   Hal
  *    | (1)  |        |          |             |  |           |          |
  *    |----->|    (2) |          |             |  |           |          |
  *    |      |--------|--------->|      (3)    |  |           |          |
