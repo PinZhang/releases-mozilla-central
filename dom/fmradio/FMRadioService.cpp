@@ -34,73 +34,6 @@ using mozilla::Preferences;
 
 BEGIN_FMRADIO_NAMESPACE
 
-class RilSettingsObserver MOZ_FINAL : public nsIObserver
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHODIMP
-  Observe(nsISupports * aSubject, const char * aTopic, const PRUnichar * aData)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(sFMRadioService);
-
-    if (strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
-      return NS_OK;
-    }
-
-    // The string that we're interested in will be a JSON string looks like:
-    //  {"key":"ril.radio.disabled","value":true}
-    mozilla::AutoSafeJSContext cx;
-    const nsDependentString dataStr(aData);
-    JS::Rooted<JS::Value> val(cx);
-    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
-        !val.isObject()) {
-      return NS_OK;
-    }
-
-    JS::Rooted<JSObject*> obj(cx, &val.toObject());
-    JS::Rooted<JS::Value> key(cx);
-    if (!JS_GetProperty(cx, obj, "key", key.address()) ||
-        !key.isString()) {
-      return NS_OK;
-    }
-
-    JS::Rooted<JSString*> jsKey(cx, key.toString());
-    nsDependentJSString keyStr;
-    if (!keyStr.init(cx, jsKey)) {
-      return NS_OK;
-    }
-
-    JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", value.address())) {
-      return NS_OK;
-    }
-
-    if (keyStr.EqualsLiteral(SETTING_KEY_RIL_RADIO_DISABLED)) {
-      if (!value.isBoolean()) {
-        return NS_OK;
-      }
-
-      FMRadioService* fmRadioService = FMRadioService::Singleton();
-
-      fmRadioService->mRilDisabled = value.toBoolean();
-
-      // Disable the FM radio HW if Airplane mode is enabled.
-      if (fmRadioService->mRilDisabled) {
-        LOG("mRilDisabled is false, disable the FM right now");
-        fmRadioService->Disable(nullptr);
-      }
-
-      return NS_OK;
-    }
-
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS1(RilSettingsObserver, nsIObserver)
-
 // static
 IFMRadioService*
 IFMRadioService::Singleton()
@@ -162,11 +95,9 @@ FMRadioService::FMRadioService()
       break;
   }
 
-  mSettingsObserver = new RilSettingsObserver();
-
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
 
-  if (NS_FAILED(obs->AddObserver(mSettingsObserver,
+  if (NS_FAILED(obs->AddObserver(this,
                                  MOZSETTINGS_CHANGED_ID,
                                  /* useWeak */ false))) {
     NS_WARNING("Failed to add settings change observer!");
@@ -179,10 +110,11 @@ FMRadioService::~FMRadioService()
 {
   LOG("destructor");
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs || NS_FAILED(obs->RemoveObserver(mSettingsObserver,
+  if (!obs || NS_FAILED(obs->RemoveObserver(this,
                                             MOZSETTINGS_CHANGED_ID))) {
     NS_WARNING("Can't unregister observers, or already unregistered");
   }
+
   UnregisterFMRadioObserver(this);
 }
 
@@ -708,6 +640,65 @@ FMRadioService::CancelSeek(ReplyRunnable* aReplyRunnable)
   NS_DispatchToMainThread(aReplyRunnable);
 }
 
+NS_IMETHODIMP
+FMRadioService::Observe(nsISupports * aSubject,
+                        const char * aTopic,
+                        const PRUnichar * aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sFMRadioService);
+
+  if (strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
+    return NS_OK;
+  }
+
+  // The string that we're interested in will be a JSON string looks like:
+  //  {"key":"ril.radio.disabled","value":true}
+  mozilla::AutoSafeJSContext cx;
+  const nsDependentString dataStr(aData);
+  JS::Rooted<JS::Value> val(cx);
+  if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
+      !val.isObject()) {
+    return NS_OK;
+  }
+
+  JS::Rooted<JSObject*> obj(cx, &val.toObject());
+  JS::Rooted<JS::Value> key(cx);
+  if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+      !key.isString()) {
+    return NS_OK;
+  }
+
+  JS::Rooted<JSString*> jsKey(cx, key.toString());
+  nsDependentJSString keyStr;
+  if (!keyStr.init(cx, jsKey)) {
+    return NS_OK;
+  }
+
+  JS::Rooted<JS::Value> value(cx);
+  if (!JS_GetProperty(cx, obj, "value", value.address())) {
+    return NS_OK;
+  }
+
+  if (keyStr.EqualsLiteral(SETTING_KEY_RIL_RADIO_DISABLED)) {
+    if (!value.isBoolean()) {
+      return NS_OK;
+    }
+
+    mRilDisabled = value.toBoolean();
+
+    // Disable the FM radio HW if Airplane mode is enabled.
+    if (mRilDisabled) {
+      LOG("mRilDisabled is false, disable the FM right now");
+      Disable(nullptr);
+    }
+
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
 void
 FMRadioService::NotifyFMRadioEvent(FMRadioEventType aType)
 {
@@ -850,6 +841,8 @@ FMRadioService::Singleton()
 
   return sFMRadioService;
 }
+
+NS_IMPL_ISUPPORTS1(FMRadioService, nsIObserver)
 
 END_FMRADIO_NAMESPACE
 
