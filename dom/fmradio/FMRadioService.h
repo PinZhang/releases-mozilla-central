@@ -132,14 +132,16 @@ enum FMRadioState
 
 class FMRadioService MOZ_FINAL : public IFMRadioService
                                , public hal::FMRadioObserver
+                               , public nsIObserver
 {
   friend class ReadRilSettingTask;
-  friend class RilSettingsObserver;
   friend class SetFrequencyRunnable;
 
 public:
   static FMRadioService* Singleton();
   virtual ~FMRadioService();
+
+  NS_DECL_ISUPPORTS
 
   virtual bool IsEnabled() const MOZ_OVERRIDE;
   virtual double GetFrequency() const MOZ_OVERRIDE;
@@ -159,6 +161,8 @@ public:
 
   /* FMRadioObserver */
   void Notify(const hal::FMRadioOperationInformation& aInfo) MOZ_OVERRIDE;
+
+  NS_DECL_NSIOBSERVER
 
 protected:
   FMRadioService();
@@ -185,8 +189,6 @@ private:
   double mUpperBoundInKHz;
   double mLowerBoundInKHz;
   double mChannelWidthInKHz;
-
-  nsCOMPtr<nsIObserver> mSettingsObserver;
 
   nsRefPtr<ReplyRunnable> mPendingRequest;
 
