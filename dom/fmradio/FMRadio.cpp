@@ -57,7 +57,7 @@ FMRadioRequest::Run()
       FireError(mResponseType.get_ErrorResponse().error());
       break;
     case FMRadioResponseType::TSuccessResponse:
-      FireSuccess(JS::Rooted<JS::Value>(AutoJSContext(), JSVAL_VOID));
+      FireSuccess(JS::UndefinedHandleValue);
       break;
     default:
       MOZ_CRASH();
