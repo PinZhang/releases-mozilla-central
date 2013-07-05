@@ -733,6 +733,7 @@ FMRadioService::Observe(nsISupports * aSubject,
     }
 
     mRilDisabled = value.toBoolean();
+    mHasReadRilSetting = true;
 
     // Disable the FM radio HW if Airplane mode is enabled.
     if (mRilDisabled) {
