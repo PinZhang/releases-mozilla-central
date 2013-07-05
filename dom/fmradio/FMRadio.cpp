@@ -78,16 +78,13 @@ FMRadio::FMRadio()
 
 FMRadio::~FMRadio()
 {
-  LOG("FMRadio is destructed.");
 }
 
 void
 FMRadio::Init(nsPIDOMWindow *aWindow)
 {
-  LOG("Init");
   BindToOwner(aWindow);
 
-  LOG("Register Handler");
   IFMRadioService::Singleton()->AddObserver(this);
 
   mHasInternalAntenna = Preferences::GetBool(DOM_FM_ANTENNA_INTERNAL_PREF,
@@ -103,11 +100,9 @@ FMRadio::Init(nsPIDOMWindow *aWindow)
 void
 FMRadio::Shutdown()
 {
-  LOG("Shutdown, Unregister Handler");
   IFMRadioService::Singleton()->RemoveObserver(this);
 
   if (!mHasInternalAntenna) {
-    LOG("Unregister SWITCH_HEADPHONES observer.");
     UnregisterSwitchObserver(SWITCH_HEADPHONES, this);
   }
 
@@ -142,10 +137,8 @@ FMRadio::Notify(const FMRadioEventType& aType)
       break;
     case EnabledChanged:
       if (IFMRadioService::Singleton()->IsEnabled()) {
-        LOG("Fire onenabled");
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
-        LOG("Fire ondisabled");
         DispatchTrustedEvent(NS_LITERAL_STRING("disabled"));
       }
       break;

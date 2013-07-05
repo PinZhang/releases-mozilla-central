@@ -7,29 +7,22 @@
 #include "FMRadioRequestChild.h"
 #include "FMRadioService.h"
 
-#undef LOG
-#define LOG(args...) FM_LOG("FMRadioRequestChild", args)
-
 BEGIN_FMRADIO_NAMESPACE
 
 FMRadioRequestChild::FMRadioRequestChild(ReplyRunnable* aReplyRunnable)
   : mReplyRunnable(aReplyRunnable)
 {
-  LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioRequestChild);
 }
 
 FMRadioRequestChild::~FMRadioRequestChild()
 {
-  LOG("DESTRUCTOR");
   MOZ_COUNT_DTOR(FMRadioRequestChild);
 }
 
 bool
 FMRadioRequestChild::Recv__delete__(const FMRadioResponseType& aType)
 {
-  LOG("Recv__delete__");
-
   mReplyRunnable->SetReply(aType);
   NS_DispatchToMainThread(mReplyRunnable);
 
