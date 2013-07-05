@@ -38,7 +38,22 @@ function setOutOfRangeFrequency() {
   request.onsuccess = function() {
     ok(false, "The request of setting an out-of-range frequency should fail.");
   };
-  request.onerror = cleanUp;
+  request.onerror = setFrequencyWhenSeeking;
+}
+
+function setFrequencyWhenSeeking() {
+  log("Set frequency when seeking");
+  var request = FMRadio.seekUp();
+  ok(request, "Seekup request should not be null.");
+
+  request.onsuccess = function() {
+    ok(false, "Seek request should fail.");
+  };
+
+  var setFreqRequest = FMRadio.setFrequency(101);
+  ok(setFreqRequest, "setFrequency request should not be null.");
+
+  setFreqRequest.onsuccess = cleanUp;
 }
 
 function cleanUp() {

@@ -337,16 +337,15 @@ FMRadioService::RoundFrequency(double aFrequencyInMHz)
 {
   double halfChannelWidthInMHz = mChannelWidthInKHz / 1000.0 / 2;
 
+  // Make sure 87.49999MHz would be rounded to the lower bound when
+  // the lower bound is 87500KHz.
   if (aFrequencyInMHz < mLowerBoundInKHz / 1000.0 - halfChannelWidthInMHz ||
       aFrequencyInMHz > mUpperBoundInKHz / 1000.0 + halfChannelWidthInMHz) {
     return 0;
   }
 
-  aFrequencyInMHz += halfChannelWidthInMHz;
-  int32_t aFrequencyInKHz = round(aFrequencyInMHz * 1000);
-
-  int32_t partToBeRounded = aFrequencyInKHz - mLowerBoundInKHz;
-  int32_t roundedPart = partToBeRounded / mChannelWidthInKHz *
+  int32_t partToBeRounded = round(aFrequencyInMHz * 1000) - mLowerBoundInKHz;
+  int32_t roundedPart = round(partToBeRounded / (double)mChannelWidthInKHz) *
                         mChannelWidthInKHz;
 
   return mLowerBoundInKHz + roundedPart;
@@ -587,6 +586,13 @@ FMRadioService::SetFrequency(double aFrequencyInMHz,
       NS_DispatchToMainThread(aReplyRunnable);
       return;
     case Seeking:
+      LOG("It's seeking, fail it immediately.");
+      CancelFMRadioSeek();
+      mPendingRequest->SetReply(
+        ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")));
+      NS_DispatchToMainThread(mPendingRequest);
+      SetState(Enabled);
+      break;
     case Enabled:
       break;
   }
@@ -751,44 +757,27 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
 {
   switch (aInfo.operation()) {
     case FM_RADIO_OPERATION_ENABLE:
-    {
       LOG("FM HW is enabled.");
+      MOZ_ASSERT(IsFMRadioOn());
+      MOZ_ASSERT(mState == Disabling || mState == Enabling);
 
-      // We will receive FM_RADIO_OPERATION_ENABLE if we call DisableFMRadio(),
-      // there must be some problem with HAL layer, we need to double check
-      // the FM radio HW status here.
-      if (!IsFMRadioOn())
-      {
-        LOG("FMRadio should not be off!!");
-        return;
-      }
-
-      // If we're disabling, go disable the radio right now.
-      // We don't change the `mState` value here, because we have set it to
-      // `Disabled` when Disable() is called.
+      // If we're disabling, disable the radio right now.
       if (mState == Disabling) {
         LOG("We need to disable FM Radio for the waiting request.");
         DoDisable();
         return;
       }
 
-      // The signal we received might be triggered by enable request in other
-      // process, we should check if `mState` is Enabling, if it's not enabling,
-      // we should skip it and just update the power state and frequency.
-      if (mState == Enabling) {
-        // Fire success callback on the enable request.
-        LOG("Fire Success for enable request.");
-        mPendingRequest->SetReply(SuccessResponse());
-        NS_DispatchToMainThread(mPendingRequest);
+      // Fire success callback on the enable request.
+      LOG("Fire Success for enable request.");
+      mPendingRequest->SetReply(SuccessResponse());
+      NS_DispatchToMainThread(mPendingRequest);
 
-        SetState(Enabled);
+      SetState(Enabled);
 
-        // To make sure the FM app will get the right frequency after the FM
-        // radio is enabled, we have to set the frequency first.
-        SetFMRadioFrequency(mPendingFrequencyInKHz);
-      } else {
-        LOG("Not triggered by current thread, skip it.");
-      }
+      // To make sure the FM app will get the right frequency after the FM
+      // radio is enabled, we have to set the frequency first.
+      SetFMRadioFrequency(mPendingFrequencyInKHz);
 
       // Update the current frequency without sending the`FrequencyChanged`
       // event, to make sure the FM app will get the right frequency when the
@@ -800,35 +789,23 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
       // should send the `FrequencyChanged` event manually.
       NotifyFMRadioEvent(FrequencyChanged);
       break;
-    }
     case FM_RADIO_OPERATION_DISABLE:
-    {
       LOG("FM HW is disabled.");
+      MOZ_ASSERT(mState == Disabling);
 
-      // The signal we received might be triggered by disable request in other
-      // process, we should check if `mState` is Disabling, if false, we should
-      // skip it and just update the power state.
-      if (mState == Disabling) {
-        if (mPendingRequest) {
-          mPendingRequest->SetReply(SuccessResponse());
-          NS_DispatchToMainThread(mPendingRequest);
-        }
-
-        SetState(Disabled);
-      } else {
-        LOG("Not triggered by current thread, skip it.");
+      if (mPendingRequest) {
+        mPendingRequest->SetReply(SuccessResponse());
+        NS_DispatchToMainThread(mPendingRequest);
       }
 
+      SetState(Disabled);
       UpdatePowerState();
       break;
-    }
     case FM_RADIO_OPERATION_SEEK:
-    {
       LOG("FM HW seek complete.");
 
-      // The signal we received might be triggered by disable request in other
-      // process, we should check if `mState` is Seeking, if false, we should
-      // skip it and just update the frequency.
+      // Seek action might be cancelled by SetFrequency(), we need to check if
+      // the current state is Seeking.
       if (mState == Seeking) {
         LOG("Fire success event for seeking request");
         mPendingRequest->SetReply(SuccessResponse());
@@ -842,7 +819,6 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
       LOG("Update frequency");
       UpdateFrequency();
       break;
-    }
     default:
       MOZ_CRASH();
   }
