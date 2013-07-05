@@ -1182,10 +1182,10 @@ Navigator::GetMozFMRadio(nsISupports** aFMRadio)
   *aFMRadio = nullptr;
 
   if (!mFMRadio) {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mWindow));
-    NS_ENSURE_TRUE(win && win->GetDocShell(), NS_OK);
+    NS_ENSURE_STATE(mWindow);
+    NS_ENSURE_TRUE(mWindow->GetDocShell(), NS_OK);
 
-    mFMRadio = FMRadio::CheckPermissionAndCreateInstance(win);
+    mFMRadio = FMRadio::CheckPermissionAndCreateInstance(mWindow);
   }
 
   nsRefPtr<nsISupports> radio = static_cast<nsIDOMEventTarget*>(mFMRadio);

@@ -18,3 +18,8 @@ CPP_SOURCES += [
     'FMRadioRequestParent.cpp',
 ]
 
+IPDL_SOURCES += [
+    'PFMRadio.ipdl',
+    'PFMRadioRequest.ipdl',
+]
+
