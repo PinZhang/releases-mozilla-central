@@ -89,7 +89,7 @@ class IFMRadioService
 public:
   virtual ~IFMRadioService() { }
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IFMRadioService)
+  NS_INLINE_DECL_REFCOUNTING(IFMRadioService)
 
   virtual bool IsEnabled() const = 0;
   virtual double GetFrequency() const = 0;
