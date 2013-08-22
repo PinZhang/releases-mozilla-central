@@ -86,11 +86,10 @@ protected:
  */
 class IFMRadioService
 {
-public:
+protected:
   virtual ~IFMRadioService() { }
 
-  NS_INLINE_DECL_REFCOUNTING(IFMRadioService)
-
+public:
   virtual bool IsEnabled() const = 0;
   virtual double GetFrequency() const = 0;
   virtual double GetFrequencyUpperBound() const = 0;
@@ -172,6 +171,7 @@ private:
 
   void NotifyFMRadioEvent(FMRadioEventType aType);
   void DoDisable();
+  void TransitionState(const FMRadioResponseType& aResponse, FMRadioState aState);
   void SetState(FMRadioState aState);
   void UpdatePowerState();
   void UpdateFrequency();
@@ -194,7 +194,6 @@ private:
 
   FMRadioEventObserverList mObserverList;
 
-private:
   static StaticRefPtr<FMRadioService> sFMRadioService;
 };
 

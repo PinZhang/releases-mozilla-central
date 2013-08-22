@@ -11,7 +11,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
 #include "DOMRequest.h"
-#include "FMRadioService.h"
 #include "nsWeakReference.h"
 
 class nsPIDOMWindow;
@@ -28,7 +27,6 @@ class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
 
 public:
   FMRadio();
-  ~FMRadio();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -42,7 +40,7 @@ public:
   /* FMRadioEventObserver */
   virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;
 
-  nsPIDOMWindow * GetParentObject() const
+  nsPIDOMWindow* GetParentObject() const
   {
     return GetOwner();
   }
@@ -80,25 +78,11 @@ public:
   IMPL_EVENT_HANDLER(frequencychange);
 
 private:
+  ~FMRadio();
+
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;
   bool mIsShutdown;
-};
-
-class FMRadioRequest MOZ_FINAL : public ReplyRunnable
-                               , public DOMRequest
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio);
-
-  ~FMRadioRequest() { }
-
-  NS_IMETHOD Run();
-
-private:
-  nsWeakPtr mFMRadio;
 };
 
 END_FMRADIO_NAMESPACE

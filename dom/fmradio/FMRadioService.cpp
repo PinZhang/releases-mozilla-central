@@ -159,29 +159,25 @@ class ReadRilSettingTask MOZ_FINAL : public nsISettingsServiceCallback
 public:
   NS_DECL_ISUPPORTS
 
-  ReadRilSettingTask() { }
+  ReadRilSettingTask(nsRefPtr<ReplyRunnable> aPendingRequest)
+    : mPendingRequest(aPendingRequest) { }
 
   NS_IMETHOD
   Handle(const nsAString& aName, const JS::Value& aResult)
   {
     LOG("Read settings value");
 
+    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
+
     FMRadioService* fmRadioService = FMRadioService::Singleton();
 
     fmRadioService->mHasReadRilSetting = true;
 
-    if (!fmRadioService->mPendingRequest) {
-      return NS_OK;
-    }
-
     if (!aResult.isBoolean()) {
       LOG("Settings is not boolean");
-      fmRadioService->mPendingRequest->SetReply(
-        ErrorResponse(NS_LITERAL_STRING("Unexpected error")));
-      NS_DispatchToMainThread(fmRadioService->mPendingRequest);
-
       // Failed to read the setting value, set the state back to Disabled.
-      fmRadioService->SetState(Disabled);
+      fmRadioService->TransitionState(
+        ErrorResponse(NS_LITERAL_STRING("Unexpected error")), Disabled);
       return NS_OK;
     }
 
@@ -194,12 +190,9 @@ public:
                            fmRadioService->mChannelWidthInKHz);
       NS_DispatchToMainThread(runnable);
     } else {
-      fmRadioService->mPendingRequest->SetReply(ErrorResponse(
-        NS_LITERAL_STRING("Airplane mode currently enabled")));
-      NS_DispatchToMainThread(fmRadioService->mPendingRequest);
-
       // Airplane mode is enabled, set the state back to Disabled.
-      fmRadioService->SetState(Disabled);
+      fmRadioService->TransitionState(ErrorResponse(
+        NS_LITERAL_STRING("Airplane mode currently enabled")), Disabled);
     }
 
     return NS_OK;
@@ -209,19 +202,18 @@ public:
   HandleError(const nsAString& aName)
   {
     LOG("Can not read settings value.");
+    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
 
     FMRadioService* fmRadioService = FMRadioService::Singleton();
 
-    if (!fmRadioService->mPendingRequest) {
-      return NS_OK;
-    }
+    fmRadioService->TransitionState(ErrorResponse(
+      NS_LITERAL_STRING("Unexpected error")), Disabled);
 
-    fmRadioService->mPendingRequest->SetReply(ErrorResponse(
-      NS_LITERAL_STRING("Unexpected error")));
-    NS_DispatchToMainThread(fmRadioService->mPendingRequest);
-    fmRadioService->SetState(Disabled);
     return NS_OK;
   }
+
+private:
+  nsRefPtr<ReplyRunnable> mPendingRequest;
 };
 
 NS_IMPL_ISUPPORTS1(ReadRilSettingTask, nsISettingsServiceCallback)
@@ -249,7 +241,7 @@ public:
 class SetFrequencyRunnable MOZ_FINAL : public nsRunnable
 {
 public:
-  SetFrequencyRunnable(FMRadioService* aService, int32_t aFrequency)
+  SetFrequencyRunnable(int32_t aFrequency)
     : mFrequency(aFrequency) { }
 
   NS_IMETHOD Run()
@@ -288,6 +280,18 @@ public:
 private:
   FMRadioSeekDirection mDirection;
 };
+
+void
+FMRadioService::TransitionState(const FMRadioResponseType& aResponse,
+                                FMRadioState aState)
+{
+  if (mPendingRequest) {
+    mPendingRequest->SetReply(aResponse);
+    NS_DispatchToMainThread(mPendingRequest);
+  }
+
+  SetState(aState);
+}
 
 void
 FMRadioService::SetState(FMRadioState aState)
@@ -456,17 +460,18 @@ FMRadioService::Enable(double aFrequencyInMHz, ReplyRunnable* aReplyRunnable)
     nsCOMPtr<nsISettingsServiceLock> settingsLock;
     nsresult rv = settings->CreateLock(getter_AddRefs(settingsLock));
     if (NS_FAILED(rv)) {
-      aReplyRunnable->SetReply(ErrorResponse(
-        NS_LITERAL_STRING("Can't create settings lock")));
-      NS_DispatchToMainThread(aReplyRunnable);
+      TransitionState(ErrorResponse(
+        NS_LITERAL_STRING("Can't create settings lock")), Disabled);
+      return;
     }
 
-    nsRefPtr<ReadRilSettingTask> callback = new ReadRilSettingTask();
+    nsRefPtr<ReadRilSettingTask> callback =
+      new ReadRilSettingTask(mPendingRequest);
+
     rv = settingsLock->Get(SETTING_KEY_RIL_RADIO_DISABLED, callback);
     if (NS_FAILED(rv)) {
-      aReplyRunnable->SetReply(ErrorResponse(
-        NS_LITERAL_STRING("Can't get settings value")));
-      NS_DispatchToMainThread(aReplyRunnable);
+      TransitionState(ErrorResponse(
+        NS_LITERAL_STRING("Can't get settings lock")), Disabled);
     }
 
     return;
@@ -509,15 +514,15 @@ FMRadioService::Disable(ReplyRunnable* aReplyRunnable)
       break;
   }
 
+  nsRefPtr<ReplyRunnable> enablingRequest = mPendingRequest;
+
   // If the FM Radio is currently seeking, no fail-to-seek or similar
   // event will be fired, execute the seek callback manually.
   if (mState == Seeking) {
-    mPendingRequest->SetReply(ErrorResponse(
-      NS_LITERAL_STRING("Seek action is cancelled")));
-    NS_DispatchToMainThread(mPendingRequest);
+    TransitionState(ErrorResponse(
+      NS_LITERAL_STRING("Seek action is cancelled")), Disabling);
   }
 
-  nsRefPtr<ReplyRunnable> enablingRequest = mPendingRequest;
   FMRadioState preState = mState;
   SetState(Disabling);
   mPendingRequest = aReplyRunnable;
@@ -531,8 +536,8 @@ FMRadioService::Disable(ReplyRunnable* aReplyRunnable)
       ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")));
     NS_DispatchToMainThread(enablingRequest);
 
-    // If we havn't read the ril settings yet which means we won't enable
-    // the FM radio HW, fail the disable request immediately.
+    // If we haven't read the ril settings yet we won't enable the FM radio HW,
+    // so fail the disable request immediately.
     if (!mHasReadRilSetting) {
       SetState(Disabled);
 
@@ -589,10 +594,8 @@ FMRadioService::SetFrequency(double aFrequencyInMHz,
     case Seeking:
       LOG("It's seeking, fail it immediately.");
       CancelFMRadioSeek();
-      mPendingRequest->SetReply(
-        ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")));
-      NS_DispatchToMainThread(mPendingRequest);
-      SetState(Enabled);
+      TransitionState(ErrorResponse(
+        NS_LITERAL_STRING("Seek action is cancelled")), Enabled);
       break;
     case Enabled:
       break;
@@ -610,7 +613,7 @@ FMRadioService::SetFrequency(double aFrequencyInMHz,
   aReplyRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aReplyRunnable);
 
-  NS_DispatchToMainThread(new SetFrequencyRunnable(this, roundedFrequency));
+  NS_DispatchToMainThread(new SetFrequencyRunnable(roundedFrequency));
 }
 
 void
@@ -677,11 +680,8 @@ FMRadioService::CancelSeek(ReplyRunnable* aReplyRunnable)
   CancelFMRadioSeek();
 
   LOG("Fail seeking request");
-  mPendingRequest->SetReply(
-    ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")));
-  NS_DispatchToMainThread(mPendingRequest);
-
-  SetState(Enabled);
+  TransitionState(
+    ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")), Enabled);
 
   LOG("Fire success for cancel seeking");
   aReplyRunnable->SetReply(SuccessResponse());
@@ -772,10 +772,7 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
 
       // Fire success callback on the enable request.
       LOG("Fire Success for enable request.");
-      mPendingRequest->SetReply(SuccessResponse());
-      NS_DispatchToMainThread(mPendingRequest);
-
-      SetState(Enabled);
+      TransitionState(SuccessResponse(), Enabled);
 
       // To make sure the FM app will get the right frequency after the FM
       // radio is enabled, we have to set the frequency first.
@@ -795,12 +792,7 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
       LOG("FM HW is disabled.");
       MOZ_ASSERT(mState == Disabling);
 
-      if (mPendingRequest) {
-        mPendingRequest->SetReply(SuccessResponse());
-        NS_DispatchToMainThread(mPendingRequest);
-      }
-
-      SetState(Disabled);
+      TransitionState(SuccessResponse(), Disabled);
       UpdatePowerState();
       break;
     case FM_RADIO_OPERATION_SEEK:
@@ -810,10 +802,7 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
       // the current state is Seeking.
       if (mState == Seeking) {
         LOG("Fire success event for seeking request");
-        mPendingRequest->SetReply(SuccessResponse());
-        NS_DispatchToMainThread(mPendingRequest);
-
-        SetState(Enabled);
+        TransitionState(SuccessResponse(), Enabled);
       } else {
         LOG("Not triggered by current thread, skip it.");
       }

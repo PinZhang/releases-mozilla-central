@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FMRadio.h"
+#include "mozilla/dom/FMRadio.h"
 #include "nsContentUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/HalTypes.h"
@@ -12,7 +12,7 @@
 #include "mozilla/dom/FMRadioBinding.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
-#include "nsIPermissionManager.h"
+#include "mozilla/dom/FMRadioService.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadio", args)
@@ -26,45 +26,57 @@ using mozilla::Preferences;
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequest::FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
-  : DOMRequest(aWindow)
+class FMRadioRequest MOZ_FINAL : public ReplyRunnable
+                               , public DOMRequest
 {
-  // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
-  // which both inherits from nsISupports, so |nsISupports| is an ambiguous
-  // base of |FMRadio|, we have to cast |aFMRadio| to one of the base classes.
-  mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
-}
+public:
+  NS_DECL_ISUPPORTS_INHERITED
 
-NS_IMETHODIMP
-FMRadioRequest::Run()
-{
-  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  FMRadioRequest(nsPIDOMWindow* aWindow, FMRadio* aFMRadio)
+    : DOMRequest(aWindow)
+  {
+    // |FMRadio| inherits from |nsIDOMEventTarget| and |nsISupportsWeakReference|
+    // which both inherits from nsISupports, so |nsISupports| is an ambiguous
+    // base of |FMRadio|, we have to cast |aFMRadio| to one of the base classes.
+    mFMRadio = do_GetWeakReference(static_cast<nsIDOMEventTarget*>(aFMRadio));
+  }
 
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mFMRadio);
-  if (!target) {
+  ~FMRadioRequest() { }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryReferent(mFMRadio);
+    if (!target) {
+      return NS_OK;
+    }
+
+    FMRadio* fmRadio = static_cast<FMRadio*>(
+      static_cast<nsIDOMEventTarget*>(target));
+
+    if (fmRadio->mIsShutdown) {
+      return NS_OK;
+    }
+
+    switch (mResponseType.type()) {
+      case FMRadioResponseType::TErrorResponse:
+        FireError(mResponseType.get_ErrorResponse().error());
+        break;
+      case FMRadioResponseType::TSuccessResponse:
+        FireSuccess(JS::UndefinedHandleValue);
+        break;
+      default:
+        MOZ_CRASH();
+    }
+
     return NS_OK;
   }
 
-  FMRadio* fmRadio = static_cast<FMRadio*>(
-    static_cast<nsIDOMEventTarget*>(target));
-
-  if (fmRadio->mIsShutdown) {
-    return NS_OK;
-  }
-
-  switch (mResponseType.type()) {
-    case FMRadioResponseType::TErrorResponse:
-      FireError(mResponseType.get_ErrorResponse().error());
-      break;
-    case FMRadioResponseType::TSuccessResponse:
-      FireSuccess(JS::UndefinedHandleValue);
-      break;
-    default:
-      MOZ_CRASH();
-  }
-
-  return NS_OK;
-}
+private:
+  nsWeakPtr mFMRadio;
+};
 
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
