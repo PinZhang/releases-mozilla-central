@@ -21,9 +21,9 @@
 #endif
 
 #define BEGIN_FMRADIO_NAMESPACE \
-  namespace mozilla { namespace dom { namespace fmradio {
+  namespace mozilla { namespace dom {
 #define END_FMRADIO_NAMESPACE \
-  } /* namespace fmradio */ } /* namespace dom */ } /* namespace mozilla */
+  } /* namespace dom */ } /* namespace mozilla */
 
 BEGIN_FMRADIO_NAMESPACE
 

@@ -6,7 +6,6 @@ include protocol PFMRadio;
 
 namespace mozilla {
 namespace dom {
-namespace fmradio {
 
 struct ErrorResponse
 {
@@ -39,7 +38,6 @@ child:
   __delete__(FMRadioResponseType response);
 };
 
-} // namespace fmradio
 } // namespace dom
 } // namespace mozilla
 

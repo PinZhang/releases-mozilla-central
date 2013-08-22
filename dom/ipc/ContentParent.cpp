@@ -32,7 +32,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
-#include "mozilla/dom/fmradio/PFMRadioParent.h"
+#include "mozilla/dom/PFMRadioParent.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "SmsParent.h"
 #include "mozilla/Hal.h"
@@ -126,7 +126,7 @@ using namespace mozilla::system;
 #include "JavaScriptParent.h"
 
 #ifdef MOZ_B2G_FM
-#include "mozilla/dom/fmradio/FMRadioParent.h"
+#include "mozilla/dom/FMRadioParent.h"
 #endif
 
 #include "Crypto.h"
@@ -142,7 +142,6 @@ using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
-using namespace mozilla::dom::fmradio;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobilemessage;

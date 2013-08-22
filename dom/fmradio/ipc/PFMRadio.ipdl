@@ -11,7 +11,6 @@ using mozilla::hal::FMRadioSeekDirection;
 
 namespace mozilla {
 namespace dom {
-namespace fmradio {
 
 struct EnableRequestArgs
 {
@@ -90,7 +89,6 @@ parent:
   PFMRadioRequest(FMRadioRequestArgs requestType);
 };
 
-} // namespace fmradio
 } // namespace dom
 } // namespace mozilla
 

@@ -66,7 +66,7 @@
 #endif
 
 #ifdef MOZ_B2G_FM
-#include "FMRadio.h"
+#include "mozilla/dom/FMRadio.h"
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
@@ -1060,11 +1060,8 @@ Navigator::GetMozNotification(ErrorResult& aRv)
 
 #ifdef MOZ_B2G_FM
 
-using mozilla::dom::fmradio::FMRadio;
+using mozilla::dom::FMRadio;
 
-//*****************************************************************************
-//    Navigator::nsIDOMNavigatorFMRadio
-//*****************************************************************************
 FMRadio*
 Navigator::GetMozFMRadio(ErrorResult& aRv)
 {

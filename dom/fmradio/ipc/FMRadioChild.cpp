@@ -6,7 +6,7 @@
 
 #include "FMRadioChild.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/fmradio/FMRadioRequestChild.h"
+#include "mozilla/dom/FMRadioRequestChild.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadioChild", args)

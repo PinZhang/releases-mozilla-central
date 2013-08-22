@@ -54,9 +54,7 @@ class BatteryManager;
 } // namespace battery
 
 #ifdef MOZ_B2G_FM
-namespace fmradio {
 class FMRadio;
-}
 #endif
 
 class DesktopNotificationCenter;
@@ -234,7 +232,7 @@ public:
   void GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
 #endif // MOZ_GAMEPAD
 #ifdef MOZ_B2G_FM
-  fmradio::FMRadio* GetMozFMRadio(ErrorResult& aRv);
+  FMRadio* GetMozFMRadio(ErrorResult& aRv);
 #endif
 #ifdef MOZ_B2G_BT
   bluetooth::BluetoothManager* GetMozBluetooth(ErrorResult& aRv);
@@ -324,7 +322,7 @@ private:
   nsRefPtr<DesktopNotificationCenter> mNotification;
   nsRefPtr<battery::BatteryManager> mBatteryManager;
 #ifdef MOZ_B2G_FM
-  nsRefPtr<fmradio::FMRadio> mFMRadio;
+  nsRefPtr<FMRadio> mFMRadio;
 #endif
   nsRefPtr<power::PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
