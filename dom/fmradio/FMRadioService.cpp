@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
+#include "nsCxPusher.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadioService", args)
@@ -701,7 +702,7 @@ FMRadioService::Observe(nsISupports * aSubject,
 
   // The string that we're interested in will be a JSON string looks like:
   //  {"key":"ril.radio.disabled","value":true}
-  mozilla::AutoSafeJSContext cx;
+  AutoSafeJSContext cx;
   const nsDependentString dataStr(aData);
   JS::Rooted<JS::Value> val(cx);
   if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
@@ -709,9 +710,9 @@ FMRadioService::Observe(nsISupports * aSubject,
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> obj(cx, &val.toObject());
+  JSObject& obj(val.toObject());
   JS::Rooted<JS::Value> key(cx);
-  if (!JS_GetProperty(cx, obj, "key", key.address()) ||
+  if (!JS_GetProperty(cx, &obj, "key", &key) ||
       !key.isString()) {
     return NS_OK;
   }
@@ -723,7 +724,7 @@ FMRadioService::Observe(nsISupports * aSubject,
   }
 
   JS::Rooted<JS::Value> value(cx);
-  if (!JS_GetProperty(cx, obj, "value", value.address())) {
+  if (!JS_GetProperty(cx, &obj, "value", &value)) {
     return NS_OK;
   }
 

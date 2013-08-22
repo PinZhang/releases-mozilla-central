@@ -16,10 +16,6 @@
 #include "nsString.h"
 #include "nsTArray.h"
 
-#ifdef MOZ_B2G_FM
-#include "nsIDOMNavigatorFMRadio.h"
-#endif
-
 class nsPluginArray;
 class nsMimeTypeArray;
 class nsPIDOMWindow;
@@ -117,9 +113,6 @@ class AudioChannelManager;
 class Navigator : public nsIDOMNavigator
                 , public nsIMozNavigatorNetwork
                 , public nsWrapperCache
-#ifdef MOZ_B2G_FM
-                , public nsIDOMNavigatorFMRadio
-#endif
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
@@ -240,6 +233,9 @@ public:
 #ifdef MOZ_GAMEPAD
   void GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
 #endif // MOZ_GAMEPAD
+#ifdef MOZ_B2G_FM
+  fmradio::FMRadio* GetMozFMRadio(ErrorResult& aRv);
+#endif
 #ifdef MOZ_B2G_BT
   bluetooth::BluetoothManager* GetMozBluetooth(ErrorResult& aRv);
 #endif // MOZ_B2G_BT
@@ -293,6 +289,9 @@ public:
 #ifdef MOZ_B2G_BT
   static bool HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal);
 #endif // MOZ_B2G_BT
+#ifdef MOZ_B2G_FM
+  static bool HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal);
+#endif // MOZ_B2G_FM
 #ifdef MOZ_TIME_MANAGER
   static bool HasTimeSupport(JSContext* /* unused */, JSObject* aGlobal);
 #endif // MOZ_TIME_MANAGER
