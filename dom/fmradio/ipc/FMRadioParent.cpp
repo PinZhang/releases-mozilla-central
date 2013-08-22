@@ -45,7 +45,7 @@ FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 }
 
 PFMRadioRequestParent*
-FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
+FMRadioParent::AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs)
 {
   LOG("AllocPFMRadioRequest");
   nsRefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
@@ -81,7 +81,7 @@ FMRadioParent::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
 }
 
 bool
-FMRadioParent::DeallocPFMRadioRequest(PFMRadioRequestParent* aActor)
+FMRadioParent::DeallocPFMRadioRequestParent(PFMRadioRequestParent* aActor)
 {
   LOG("DeallocPFMRadioRequest");
   FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);

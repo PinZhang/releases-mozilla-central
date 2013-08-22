@@ -929,7 +929,7 @@ ContentChild::DeallocPBluetoothChild(PBluetoothChild* aActor)
 }
 
 PFMRadioChild*
-ContentChild::AllocPFMRadio()
+ContentChild::AllocPFMRadioChild()
 {
 #ifdef MOZ_B2G_FM
     NS_RUNTIMEABORT("No one should be allocating PFMRadioChild actors");
@@ -941,7 +941,7 @@ ContentChild::AllocPFMRadio()
 }
 
 bool
-ContentChild::DeallocPFMRadio(PFMRadioChild* aActor)
+ContentChild::DeallocPFMRadioChild(PFMRadioChild* aActor)
 {
 #ifdef MOZ_B2G_FM
     delete aActor;

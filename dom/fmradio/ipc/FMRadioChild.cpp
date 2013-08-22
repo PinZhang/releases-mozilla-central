@@ -163,14 +163,14 @@ FMRadioChild::Recv__delete__()
 }
 
 PFMRadioRequestChild*
-FMRadioChild::AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs)
+FMRadioChild::AllocPFMRadioRequestChild(const FMRadioRequestArgs& aArgs)
 {
   MOZ_CRASH();
   return nullptr;
 }
 
 bool
-FMRadioChild::DeallocPFMRadioRequest(PFMRadioRequestChild* aActor)
+FMRadioChild::DeallocPFMRadioRequestChild(PFMRadioRequestChild* aActor)
 {
   delete aActor;
   return true;

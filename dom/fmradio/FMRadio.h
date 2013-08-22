@@ -79,9 +79,6 @@ public:
   IMPL_EVENT_HANDLER(antennaavailablechange);
   IMPL_EVENT_HANDLER(frequencychange);
 
-  static already_AddRefed<FMRadio>
-  CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow);
-
 private:
   hal::SwitchState mHeadphoneState;
   bool mHasInternalAntenna;

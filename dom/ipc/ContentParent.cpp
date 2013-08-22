@@ -2233,7 +2233,7 @@ ContentParent::RecvPBluetoothConstructor(PBluetoothParent* aActor)
 }
 
 PFMRadioParent*
-ContentParent::AllocPFMRadio()
+ContentParent::AllocPFMRadioParent()
 {
 #ifdef MOZ_B2G_FM
     if (!AssertAppProcessPermission(this, "fmradio")) {
@@ -2247,7 +2247,7 @@ ContentParent::AllocPFMRadio()
 }
 
 bool
-ContentParent::DeallocPFMRadio(PFMRadioParent* aActor)
+ContentParent::DeallocPFMRadioParent(PFMRadioParent* aActor)
 {
 #ifdef MOZ_B2G_FM
     delete aActor;

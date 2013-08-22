@@ -276,27 +276,6 @@ FMRadio::CancelSeek()
   return r.forget();
 }
 
-// static
-already_AddRefed<FMRadio>
-FMRadio::CheckPermissionAndCreateInstance(nsPIDOMWindow* aWindow)
-{
-  nsCOMPtr<nsIPermissionManager> permMgr =
-    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
-  NS_ENSURE_TRUE(permMgr, nullptr);
-
-  uint32_t permission = nsIPermissionManager::DENY_ACTION;
-  permMgr->TestPermissionFromWindow(aWindow, "fmradio", &permission);
-
-  if (permission != nsIPermissionManager::ALLOW_ACTION) {
-    return nullptr;
-  }
-
-  nsRefPtr<FMRadio> fmRadio = new FMRadio();
-  fmRadio->Init(aWindow);
-
-  return fmRadio.forget();
-}
-
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FMRadio)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)

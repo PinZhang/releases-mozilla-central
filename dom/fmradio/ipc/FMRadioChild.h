@@ -8,7 +8,6 @@
 #define mozilla_dom_fmradio_ipc_fmradiochild_h__
 
 #include "FMRadioCommon.h"
-#include "DOMRequest.h"
 #include "FMRadioService.h"
 #include "mozilla/dom/fmradio/PFMRadioChild.h"
 #include "mozilla/StaticPtr.h"
@@ -62,10 +61,10 @@ public:
                            const double& aFrequency) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestChild*
-  AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
+  AllocPFMRadioRequestChild(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
 
   virtual bool
-  DeallocPFMRadioRequest(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
+  DeallocPFMRadioRequestChild(PFMRadioRequestChild* aActor) MOZ_OVERRIDE;
 
 private:
   FMRadioChild();

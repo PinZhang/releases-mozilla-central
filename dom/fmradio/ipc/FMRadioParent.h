@@ -9,7 +9,6 @@
 
 #include "FMRadioCommon.h"
 #include "mozilla/dom/fmradio/PFMRadioParent.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/HalTypes.h"
 
 BEGIN_FMRADIO_NAMESPACE
@@ -27,10 +26,10 @@ public:
   RecvGetStatusInfo(StatusInfo* aStatusInfo) MOZ_OVERRIDE;
 
   virtual PFMRadioRequestParent*
-  AllocPFMRadioRequest(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
+  AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
 
   virtual bool
-  DeallocPFMRadioRequest(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
+  DeallocPFMRadioRequestParent(PFMRadioRequestParent* aActor) MOZ_OVERRIDE;
 
   /* FMRadioEventObserver */
   virtual void Notify(const FMRadioEventType& aType) MOZ_OVERRIDE;

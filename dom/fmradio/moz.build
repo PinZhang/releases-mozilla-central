@@ -8,15 +8,7 @@ DIRS += [
     'ipc',
 ]
 
-XPIDL_SOURCES += [
-    'nsIDOMNavigatorFMRadio.idl',
-]
-
 XPIDL_MODULE = 'dom_fmradio'
-
-XPIDL_FLAGS += [
-    '-I$(topsrcdir)/dom/interfaces/events',
-]
 
 MODULE = 'dom'
 

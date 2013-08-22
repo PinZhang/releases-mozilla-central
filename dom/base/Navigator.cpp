@@ -1065,7 +1065,7 @@ using mozilla::dom::fmradio::FMRadio;
 //*****************************************************************************
 //    Navigator::nsIDOMNavigatorFMRadio
 //*****************************************************************************
-fmradio::FMRadio*
+FMRadio*
 Navigator::GetMozFMRadio(ErrorResult& aRv)
 {
   if (!mFMRadio) {
@@ -1076,12 +1076,8 @@ Navigator::GetMozFMRadio(ErrorResult& aRv)
 
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mFMRadio = FMRadio::CheckPermissionAndCreateInstance(mWindow);
-
-    if (!mFMRadio) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
+    mFMRadio = new FMRadio();
+    mFMRadio->Init(mWindow);
   }
 
   return mFMRadio;
@@ -1762,6 +1758,16 @@ Navigator::HasBluetoothSupport(JSContext* /* unused */, JSObject* aGlobal)
   return win && bluetooth::BluetoothManager::CheckPermission(win);
 }
 #endif // MOZ_B2G_BT
+
+#ifdef MOZ_B2G_FM
+/* static */
+bool
+Navigator::HasFMRadioSupport(JSContext* /* unused */, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return win && CheckPermission(win, "fmradio");
+}
+#endif // MOZ_B2G_FM
 
 #ifdef MOZ_TIME_MANAGER
 /* static */
