@@ -11,7 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/FMRadioBinding.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/fmradio/PFMRadioChild.h"
+#include "mozilla/dom/PFMRadioChild.h"
 #include "nsIPermissionManager.h"
 
 #undef LOG

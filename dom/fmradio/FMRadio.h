@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_fmradio_FMRadio_h
-#define mozilla_dom_fmradio_FMRadio_h
+#ifndef mozilla_dom_FMRadio_h
+#define mozilla_dom_FMRadio_h
 
 #include "FMRadioCommon.h"
 #include "nsDOMEventTargetHelper.h"
@@ -103,5 +103,5 @@ private:
 
 END_FMRADIO_NAMESPACE
 
-#endif // mozilla_dom_fmradio_FMRadio_h
+#endif // mozilla_dom_FMRadio_h
 

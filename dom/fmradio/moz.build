@@ -12,7 +12,8 @@ XPIDL_MODULE = 'dom_fmradio'
 
 MODULE = 'dom'
 
-EXPORTS.mozilla.dom.fmradio += [
+EXPORTS.mozilla.dom += [
+    'FMRadio.h',
     'FMRadioCommon.h',
     'FMRadioService.h',
 ]

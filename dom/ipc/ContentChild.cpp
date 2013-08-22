@@ -98,7 +98,7 @@
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
-#include "mozilla/dom/fmradio/PFMRadioChild.h"
+#include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
 #ifdef MOZ_WEBSPEECH
@@ -122,9 +122,6 @@ using namespace base;
 using namespace mozilla;
 using namespace mozilla::docshell;
 using namespace mozilla::dom::bluetooth;
-#ifdef MOZ_B2G_FM
-using namespace mozilla::dom::fmradio;
-#endif
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::ipc;
 using namespace mozilla::dom::mobilemessage;

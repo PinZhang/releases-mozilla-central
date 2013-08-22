@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_fmradio_ipc_fmradioservice_h__
-#define mozilla_dom_fmradio_ipc_fmradioservice_h__
+#ifndef mozilla_dom_fmradioservice_h__
+#define mozilla_dom_fmradioservice_h__
 
-#include "mozilla/dom/fmradio/PFMRadioRequest.h"
+#include "mozilla/dom/PFMRadioRequest.h"
 #include "FMRadioCommon.h"
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPtr.h"
@@ -200,5 +200,5 @@ private:
 
 END_FMRADIO_NAMESPACE
 
-#endif // mozilla_dom_fmradio_ipc_fmradioservice_h__
+#endif // mozilla_dom_fmradioservice_h__
 

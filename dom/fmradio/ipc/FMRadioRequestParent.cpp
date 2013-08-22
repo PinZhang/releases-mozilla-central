@@ -6,7 +6,7 @@
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
 #include "mozilla/unused.h"
-#include "mozilla/dom/fmradio/PFMRadio.h"
+#include "mozilla/dom/PFMRadio.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("PFMRadioRequestParent", args)
