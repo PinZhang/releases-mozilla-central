@@ -48,7 +48,7 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  bool Enabled() const;
+  static bool Enabled();
 
   bool AntennaAvailable() const;
 

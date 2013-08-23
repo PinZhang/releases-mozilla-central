@@ -153,7 +153,7 @@ FMRadio::Notify(const FMRadioEventType& aType)
       DispatchTrustedEvent(NS_LITERAL_STRING("frequencychange"));
       break;
     case EnabledChanged:
-      if (IFMRadioService::Singleton()->IsEnabled()) {
+      if (Enabled()) {
         LOG("Fire onenabled");
         DispatchTrustedEvent(NS_LITERAL_STRING("enabled"));
       } else {
@@ -166,8 +166,9 @@ FMRadio::Notify(const FMRadioEventType& aType)
   }
 }
 
+/* static */
 bool
-FMRadio::Enabled() const
+FMRadio::Enabled()
 {
   return IFMRadioService::Singleton()->IsEnabled();
 }

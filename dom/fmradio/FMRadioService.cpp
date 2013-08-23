@@ -110,12 +110,6 @@ FMRadioService::FMRadioService()
 FMRadioService::~FMRadioService()
 {
   LOG("destructor");
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (!obs || NS_FAILED(obs->RemoveObserver(this,
-                                            MOZSETTINGS_CHANGED_ID))) {
-    NS_WARNING("Can't unregister observers, or already unregistered");
-  }
-
   UnregisterFMRadioObserver(this);
 }
 
@@ -533,7 +527,7 @@ FMRadioService::Disable(ReplyRunnable* aReplyRunnable)
     // DoDisable and fire the success callback on the disable request.
     LOG("FM radio currently enabling, fail it immediately.");
     enablingRequest->SetReply(
-      ErrorResponse(NS_LITERAL_STRING("Seek action is cancelled")));
+      ErrorResponse(NS_LITERAL_STRING("Enable action is cancelled")));
     NS_DispatchToMainThread(enablingRequest);
 
     // If we haven't read the ril settings yet we won't enable the FM radio HW,
@@ -610,10 +604,10 @@ FMRadioService::SetFrequency(double aFrequencyInMHz,
     return;
   }
 
+  NS_DispatchToMainThread(new SetFrequencyRunnable(roundedFrequency));
+
   aReplyRunnable->SetReply(SuccessResponse());
   NS_DispatchToMainThread(aReplyRunnable);
-
-  NS_DispatchToMainThread(new SetFrequencyRunnable(roundedFrequency));
 }
 
 void
@@ -696,7 +690,7 @@ FMRadioService::Observe(nsISupports * aSubject,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sFMRadioService);
 
-  if (strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
+  if (strcmp(aTopic, MOZSETTINGS_CHANGED_ID) != 0) {
     return NS_OK;
   }
 
