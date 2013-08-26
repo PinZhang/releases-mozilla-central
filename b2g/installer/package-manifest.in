@@ -172,9 +172,6 @@
 @BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
 #endif
-#ifdef MOZ_B2G_FM
-@BINPATH@/components/dom_fmradio.xpt
-#endif
 #ifdef MOZ_B2G_BT
 @BINPATH@/components/dom_bluetooth.xpt
 #endif
