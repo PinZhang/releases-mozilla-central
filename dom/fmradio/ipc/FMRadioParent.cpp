@@ -9,14 +9,10 @@
 #include "FMRadioRequestParent.h"
 #include "FMRadioService.h"
 
-#undef LOG
-#define LOG(args...) FM_LOG("PFMRadioParent", args)
-
 BEGIN_FMRADIO_NAMESPACE
 
 FMRadioParent::FMRadioParent()
 {
-  LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioParent);
 
   IFMRadioService::Singleton()->AddObserver(this);
@@ -24,7 +20,6 @@ FMRadioParent::FMRadioParent()
 
 FMRadioParent::~FMRadioParent()
 {
-  LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioParent);
 
   IFMRadioService::Singleton()->RemoveObserver(this);
@@ -47,21 +42,17 @@ FMRadioParent::RecvGetStatusInfo(StatusInfo* aStatusInfo)
 PFMRadioRequestParent*
 FMRadioParent::AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs)
 {
-  LOG("AllocPFMRadioRequest");
   nsRefPtr<FMRadioRequestParent> requestParent = new FMRadioRequestParent();
 
   switch (aArgs.type()) {
     case FMRadioRequestArgs::TEnableRequestArgs:
-      LOG("Call Enable");
       IFMRadioService::Singleton()->Enable(
         aArgs.get_EnableRequestArgs().frequency(), requestParent);
       break;
     case FMRadioRequestArgs::TDisableRequestArgs:
-      LOG("Call Disable");
       IFMRadioService::Singleton()->Disable(requestParent);
       break;
     case FMRadioRequestArgs::TSetFrequencyRequestArgs:
-      LOG("Call SetFrequency");
       IFMRadioService::Singleton()->SetFrequency(
         aArgs.get_SetFrequencyRequestArgs().frequency(), requestParent);
       break;
@@ -70,7 +61,6 @@ FMRadioParent::AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs)
         aArgs.get_SeekRequestArgs().direction(), requestParent);
       break;
     case FMRadioRequestArgs::TCancelSeekRequestArgs:
-      LOG("Call CancelSeek");
       IFMRadioService::Singleton()->CancelSeek(requestParent);
       break;
     default:
@@ -83,7 +73,6 @@ FMRadioParent::AllocPFMRadioRequestParent(const FMRadioRequestArgs& aArgs)
 bool
 FMRadioParent::DeallocPFMRadioRequestParent(PFMRadioRequestParent* aActor)
 {
-  LOG("DeallocPFMRadioRequest");
   FMRadioRequestParent* parent = static_cast<FMRadioRequestParent*>(aActor);
   NS_RELEASE(parent);
   return true;

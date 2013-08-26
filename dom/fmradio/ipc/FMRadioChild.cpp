@@ -8,9 +8,6 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/FMRadioRequestChild.h"
 
-#undef LOG
-#define LOG(args...) FM_LOG("FMRadioChild", args)
-
 using namespace mozilla::hal;
 
 BEGIN_FMRADIO_NAMESPACE
@@ -22,7 +19,6 @@ FMRadioChild::FMRadioChild()
   , mFrequency(0)
   , mObserverList(FMRadioEventObserverList())
 {
-  LOG("Constructor");
   MOZ_COUNT_CTOR(FMRadioChild);
 
   ContentChild::GetSingleton()->SendPFMRadioConstructor(this);
@@ -39,7 +35,6 @@ FMRadioChild::FMRadioChild()
 
 FMRadioChild::~FMRadioChild()
 {
-  LOG("Destructor");
   MOZ_COUNT_DTOR(FMRadioChild);
 }
 
@@ -108,7 +103,6 @@ FMRadioChild::CancelSeek(ReplyRunnable* aReplyRunnable)
 inline void
 FMRadioChild::NotifyFMRadioEvent(FMRadioEventType aType)
 {
-  LOG("Notify FMRadioEvent");
   mObserverList.Broadcast(aType);
 }
 
@@ -116,13 +110,11 @@ void
 FMRadioChild::AddObserver(FMRadioEventObserver* aObserver)
 {
   mObserverList.AddObserver(aObserver);
-  LOG("Register observer, we have %d observers", mObserverList.Length());
 }
 
 void
 FMRadioChild::RemoveObserver(FMRadioEventObserver* aObserver)
 {
-  LOG("Unregister observer");
   mObserverList.RemoveObserver(aObserver);
 }
 
@@ -132,13 +124,11 @@ FMRadioChild::SendRequest(ReplyRunnable* aReplyRunnable,
 {
   PFMRadioRequestChild* childRequest = new FMRadioRequestChild(aReplyRunnable);
   SendPFMRadioRequestConstructor(childRequest, aArgs);
-  LOG("Request is sent.");
 }
 
 bool
 FMRadioChild::RecvNotifyFrequencyChanged(const double& aFrequency)
 {
-  LOG("RecvNotifyFrequencyChanged");
   mFrequency = aFrequency;
   NotifyFMRadioEvent(FrequencyChanged);
   return true;
@@ -148,7 +138,6 @@ bool
 FMRadioChild::RecvNotifyEnabledChanged(const bool& aEnabled,
                                        const double& aFrequency)
 {
-  LOG("RecvEnabledChanged");
   mEnabled = aEnabled;
   mFrequency = aFrequency;
   NotifyFMRadioEvent(EnabledChanged);
@@ -158,7 +147,6 @@ FMRadioChild::RecvNotifyEnabledChanged(const bool& aEnabled,
 bool
 FMRadioChild::Recv__delete__()
 {
-  LOG("Recv__delete__");
   return true;
 }
 
@@ -184,7 +172,6 @@ FMRadioChild::Singleton()
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sFMRadioChild) {
-    LOG("Create sFMRadioChild");
     sFMRadioChild = new FMRadioChild();
   }
 

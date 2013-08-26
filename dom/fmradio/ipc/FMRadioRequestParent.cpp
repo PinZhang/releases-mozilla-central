@@ -8,28 +8,22 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/PFMRadio.h"
 
-#undef LOG
-#define LOG(args...) FM_LOG("PFMRadioRequestParent", args)
-
 BEGIN_FMRADIO_NAMESPACE
 
 FMRadioRequestParent::FMRadioRequestParent()
   : mActorDestroyed(false)
 {
-  LOG("constructor");
   MOZ_COUNT_CTOR(FMRadioRequestParent);
 }
 
 FMRadioRequestParent::~FMRadioRequestParent()
 {
-  LOG("destructor");
   MOZ_COUNT_DTOR(FMRadioRequestParent);
 }
 
 void
 FMRadioRequestParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  LOG("ActorDestroy: %d", aWhy);
   mActorDestroyed = true;
 }
 
