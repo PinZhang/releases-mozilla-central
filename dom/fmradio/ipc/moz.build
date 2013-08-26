@@ -23,3 +23,7 @@ IPDL_SOURCES += [
     'PFMRadioRequest.ipdl',
 ]
 
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+

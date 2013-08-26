@@ -161,9 +161,8 @@ public:
   {
     LOG("Read settings value");
 
-    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
-
     FMRadioService* fmRadioService = FMRadioService::Singleton();
+    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
 
     fmRadioService->mHasReadRilSetting = true;
 
@@ -196,9 +195,8 @@ public:
   HandleError(const nsAString& aName)
   {
     LOG("Can not read settings value.");
-    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
-
     FMRadioService* fmRadioService = FMRadioService::Singleton();
+    MOZ_ASSERT(mPendingRequest == fmRadioService->mPendingRequest);
 
     fmRadioService->TransitionState(ErrorResponse(
       NS_LITERAL_STRING("Unexpected error")), Disabled);

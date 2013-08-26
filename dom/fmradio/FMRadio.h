@@ -10,13 +10,14 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/HalTypes.h"
-#include "DOMRequest.h"
 #include "nsWeakReference.h"
 
 class nsPIDOMWindow;
 class nsIScriptContext;
 
 BEGIN_FMRADIO_NAMESPACE
+
+class DOMRequest;
 
 class FMRadio MOZ_FINAL : public nsDOMEventTargetHelper
                         , public hal::SwitchObserver

@@ -13,6 +13,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
 #include "mozilla/dom/FMRadioService.h"
+#include "DOMRequest.h"
 
 #undef LOG
 #define LOG(args...) FM_LOG("FMRadio", args)
@@ -77,6 +78,8 @@ public:
 private:
   nsWeakPtr mFMRadio;
 };
+
+NS_IMPL_ISUPPORTS_INHERITED0(FMRadioRequest, DOMRequest)
 
 FMRadio::FMRadio()
   : mHeadphoneState(SWITCH_STATE_OFF)
@@ -295,8 +298,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 NS_IMPL_ADDREF_INHERITED(FMRadio, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(FMRadio, nsDOMEventTargetHelper)
-
-NS_IMPL_ISUPPORTS_INHERITED0(FMRadioRequest, DOMRequest)
 
 END_FMRADIO_NAMESPACE
 
