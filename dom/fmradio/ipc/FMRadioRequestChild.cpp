@@ -12,7 +12,7 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-FMRadioRequestChild::FMRadioRequestChild(ReplyRunnable* aReplyRunnable)
+FMRadioRequestChild::FMRadioRequestChild(FMRadioReplyRunnable* aReplyRunnable)
   : mReplyRunnable(aReplyRunnable)
 {
   LOG("Constructor");
