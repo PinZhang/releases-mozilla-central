@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_B2G_FM']:
-    LIBRARY_NAME = 'domfmradio_s'
-
     DIRS += [
         'ipc',
     ]
@@ -26,12 +24,12 @@ if CONFIG['MOZ_B2G_FM']:
 
     LIBXUL_LIBRARY = True
 
+    LIBRARY_NAME = 'domfmradio_s'
+
 IPDL_SOURCES += [
     'ipc/PFMRadio.ipdl',
     'ipc/PFMRadioRequest.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True
-
-LIBXUL_LIBRARY = True
 
