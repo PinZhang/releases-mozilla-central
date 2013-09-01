@@ -9,19 +9,21 @@ let FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
   setUp();
 }
 
 function setUp() {
-  FMRadio.enable(90);
+  let frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  FMRadio.enable(frequency);
   FMRadio.onenabled = setFrequency;
 }
 
 function setFrequency() {
   log("Set Frequency");
-  var request = FMRadio.setFrequency(100);
+  let frequency = FMRadio.frequency + FMRadio.channelWidth;
+  var request = FMRadio.setFrequency(frequency);
   ok(request, "setFrequency request should not be null.");
 
   request.onsuccess = setOutOfRangeFrequency;
@@ -46,14 +48,30 @@ function setFrequencyWhenSeeking() {
   var request = FMRadio.seekUp();
   ok(request, "Seekup request should not be null.");
 
-  request.onsuccess = function() {
-    ok(false, "Seek request should fail.");
+  // There are two possibilities which depends on the system
+  // process scheduling (bug 911063 comment 0):
+  //   - seek fails
+  //   - seek's onsuccess fires before setFrequency's onsucess
+
+  var failedToSeek = false;
+  request.onerror = function() {
+    failedToSeek = true;
   };
 
-  var setFreqRequest = FMRadio.setFrequency(101);
+  var seekCompletes = false;
+  request.onsuccess = function() {
+    ok(!failedToSeek);
+    seekCompletes = true;
+  };
+
+  var frequency = FMRadio.frequencyUpperBound - FMRadio.channelWidth;
+  var setFreqRequest = FMRadio.setFrequency(frequency);
   ok(setFreqRequest, "setFrequency request should not be null.");
 
-  setFreqRequest.onsuccess = cleanUp;
+  setFreqRequest.onsuccess = function() {
+    ok(failedToSeek || seekCompletes);
+    cleanUp();
+  };
 }
 
 function cleanUp() {

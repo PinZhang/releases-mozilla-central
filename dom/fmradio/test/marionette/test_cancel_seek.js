@@ -9,13 +9,14 @@ let FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
   setUp();
 }
 
 function setUp() {
-  FMRadio.enable(90);
+  let frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  FMRadio.enable(frequency);
   FMRadio.onenabled = seek;
 }
 
@@ -29,16 +30,28 @@ function seek() {
     seekUpIsCancelled = true;
   };
 
+  var seekUpCompleted = false;
   request.onsuccess = function() {
-    ok(false, "Seekup request should fail.");
+    ok(!seekUpIsCancelled);
+    seekUpCompleted = true;
   };
 
   log("Seek up");
   var cancelSeekReq = FMRadio.cancelSeek();
   ok(cancelSeekReq, "Cancel request should not be null.");
 
+  // There are two possibilities which depends on the system
+  // process scheduling (bug 911063 comment 0):
+  //   - seekup action is canceled
+  //   - seekup's onsuccess fires before cancelSeek's onerror
+
   cancelSeekReq.onsuccess = function() {
     ok(seekUpIsCancelled, "Seekup request failed.");
+    cleanUp();
+  };
+
+  cancelSeekReq.onerror = function() {
+    ok(seekUpCompleted);
     cleanUp();
   };
 }

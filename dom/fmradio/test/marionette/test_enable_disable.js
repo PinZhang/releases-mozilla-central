@@ -9,13 +9,9 @@ let FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
-  verifyAttributesWhenDisabled();
-  enableFMRadio();
-}
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
 
-function verifyAttributesWhenDisabled() {
   log("Verifying attributes when disabled.");
   is(FMRadio.frequency, null, "FMRadio.frequency == null");
   ok(FMRadio.frequencyLowerBound, "FMRadio.frequencyLowerBound");
@@ -23,12 +19,15 @@ function verifyAttributesWhenDisabled() {
   ok(FMRadio.frequencyUpperBound > FMRadio.frequencyLowerBound,
     "FMRadio.frequencyUpperBound > FMRadio.frequencyLowerBound");
   ok(FMRadio.channelWidth, "FMRadio.channelWidth")
+
+  enableFMRadio();
 }
 
 function enableFMRadio() {
   log("Verifying behaviors when enabled.");
-  var request = FMRadio.enable(90);
-  ok(request, "FMRadio.enable(90) returns request");
+  var frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  var request = FMRadio.enable(frequency);
+  ok(request, "FMRadio.enable(r" + frequency + ") returns request");
 
   request.onsuccess = function() {
     ok(FMRadio.enabled, "FMRadio.enabled");

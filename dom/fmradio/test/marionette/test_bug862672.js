@@ -9,30 +9,37 @@ let FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
   enableThenDisable();
 }
 
 function enableThenDisable() {
   log("Enable FM Radio and disable it immediately.");
-  var request = FMRadio.enable(90);
+  var frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  var request = FMRadio.enable(frequency);
   ok(request, "request should not be null.");
-
-  request.onsuccess = function() {
-    ok(false, "Enable request should fail.");
-  };
 
   var failedToEnable = false;
   request.onerror = function() {
     failedToEnable = true;
   };
 
+  var enableCompleted = false;
+  request.onsuccess = function() {
+    of(!failedToEnable);
+    enableCompleted = true;
+  };
+
   var disableReq = FMRadio.disable();
   ok(disableReq, "Disable request should not be null.");
 
   disableReq.onsuccess = function() {
-    ok(failedToEnable, "Enable request failed.");
+    // There are two possibilities which depends on the system
+    // process scheduling (bug 911063 comment 0):
+    //   - enable fails
+    //   - enable's onsuccess fires before disable's onsucess
+    ok(failedToEnable || enableCompleted);
     ok(!FMRadio.enabled, "FMRadio.enabled is false.");
     finish();
   };

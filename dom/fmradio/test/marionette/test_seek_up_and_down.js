@@ -9,13 +9,14 @@ let FMRadio = window.navigator.mozFMRadio;
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
   setUp();
 }
 
 function setUp() {
-  FMRadio.enable(90);
+  let frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  FMRadio.enable(frequency);
   FMRadio.onenabled = seekUp;
 }
 

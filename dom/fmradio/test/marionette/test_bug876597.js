@@ -13,9 +13,9 @@ let KEY = "ril.radio.disabled";
 
 function verifyInitialState() {
   log("Verifying initial state.");
-  ok(FMRadio, "FMRadio");
-  is(FMRadio.enabled, false, "FMRadio.enabled");
-  ok(mozSettings, "mozSettings");
+  ok(FMRadio);
+  is(FMRadio.enabled, false);
+  ok(mozSettings);
 
   checkRilSettings();
 }
@@ -36,7 +36,8 @@ function checkRilSettings() {
 
 function enableFMRadio() {
   log("Enable FM radio");
-  let req = FMRadio.enable(90);
+  let frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  let req = FMRadio.enable(frequency);
 
   req.onsuccess = function() {
     enableAirplaneMode();
@@ -61,7 +62,8 @@ function enableAirplaneMode() {
 
 function enableFMRadioWithAirplanModeEnabled() {
   log("Enable FM radio with airplane mode enabled");
-  let req = FMRadio.enable(90);
+  let frequency = FMRadio.frequencyLowerBound + FMRadio.channelWidth;
+  let req = FMRadio.enable(frequency);
   req.onerror = cleanUp();
 
   req.onsuccess = function() {
