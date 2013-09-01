@@ -8,9 +8,13 @@
 #define mozilla_dom_fmradioservice_h__
 
 #include "mozilla/dom/PFMRadioRequest.h"
-#include "FMRadioCommon.h"
+#include "mozilla/dom/FMRadioCommon.h"
 #include "mozilla/Hal.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Services.h"
+#include "nsThreadUtils.h"
+#include "nsIObserver.h"
+#include "nsXULAppAPI.h"
 
 BEGIN_FMRADIO_NAMESPACE
 
